@@ -23,6 +23,11 @@ const router = createRouter({
       path: "/render",
       name: "render",
       component: () => import('../views/Render.vue')
+    },
+    {
+      path: "/drag",
+      name: "drag",
+      component: () => import('../views/DragEditor.vue')
     }
   ],
 })

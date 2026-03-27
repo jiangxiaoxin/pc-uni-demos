@@ -1,5 +1,8 @@
 <template>
   <div class="editor-container">
+    <nav class="nav-menu">
+      <router-link to="/drag" class="nav-link">拖拽编辑器</router-link>
+    </nav>
     <h1>JSON Editor</h1>
     <div class="input-section">
       <label for="json-input">请输入 JSON 数据：</label>
@@ -128,6 +131,21 @@ const handleClear = () => {
   max-width: 800px;
   margin: 0 auto;
   padding: 20px;
+}
+
+.nav-menu {
+  text-align: right;
+  margin-bottom: 10px;
+}
+
+.nav-link {
+  color: #409eff;
+  text-decoration: none;
+  font-size: 14px;
+}
+
+.nav-link:hover {
+  text-decoration: underline;
 }
 
 h1 {

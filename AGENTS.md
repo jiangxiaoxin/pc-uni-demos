@@ -2,11 +2,13 @@
 
 ## 项目概述
 
-PC-UNI-H5 是一个基于 pnpm workspaces 管理的 monorepo 项目，包含两个主要前端应用和一个消息中转服务器：
+PC-UNI-H5 是一个基于 pnpm workspaces 管理的 monorepo 项目，包含以下主要应用和服务：
 
-1. **myEditor**: Vue 3 + Vite + TypeScript 编辑器，用于输入和发送 JSON Schema 表单配置
+1. **myEditor**: Vue 3 + Vite + TypeScript 编辑器，包含 JSON 编辑器和拖拽式组件编辑器
 2. **myViewer**: Uni-app 跨平台应用，用于接收表单配置并渲染动态表单
 3. **message-server**: Node.js HTTP 消息服务器，实现两个应用间的跨域通信
+4. **server**: Express + MySQL 后台服务，提供 RESTful API
+5. **flow**: 基于 LogicFlow 的流程图编辑器
 
 ## 技术栈
 
@@ -16,7 +18,7 @@ PC-UNI-H5 是一个基于 pnpm workspaces 管理的 monorepo 项目，包含两�
 - **语言**: TypeScript 5.9.x (严格模式)
 - **路由**: Vue Router 4.x
 - **开发端口**: 5173
-- **依赖**: `@pc-uni-h5/utils` (workspace)
+- **依赖**: `@pc-uni-h5/utils` (workspace), Element Plus, @element-plus/icons-vue
 
 ### myViewer (查看器)
 - **框架**: Uni-app 3.x + Vue 3
@@ -36,6 +38,21 @@ PC-UNI-H5 是一个基于 pnpm workspaces 管理的 monorepo 项目，包含两�
 - **包名**: `@pc-uni-h5/utils`
 - **位置**: `packages/utils/`
 - **功能**: 类型检查、日期处理、JSON 工具、消息通信类型定义
+
+### Server (后台服务)
+- **框架**: Express 4.x
+- **数据库**: MySQL (mysql2)
+- **语言**: TypeScript 5.9.x
+- **开发端口**: 3001
+- **依赖**: cors, dotenv, express-validator, helmet, morgan, mysql2
+
+### Flow (流程图编辑器)
+- **框架**: Vue 3 + TypeScript
+- **流程图引擎**: LogicFlow 2.x (@logicflow/core, @logicflow/extension)
+- **节点注册**: @logicflow/vue-node-registry
+- **UI 组件库**: Ant Design Vue 4.x
+- **构建工具**: Vite 8.x
+- **开发端口**: 5175
 
 ## 项目结构
 
@@ -63,11 +80,13 @@ pc-uni-h5/
 │       ├── main.ts           # 应用入口
 │       ├── App.vue
 │       ├── style.css
-│       ├── router/index.ts   # 路由配置 (3个路由)
+│       ├── router/index.ts   # 路由配置 (5个路由)
 │       ├── views/
 │       │   ├── EditorView.vue    # JSON 编辑器主页面
 │       │   ├── MyFrame.vue       # iframe 手机模拟器
-│       │   └── Preview.vue       # 响应式预览工具
+│       │   ├── Preview.vue       # 响应式预览工具
+│       │   ├── Render.vue        # 渲染测试页面
+│       │   └── DragEditor.vue    # 拖拽式组件编辑器
 │       ├── components/HelloWorld.vue
 │       └── assets/
 └── myViewer/                 # Uni-app 查看器应用
@@ -99,6 +118,33 @@ pc-uni-h5/
                 ├── uni-editor.vue
                 └── components/
                     └── ComponentPreview.vue
+├── server/                   # Express 后台服务
+│   ├── package.json
+│   ├── tsconfig.json
+│   ├── src/
+│   │   ├── app.ts            # 应用入口
+│   │   ├── routes/           # 路由定义
+│   │   ├── controllers/      # 控制器
+│   │   └── ...
+│   └── .env                  # 环境变量配置
+└── flow/                     # LogicFlow 流程图编辑器
+    ├── package.json
+    ├── vite.config.ts
+    ├── src/
+    │   ├── main.ts
+    │   ├── App.vue
+    │   ├── components/
+    │   │   ├── LogicFlowPanel.vue    # LogicFlow 画布组件
+    │   │   ├── nodes/                # 自定义节点
+    │   │   │   ├── MyLogicNode.vue
+    │   │   │   ├── StartNode/
+    │   │   │   ├── EndNode/
+    │   │   │   └── index.ts
+    │   │   └── edges/
+    │   │       └── InteractiveEdge.ts
+    │   └── views/
+    │       └── FlowEditor.vue
+    └── vite.config.ts
 ```
 
 ## 通信原理
@@ -126,6 +172,93 @@ myEditor (5173) ──HTTP POST──> message-server (3000) <──HTTP GET─�
 
 - `GET /health` - 健康检查
   - 响应: `{ status: 'ok' }`
+
+## 拖拽式组件编辑器
+
+位于 `myEditor/src/views/DragEditor.vue`
+
+**功能特性**:
+- **左中右三栏布局**: 左侧组件库、中间舞台、右侧属性面板
+- **拖拽添加组件**: 从左侧拖拽 input/button/select 组件到舞台，默认使用 100% 宽度
+- **组件宽度设置**: 支持 1/4、1/3、1/2、100% 四种宽度，使用 Flex 布局自动排列
+- **选中删除**: 点击组件选中（显示蓝色边框和背景），显示红色删除按钮；点击舞台空白区域取消选中
+- **拖拽排序**: 舞台上的组件可以互相拖拽交换位置，目标组件显示绿色虚线边框
+- **智能背景**: 组件默认无背景色，只在悬停或选中时显示背景
+- **按钮自适应**: 按钮组件宽度自动撑满外层容器
+
+**组件类型**:
+
+| 类型 | 组件 | 说明 |
+|------|------|------|
+| `input` | ElInput | 文本输入框 |
+| `button` | ElButton | 按钮（宽度 100%）|
+| `select` | ElSelect | 下拉选择器 |
+
+**核心实现**:
+
+```typescript
+// 组件数据结构
+interface ComponentItem {
+  id: string
+  type: 'input' | 'button' | 'select'
+  label: string
+  width: string // 25%, 33.33%, 50%, 100%
+  value?: string
+}
+
+// 拖拽添加组件（默认 100% 宽度）
+function handleDrop(e: DragEvent) {
+  const newComponent: ComponentItem = {
+    id: Date.now().toString(),
+    type: dragType.value,
+    label: getLabelByType(dragType.value),
+    width: '100%', // 默认 100% 宽度
+  }
+  stageComponents.push(newComponent)
+}
+
+// 组件拖拽排序
+function handleComponentDrop(index: number, e: DragEvent) {
+  const sourceIndex = dragSourceIndex.value
+  const targetIndex = index
+  if (sourceIndex !== targetIndex) {
+    const temp = stageComponents[sourceIndex]
+    stageComponents.splice(sourceIndex, 1)
+    stageComponents.splice(targetIndex, 0, temp)
+  }
+}
+
+// 点击舞台空白取消选中
+function handleStageClick(e: MouseEvent) {
+  if (e.target === e.currentTarget) {
+    selectedComponent.value = null
+  }
+}
+```
+
+**样式要点**:
+
+```css
+/* 默认无背景，hover/selected 时显示 */
+.component-wrapper {
+  background-color: transparent;
+}
+.component-wrapper:hover {
+  background-color: #f5f7fa;
+}
+.component-wrapper.selected {
+  background-color: #ecf5ff;
+}
+
+/* 按钮宽度 100% */
+:deep(.component-content .el-button) {
+  width: 100%;
+}
+```
+
+**访问地址**: http://localhost:5173/drag
+
+---
 
 ## 低代码表单渲染器
 
@@ -207,6 +340,12 @@ pnpm run dev:editor
 
 # 只启动 myViewer (H5 模式)
 pnpm run dev:viewer
+
+# 只启动 Flow 流程编辑器
+pnpm run dev:flow
+
+# 只启动 Express 后台服务 (server)
+pnpm run dev:server
 
 # 启动 utils 开发模式（自动监听）
 pnpm run dev:utils
@@ -430,7 +569,12 @@ pnpm --filter @pc-uni-h5/utils run dev
 ## 注意事项
 
 1. **消息服务器必须运行**: 否则两个应用无法通信
-2. **端口占用**: 确保 3000、5173、5174 端口未被占用
+2. **端口占用**: 确保 3000、3001、5173、5174、5175 端口未被占用
+   - 3000: message-server (消息服务器)
+   - 3001: server (Express 后台服务)
+   - 5173: myEditor (编辑器)
+   - 5174: myViewer (查看器)
+   - 5175: flow (流程图编辑器)
 3. **CORS 配置**: myEditor 的 Vite 配置已启用 CORS
 4. **长轮询机制**: myViewer 使用 30 秒超时的长轮询，错误时会 5 秒后重试
 5. **iframe 通信**: myEditor 的 Preview 和 MyFrame 视图支持通过 iframe 嵌套 myViewer，可用于 postMessage 通信测试

@@ -8,6 +8,7 @@
     "dev:editor": "pnpm --filter myeditor run dev",
     "dev:viewer": "pnpm --filter myviewer run dev",
     "dev:flow": "pnpm --filter flow run dev",
+    "dev:server": "pnpm --filter @pc-uni-h5/server run dev",
     "server": "node message-server.js",
     "dev:utils": "pnpm --filter @pc-uni-h5/utils run dev",
     "build:utils": "pnpm --filter @pc-uni-h5/utils run build",

@@ -96,7 +96,7 @@
       edgeType: 'polyline', // 边连接的样式，polyline 折线。line 直线
       style: {
         baseEdge: {
-          strokeDasharray: '5 5', // 定义全局的边都是灰色的虚线
+          // strokeDasharray: '5 5', // 定义全局的边都是灰色的虚线
           stroke: '#aaa'
         }
       },

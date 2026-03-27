@@ -1,0 +1,63 @@
+.my-logic-node {
+  position: relative;
+  display: flex;
+  align-items: center;
+  width: 180px;
+  height: 40px; //!!! 此处的width 和height 必须跟addNode 时一样，否则会导致节点在舞台上变样
+  background: #ffffff;
+  border: 1px solid #d9d9d9;
+  border-radius: 8px;
+  padding: 0 12px;
+  box-sizing: border-box;
+  overflow: visible;
+}
+
+/* 左侧状态条 */
+.node-left-bar {
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 4px;
+  background: #1890ff;
+  border-radius: 8px 0 0 8px;
+}
+
+/* 图标区域 */
+.node-icon {
+  width: 36px;
+  height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 16px;
+  margin-right: 10px;
+  flex-shrink: 0;
+}
+
+/* 内容区域 */
+.node-content {
+  flex: 1;
+  min-width: 0;
+}
+
+.node-title {
+  font-size: 14px;
+  font-weight: 600;
+  color: #262626;
+  line-height: 1.4;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* 右侧功能区 */
+.node-actions-trigger {
+  margin-left: 8px;
+  cursor: pointer;
+  color: #8c8c8c;
+}
+
+.node-actions-trigger:hover {
+  color: #1890ff;
+}

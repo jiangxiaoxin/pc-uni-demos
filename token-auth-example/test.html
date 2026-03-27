@@ -1,0 +1,595 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>双 Token 认证测试</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: #f5f5f5;
+      padding: 20px;
+      line-height: 1.6;
+    }
+    .container {
+      max-width: 800px;
+      margin: 0 auto;
+    }
+    h1 {
+      text-align: center;
+      color: #333;
+      margin-bottom: 20px;
+    }
+    .card {
+      background: white;
+      border-radius: 8px;
+      padding: 20px;
+      margin-bottom: 20px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    }
+    .card h2 {
+      color: #333;
+      margin-bottom: 15px;
+      font-size: 18px;
+      border-bottom: 2px solid #007bff;
+      padding-bottom: 8px;
+    }
+    .form-group {
+      margin-bottom: 15px;
+    }
+    label {
+      display: block;
+      margin-bottom: 5px;
+      color: #666;
+      font-weight: 500;
+    }
+    input {
+      width: 100%;
+      padding: 10px 12px;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+      font-size: 14px;
+    }
+    input:focus {
+      outline: none;
+      border-color: #007bff;
+    }
+    button {
+      padding: 10px 20px;
+      margin: 5px;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 14px;
+      transition: opacity 0.2s;
+    }
+    button:hover {
+      opacity: 0.9;
+    }
+    .btn-primary {
+      background: #007bff;
+      color: white;
+    }
+    .btn-success {
+      background: #28a745;
+      color: white;
+    }
+    .btn-danger {
+      background: #dc3545;
+      color: white;
+    }
+    .btn-warning {
+      background: #ffc107;
+      color: #333;
+    }
+    .btn-group {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+    }
+    .info-box {
+      background: #f8f9fa;
+      border: 1px solid #dee2e6;
+      border-radius: 4px;
+      padding: 15px;
+      margin-top: 15px;
+      font-family: 'Courier New', monospace;
+      font-size: 13px;
+      white-space: pre-wrap;
+      word-break: break-all;
+      max-height: 300px;
+      overflow-y: auto;
+    }
+    .status {
+      display: inline-block;
+      padding: 4px 12px;
+      border-radius: 20px;
+      font-size: 12px;
+      font-weight: 500;
+    }
+    .status-success {
+      background: #d4edda;
+      color: #155724;
+    }
+    .status-error {
+      background: #f8d7da;
+      color: #721c24;
+    }
+    .status-warning {
+      background: #fff3cd;
+      color: #856404;
+    }
+    .log {
+      margin-top: 15px;
+      padding: 10px;
+      background: #f8f9fa;
+      border-radius: 4px;
+      font-family: 'Courier New', monospace;
+      font-size: 12px;
+      max-height: 200px;
+      overflow-y: auto;
+    }
+    .log-item {
+      padding: 4px 0;
+      border-bottom: 1px solid #eee;
+    }
+    .log-item:last-child {
+      border-bottom: none;
+    }
+    .log-time {
+      color: #999;
+    }
+    .log-info {
+      color: #007bff;
+    }
+    .log-success {
+      color: #28a745;
+    }
+    .log-error {
+      color: #dc3545;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>🔐 双 Token 认证测试</h1>
+    
+    <!-- 登录区域 -->
+    <div class="card">
+      <h2>1. 登录</h2>
+      <div class="form-group">
+        <label>用户名</label>
+        <input type="text" id="username" value="admin" placeholder="admin">
+      </div>
+      <div class="form-group">
+        <label>密码</label>
+        <input type="password" id="password" value="123456" placeholder="123456">
+      </div>
+      <button class="btn-primary" onclick="handleLogin()">登录</button>
+      <button class="btn-danger" onclick="handleLogout()">退出登录</button>
+      <div class="info-box" id="tokenInfo">未登录</div>
+    </div>
+    
+    <!-- 单请求测试 -->
+    <div class="card">
+      <h2>2. 单请求测试</h2>
+      <div class="btn-group">
+        <button class="btn-success" onclick="getUserInfo()">获取用户信息</button>
+        <button class="btn-success" onclick="getDataList()">获取列表数据</button>
+        <button class="btn-success" onclick="submitData()">提交数据</button>
+      </div>
+    </div>
+    
+    <!-- 并发请求测试（关键测试） -->
+    <div class="card">
+      <h2>3. 并发请求测试（Token 过期场景）</h2>
+      <p style="color: #666; margin-bottom: 15px;">
+        点击后会同时发起多个请求。如果此时 Access Token 已过期，
+        <strong>只会触发一次刷新请求</strong>，其他请求会等待刷新完成后自动重试。
+      </p>
+      <div class="btn-group">
+        <button class="btn-warning" onclick="sendConcurrentRequests()">
+          🚀 发送 5 个并发请求
+        </button>
+        <button class="btn-warning" onclick="sendConcurrentRequestsWithDelay()">
+          ⏱️ 发送 5 个请求（间隔 100ms）
+        </button>
+      </div>
+    </div>
+    
+    <!-- 日志 -->
+    <div class="card">
+      <h2>操作日志</h2>
+      <button class="btn-danger" onclick="clearLogs()">清空日志</button>
+      <div class="log" id="log"></div>
+    </div>
+  </div>
+
+  <!-- 先加载 Axios -->
+  <script src="https://cdn.jsdelivr.net/npm/axios@1.6.0/dist/axios.min.js"></script>
+  
+  <script>
+    // ========== 请求封装（内联实现，避免 ES Module 路径问题） ==========
+    
+    // 创建 axios 实例
+    const request = axios.create({
+      baseURL: 'http://localhost:3001',
+      timeout: 10000,
+    });
+
+    // Token 管理
+    const tokenStorage = {
+      getAccessToken() { return localStorage.getItem('accessToken'); },
+      getRefreshToken() { return localStorage.getItem('refreshToken'); },
+      setTokens(accessToken, refreshToken) {
+        localStorage.setItem('accessToken', accessToken);
+        if (refreshToken) localStorage.setItem('refreshToken', refreshToken);
+      },
+      clearTokens() {
+        localStorage.removeItem('accessToken');
+        localStorage.removeItem('refreshToken');
+      }
+    };
+
+    // 刷新状态管理
+    let isRefreshing = false;
+    let refreshSubscribers = [];
+
+    function addRefreshSubscriber(cb) { refreshSubscribers.push(cb); }
+    
+    // 从 URL 中提取用户 ID 用于排序
+    function getUserIdFromUrl(url) {
+      const match = url.match(/\/api\/user\/(\d+)/);
+      return match ? parseInt(match[1]) : 0;
+    }
+    
+    function notifySubscribers(token) {
+      // 按 URL 中的用户 ID 排序（保证 101→102→103→104→105 顺序）
+      refreshSubscribers.sort((a, b) => {
+        const idA = getUserIdFromUrl(a.url);
+        const idB = getUserIdFromUrl(b.url);
+        return idA - idB;
+      });
+      
+      console.log('🔄 按用户ID排序后的执行顺序:', 
+        refreshSubscribers.map(s => getUserIdFromUrl(s.url)));
+      
+      // 串行执行，保证顺序
+      refreshSubscribers.reduce((promise, { callback }) => {
+        return promise.then(() => callback(token));
+      }, Promise.resolve());
+      
+      refreshSubscribers = [];
+    }
+    
+    function rejectSubscribers(err) {
+      // 按用户ID排序后再通知
+      refreshSubscribers.sort((a, b) => {
+        const idA = getUserIdFromUrl(a.url);
+        const idB = getUserIdFromUrl(b.url);
+        return idA - idB;
+      });
+      refreshSubscribers.forEach(({ callback }) => callback(null, err));
+      refreshSubscribers = [];
+    }
+
+    async function doRefreshToken() {
+      const refreshToken = tokenStorage.getRefreshToken();
+      if (!refreshToken) throw new Error('没有 Refresh Token');
+      
+      try {
+        const res = await axios.post('http://localhost:3001/api/refresh', { refreshToken });
+        const { accessToken, refreshToken: newRefreshToken } = res.data.data;
+        tokenStorage.setTokens(accessToken, newRefreshToken);
+        console.log('✅ Token 刷新成功');
+        return accessToken;
+      } catch (err) {
+        tokenStorage.clearTokens();
+        const msg = err.response?.data?.message || '登录已过期，请重新登录';
+        alert(msg);
+        throw err;
+      }
+    }
+
+    // 请求拦截器
+    request.interceptors.request.use(config => {
+      const token = tokenStorage.getAccessToken();
+      if (token) config.headers['Authorization'] = `Bearer ${token}`;
+      return config;
+    });
+
+    // 响应拦截器
+    request.interceptors.response.use(
+      res => res.data,
+      async err => {
+        const original = err.config;
+        console.log("🚀 ~ test.html:283 ~ original:", original)
+
+        if (!original) return Promise.reject(err);
+        
+        const isExpired = err.response?.status === 401 && err.response?.data?.code === 401001;
+        if (!isExpired) return Promise.reject(err);
+        
+        if (original._retry) return Promise.reject(err); // _retry ???
+        
+        // 🔥 关键修复：如果已经有新 token 了（其他请求刷新成功），直接用新 token 重试
+        const currentToken = tokenStorage.getAccessToken();
+        if (currentToken && currentToken !== original.headers['Authorization']?.replace('Bearer ', '')) {
+          console.log('📝 检测到新 token，直接重试');
+          original.headers['Authorization'] = `Bearer ${currentToken}`;
+          return request(original);
+        }
+        
+        // 保存 URL 用于排序（确保按用户ID顺序重试）
+        const requestUrl = original.url;
+        
+        if (isRefreshing) {
+          return new Promise((resolve, reject) => {
+            addRefreshSubscriber({
+              url: original.url, // 保存 URL 用于排序
+              callback: (token, error) => {
+                if (error) {
+                  reject(error);
+                  return Promise.resolve();
+                } else {
+                  original.headers['Authorization'] = `Bearer ${token}`;
+                  return request(original).then(resolve).catch(reject);
+                }
+              }
+            });
+          });
+        }
+        
+        isRefreshing = true;
+        original._retry = true;
+        console.log(original.url + '进入刷新流程');
+        
+        
+        try {
+          const newToken = await doRefreshToken();
+          notifySubscribers(newToken);
+          isRefreshing = false;
+          original.headers['Authorization'] = `Bearer ${newToken}`;
+          return request(original);
+        } catch (e) {
+          rejectSubscribers(e);
+          isRefreshing = false;
+          return Promise.reject(e);
+        }
+      }
+    );
+
+    // API 封装
+    const authAPI = {
+      async login(username, password) {
+        const res = await request.post('/api/login', { username, password });
+        if (res.code === 200) {
+          tokenStorage.setTokens(res.data.accessToken, res.data.refreshToken);
+        }
+        return res;
+      },
+      async logout() {
+        await request.post('/api/logout', { refreshToken: tokenStorage.getRefreshToken() });
+        tokenStorage.clearTokens();
+      }
+    };
+
+    const userAPI = {
+      getInfo: () => request.get('/api/user/info')
+    };
+
+    const dataAPI = {
+      getList: () => request.get('/api/data/list'),
+      submit: (content) => request.post('/api/data/submit', { content })
+    };
+    
+    // 日志功能
+    function addLog(type, message) {
+      const logEl = document.getElementById('log');
+      const time = new Date().toLocaleTimeString();
+      const colorClass = {
+        'info': 'log-info',
+        'success': 'log-success',
+        'error': 'log-error'
+      }[type] || 'log-info';
+      
+      const item = document.createElement('div');
+      item.className = 'log-item';
+      item.innerHTML = `<span class="log-time">[${time}]</span> <span class="${colorClass}">${message}</span>`;
+      logEl.insertBefore(item, logEl.firstChild);
+    }
+    
+    // 更新 Token 显示
+    function updateTokenInfo() {
+      const accessToken = tokenStorage.getAccessToken();
+      const refreshToken = tokenStorage.getRefreshToken();
+      const infoEl = document.getElementById('tokenInfo');
+      
+      if (!accessToken) {
+        infoEl.textContent = '未登录';
+        return;
+      }
+      
+      // 解析 JWT payload（仅用于显示）
+      try {
+        const payload = JSON.parse(atob(accessToken.split('.')[1]));
+        const expDate = new Date(payload.exp * 1000);
+        const now = new Date();
+        const remaining = Math.floor((expDate - now) / 1000);
+        
+        infoEl.innerHTML = `
+Access Token: ${accessToken.substring(0, 30)}...\n
+Expires At: ${expDate.toLocaleTimeString()}\nRemaining: ${remaining > 0 ? remaining + 's' : '已过期'}\n
+Refresh Token: ${refreshToken ? refreshToken.substring(0, 30) + '...' : '无'}
+        `.trim();
+      } catch (e) {
+        infoEl.textContent = 'Token 解析失败';
+      }
+    }
+    
+    // 登录
+    window.handleLogin = async () => {
+      const username = document.getElementById('username').value;
+      const password = document.getElementById('password').value;
+      
+      addLog('info', `开始登录: ${username}`);
+      
+      try {
+        const res = await authAPI.login(username, password);
+        if (res.code === 200) {
+          addLog('success', '✅ 登录成功！');
+          updateTokenInfo();
+          
+          // 每秒更新一次剩余时间
+          setInterval(updateTokenInfo, 1000);
+        } else {
+          addLog('error', `❌ 登录失败: ${res.message}`);
+        }
+      } catch (error) {
+        addLog('error', `❌ 登录错误: ${error.message}`);
+      }
+    };
+    
+    // 退出
+    window.handleLogout = async () => {
+      addLog('info', '退出登录...');
+      try {
+        await authAPI.logout();
+        addLog('success', '✅ 退出成功');
+      } catch (error) {
+        addLog('error', `退出错误: ${error.message}`);
+      } finally {
+        tokenStorage.clearTokens();
+        updateTokenInfo();
+      }
+    };
+    
+    // 获取用户信息
+    window.getUserInfo = async () => {
+      addLog('info', '请求: 获取用户信息...');
+      try {
+        const res = await userAPI.getInfo();
+        addLog('success', `✅ 获取成功: ${JSON.stringify(res.data)}`);
+      } catch (error) {
+        addLog('error', `❌ 获取失败: ${error.response?.data?.message || error.message}`);
+      }
+    };
+    
+    // 获取指定用户信息（用于并发测试）
+    window.getUserById = async (id) => {
+      addLog('info', `请求: 获取用户 ${id} 的信息...`);
+      try {
+        const res = await request.get(`/api/user/${id}`);
+        addLog('success', `✅ 用户 ${id} 获取成功: ${res.data.username}`);
+        return res;
+      } catch (error) {
+        addLog('error', `❌ 用户 ${id} 获取失败: ${error.response?.data?.message || error.message}`);
+        throw error;
+      }
+    };
+    
+    // 获取列表
+    window.getDataList = async () => {
+      addLog('info', '请求: 获取列表数据...');
+      try {
+        const res = await dataAPI.getList();
+        addLog('success', `✅ 获取成功: ${res.data.length} 条数据`);
+      } catch (error) {
+        addLog('error', `❌ 获取失败: ${error.response?.data?.message || error.message}`);
+      }
+    };
+    
+    // 提交数据
+    window.submitData = async () => {
+      const content = `测试数据 ${new Date().toLocaleTimeString()}`;
+      addLog('info', `请求: 提交数据 "${content}"...`);
+      try {
+        const res = await dataAPI.submit(content);
+        addLog('success', `✅ 提交成功: ID=${res.data.id}`);
+      } catch (error) {
+        addLog('error', `❌ 提交失败: ${error.response?.data?.message || error.message}`);
+      }
+    };
+    
+    // 并发请求测试（关键测试）
+    window.sendConcurrentRequests = async () => {
+      addLog('info', '🚀 发送 5 个并发请求（获取不同用户 ID: 101-105）...');
+      addLog('info', '（如果 Token 已过期，应该只看到一次刷新请求）');
+      
+      const promises = [];
+      for (let i = 1; i <= 5; i++) {
+        const userId = 100 + i; // 101, 102, 103, 104, 105
+        promises.push(
+          request.get(`/api/user/${userId}`)
+            .then(res => {
+              addLog('success', `✅ 请求 ${i} (用户${userId}) 成功: ${res.data.username}`);
+              return res;
+            })
+            .catch(err => {
+              addLog('error', `❌ 请求 ${i} (用户${userId}) 失败: ${err.response?.data?.message || err.message}`);
+              throw err;
+            })
+        );
+      }
+      
+      try {
+        const res = await Promise.all(promises);
+        addLog('success', '🎉 所有并发请求全部成功！');
+        console.log('全部返回');
+        console.log(res);
+        
+        
+      } catch (error) {
+        addLog('error', '⚠️ 部分请求失败（可能是刷新 Token 也过期了）');
+      }
+    };
+    
+    // 间隔发送请求
+    window.sendConcurrentRequestsWithDelay = async () => {
+      addLog('info', '⏱️ 开始间隔发送 5 个请求（间隔 100ms，获取用户 201-205）...');
+      addLog('info', '（模拟请求过程中 Token 过期的场景）');
+      
+      const promises = [];
+      for (let i = 1; i <= 5; i++) {
+        const userId = 200 + i; // 201, 202, 203, 204, 205
+        const promise = new Promise((resolve, reject) => {
+          setTimeout(() => {
+            addLog('info', `发送请求 ${i} (用户${userId})...`);
+            request.get(`/api/user/${userId}`)
+              .then(res => {
+                addLog('success', `✅ 请求 ${i} (用户${userId}) 成功: ${res.data.username}`);
+                resolve(res);
+              })
+              .catch(err => {
+                addLog('error', `❌ 请求 ${i} (用户${userId}) 失败: ${err.response?.data?.message || err.message}`);
+                reject(err);
+              });
+          }, i * 100);
+        });
+        promises.push(promise);
+      }
+      
+      try {
+        await Promise.all(promises);
+        addLog('success', '🎉 所有请求全部成功！');
+      } catch (error) {
+        addLog('error', '⚠️ 部分请求失败');
+      }
+    };
+    
+    // 清空日志
+    window.clearLogs = () => {
+      document.getElementById('log').innerHTML = '';
+    };
+    
+    // 初始化
+    updateTokenInfo();
+    addLog('info', '页面加载完成，请先登录');
+  </script>
+</body>
+</html>

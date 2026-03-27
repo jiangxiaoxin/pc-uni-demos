@@ -1,0 +1,26 @@
+{
+  "name": "@pc-uni-h5/utils",
+  "version": "1.0.0",
+  "description": "Shared utilities for pc-uni-h5 projects",
+  "main": "./dist/index.js",
+  "module": "./dist/index.mjs",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "import": "./dist/index.mjs",
+      "require": "./dist/index.js",
+      "types": "./dist/index.d.ts"
+    }
+  },
+  "scripts": {
+    "build": "tsc",
+    "build:no-sourcemap": "tsc --sourceMap false --declarationMap false",
+    "dev": "tsc --watch"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "typescript": "^5.9.0"
+  }
+}

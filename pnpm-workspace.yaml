@@ -1,0 +1,6 @@
+packages:
+  - 'myEditor'
+  - 'myViewer'
+  - 'flow'
+  - 'packages/*'
+  - 'token-auth-example'

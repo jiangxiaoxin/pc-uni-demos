@@ -1,0 +1,17 @@
+{
+  "name": "token-auth-example",
+  "version": "1.0.0",
+  "description": "双 Token 认证示例 - Access Token + Refresh Token",
+  "type": "module",
+  "scripts": {
+    "server": "node server.js",
+    "dev": "node server.js",
+    "test": "echo '请使用浏览器打开 test.html 进行测试'"
+  },
+  "dependencies": {
+    "axios": "^1.6.0",
+    "cors": "^2.8.6",
+    "express": "^4.20.0",
+    "jsonwebtoken": "^9.0.3"
+  }
+}

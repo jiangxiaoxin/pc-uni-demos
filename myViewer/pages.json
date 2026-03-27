@@ -1,0 +1,39 @@
+{
+	"pages": [
+		// {
+		// 	"path": "pages/uni-editor/uni-editor",
+		// 	"style": {
+		// 		"navigationBarTitleText": "可视化编辑器"
+		// 	}
+		// },
+		{
+			"path": "pages/index/index",
+			"style": {
+				"navigationBarTitleText": "低代码表单渲染器"
+			}
+		},
+		{
+			"path": "pages/uni-editor/uni-editor",
+			"style": {
+				"navigationBarTitleText": "可视化编辑器"
+			}
+		}
+		
+		
+	],
+	"globalStyle": {
+		"navigationBarTextStyle": "black",
+		"navigationBarTitleText": "低代码表单渲染器",
+		"navigationBarBackgroundColor": "#F8F8F8",
+		"backgroundColor": "#F8F8F8",
+		"rpxCalcMaxDeviceWidth": 100
+	},
+	"easycom": {
+		"autoscan": true,
+		"custom": {
+			"^u--(.*)": "uview-pro/components/u-$1/u-$1.vue",
+			"^up-(.*)": "uview-pro/components/u-$1/u-$1.vue",
+			"^u-(.*)": "uview-pro/components/u-$1/u-$1.vue"
+		}
+	}
+}

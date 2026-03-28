@@ -1,7 +1,8 @@
 <template>
   <div class="editor-container">
     <nav class="nav-menu">
-      <router-link to="/drag" class="nav-link">拖拽编辑器</router-link>
+      <router-link to="/drag" class="nav-link">拖拽编辑器</router-link> |
+      <router-link to="/drag2" class="nav-link">拖拽编辑器2 (vue-draggable-plus)</router-link>
     </nav>
     <h1>JSON Editor</h1>
     <div class="input-section">

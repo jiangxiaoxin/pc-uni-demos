@@ -258,6 +258,46 @@ function handleStageClick(e: MouseEvent) {
 
 **访问地址**: http://localhost:5173/drag
 
+### DragEditor2 (vue-draggable-plus 版本)
+
+位于 `myEditor/src/views/DragEditor2.vue`
+
+与 DragEditor 功能相同，但使用 **vue-draggable-plus** 库实现舞台内的拖拽排序。
+
+**主要区别**:
+
+| 特性 | DragEditor (原生) | DragEditor2 (vue-draggable-plus) |
+|------|------------------|----------------------------------|
+| 拖拽库 | 原生 HTML5 Drag API | vue-draggable-plus (SortableJS) |
+| 排序方式 | 交换位置 | 平滑拖拽排序 |
+| 动画效果 | 无 | 有过渡动画 |
+| 实现复杂度 | 较复杂 | 简洁 |
+
+**vue-draggable-plus 用法**:
+
+```vue
+<template>
+  <VueDraggable
+    v-model="stageComponents"
+    :animation="200"
+    ghost-class="dragging-ghost"
+    chosen-class="dragging-chosen"
+    drag-class="dragging-item"
+    @end="onSortEnd"
+  >
+    <div v-for="item in stageComponents" :key="item.id">
+      <!-- 组件内容 -->
+    </div>
+  </VueDraggable>
+</template>
+
+<script setup>
+import { VueDraggable } from 'vue-draggable-plus'
+</script>
+```
+
+**访问地址**: http://localhost:5173/drag2
+
 ---
 
 ## 低代码表单渲染器

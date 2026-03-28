@@ -28,6 +28,11 @@ const router = createRouter({
       path: "/drag",
       name: "drag",
       component: () => import('../views/DragEditor.vue')
+    },
+    {
+      path: "/drag2",
+      name: "drag2",
+      component: () => import('../views/DragEditor2.vue')
     }
   ],
 })

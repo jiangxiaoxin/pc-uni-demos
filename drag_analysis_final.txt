@@ -1,0 +1,234 @@
+﻿//==========================================================================
+// DRAG & DROP CODE ANALYSIS - SortableJS Library
+// Extracted from form-edit.53ac3b8f2dfb762d.js
+//==========================================================================
+
+//--------------------------------------------------------------------------
+// _onDragOver - Triggered when dragging over an element
+//--------------------------------------------------------------------------
+// Original minified code:
+// _onDragOver:function(e){var t,n,a,i,o=this.el,l=e.target,c=this.options...}
+//--------------------------------------------------------------------------
+
+function _onDragOver(event) {
+    var targetElement, targetRect, targetIndex;
+    var rootEl = this.el;                    // Container element
+    var target = event.target;               // Current target under cursor
+    var options = this.options;              // Sortable options
+    var group = options.group;               // Group configuration
+    var activeSortable = eB.active;          // Currently active sortable instance
+    var sameGroup = el === group;            // Check if same group
+    var canSort = options.sort;              // Whether sorting is enabled
+    var fromSortable = ec || activeSortable; // Source sortable
+    var currentSortable = this;              // Current sortable instance
+    var dragEl = K;                          // Current dragging element
+    var cloneEl = $;                       // Clone element (ghost)
+    var completed = false;                   // Completion status
+
+    // Skip if delayed drag is active
+    if (ex) return;
+
+    // Prevent default browser behavior
+    if (event.cancelable) {
+        event.preventDefault();
+    }
+
+    // Find nearest draggable element
+    target = y(target, options.draggable, rootEl, true);
+
+    // Emit 'dragOver' event
+    et("dragOver");
+
+    // Return if event was canceled
+    if (eB.eventCanceled) return completed;
+
+    // Ignore if target is inside drag element or animating
+    if (K.contains(event.target) || 
+        target.animated && target.animatingX && target.animatingY ||
+        currentSortable._ignoreWhileAnimating === target) {
+        return ea(false);
+    }
+
+    // Reset state
+    eb = false;
+
+    // Check if we can drop here
+    if (activeSortable && !options.disabled) {
+        var canInsert = sameGroup ? canSort : false;
+        var canPull = ec === this || 
+            (this.lastPutMode = el.checkPull(this, activeSortable, K, event)) && 
+            group.checkPut(this, activeSortable, K, event);
+
+        if (canInsert || canPull) {
+            // Get drag direction (vertical/horizontal)
+            var direction = this._getDirection(event, target);
+            var dragRect = N(K);  // Get drag element rect
+
+            et("dragOverValid");
+
+            if (eB.eventCanceled) return completed;
+
+            // If same group and can sort
+            if (canInsert) {
+                Y = q;              // Set parent container
+                en();               // Cleanup animations
+                this._hideClone();
+                et("revert");
+
+                if (!eB.eventCanceled) {
+                    if (cloneEl) {
+                        q.insertBefore(K, cloneEl);
+                    } else {
+                        q.appendChild(K);
+                    }
+                    return ea(true);
+                }
+            }
+
+            // Find insertion position
+            var nearestElement = T(rootEl, options.draggable);
+            
+            if (nearestElement) {
+                if (nearestElement === K) return ea(false);
+                
+                if (nearestElement && rootEl === event.target) {
+                    target = nearestElement;
+                }
+
+                if (target) {
+                    targetRect = N(target);
+                }
+
+                // Execute insertion logic
+                if (eQ(q, rootEl, K, dragRect, target, targetRect, event, !!target) !== false) {
+                    en();
+                    if (nearestElement && nearestElement.nextSibling) {
+                        rootEl.insertBefore(K, nearestElement.nextSibling);
+                    } else {
+                        rootEl.appendChild(K);
+                    }
+                    Y = rootEl;
+                    ei();
+                    return ea(true);
+                }
+            }
+        }
+    }
+}
+
+//--------------------------------------------------------------------------
+// KEY VARIABLES / FUNCTIONS
+//--------------------------------------------------------------------------
+// K           - Current drag element (dragEl)
+// q           - Parent container of drag element
+// Y           - Target container
+// $         - Clone element (ghost/placeholder)
+// ec          - Source sortable instance
+// el          - Target group
+// eB.active   - Currently active sortable
+// N(el)       - Get element's bounding rect
+// y()         - Find closest draggable element
+// T()         - Find closest sortable element  
+// en()        - Clean up animation states
+// ea(bool)    - Complete drag operation
+// ei()        - Dispatch sort event
+// et(name)    - Emit event hook
+
+//--------------------------------------------------------------------------
+// _onDrop - Triggered when element is dropped
+//--------------------------------------------------------------------------
+// Original minified code:
+// _onDrop:function(e){var t=this.el,n=this.options;if(er=S(K),eo=S(K,n.draggable)...}
+//--------------------------------------------------------------------------
+
+function _onDrop(event) {
+    var rootEl = this.el;      // Container element
+    var options = this.options; // Sortable options
+
+    // Get position states of drag element
+    er = S(K);                  // Original position of drag element
+    eo = S(K, options.draggable); // New position after drag
+
+    // Emit 'drop' event
+    H("drop", this, { evt: event });
+    
+    // Emit 'dragend' event  
+    H("dragend", this, { evt: event });
+    
+    // Check if position changed
+    if (er !== eo) {
+        // Position changed - perform sort update
+        // Additional logic here...
+    }
+    
+    // Cleanup state
+    // ...
+}
+
+//--------------------------------------------------------------------------
+// KEY VARIABLES / FUNCTIONS
+//--------------------------------------------------------------------------
+// er       - Original position/index of dragged element
+// eo       - New position/index after drop
+// S(el)    - Get/Set element's sortable state
+// H(name)  - Dispatch event hook
+
+//--------------------------------------------------------------------------
+// _onDragStart - Triggered when drag starts
+//--------------------------------------------------------------------------
+function _onDragStart(event, touch) {
+    touch = touch || ("touch" == event.pointerType && event);
+    
+    if (!this.nativeDraggable || touch) {
+        // Fallback drag mode (non-native)
+        if (this.options.supportPointer) {
+            v(document, "pointermove", this._onTouchMove);
+        } else if (touch) {
+            v(document, "touchmove", this._onTouchMove);
+        } else {
+            v(document, "mousemove", this._onTouchMove);
+        }
+    } else {
+        // Native drag mode
+        v(K, "dragend", this);
+        v(q, "dragstart", this._onDragStart);
+    }
+    
+    // Clear text selection
+    try {
+        if (document.selection) {
+            eG(function() { document.selection.empty(); });
+        } else {
+            window.getSelection().removeAllRanges();
+        }
+    } catch (e) {}
+}
+
+//==========================================================================
+// SUMMARY - How it works
+//==========================================================================
+
+1. _onDragStart:
+   - Initializes drag operation
+   - Sets up event listeners for move/end
+   - Clears text selection
+
+2. _onDragOver (called repeatedly during drag):
+   - Calculates if element can be dropped at current position
+   - Finds nearest draggable/sortable element
+   - Determines insertion point based on mouse position
+   - Emits dragOver/dragOverValid events
+   - Performs visual reordering (DOM manipulation)
+
+3. _onDrop:
+   - Finalizes the drag operation
+   - Calculates old vs new positions
+   - Emits drop/dragend events
+   - Triggers state updates
+
+4. Key Flow:
+   DragStart -> [DragOver (multiple times)] -> Drop
+                    |
+                    +--> Check position
+                    +--> Find nearest element
+                    +--> Insert at calculated position

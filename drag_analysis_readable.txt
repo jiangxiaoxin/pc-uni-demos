@@ -1,0 +1,165 @@
+﻿//==========================================================================
+// 拖拽相关代码分析 - SortableJS 库
+// 从 form-edit.53ac3b8f2dfb762d.js 提取
+//==========================================================================
+
+//--------------------------------------------------------------------------
+// _onDragOver - 拖拽经过元素时触发
+//--------------------------------------------------------------------------
+function _onDragOver(event) {
+    var targetElement, targetRect, targetIndex;
+    var rootEl = this.el;
+    var target = event.target;
+    var options = this.options;
+    var group = options.group;
+    var activeSortable = eB.active;
+    var sameGroup = el === group;
+    var canSort = options.sort;
+    var fromSortable = ec || activeSortable;
+    var currentSortable = this;
+    var dragEl = K;  // 当前拖拽的元素
+    var cloneEl = $; // 克隆元素
+    var completed = false;
+
+    // 如果正在延迟拖拽，直接返回
+    if (ex) return;
+
+    // 阻止默认行为
+    if (event.cancelable) {
+        event.preventDefault();
+    }
+
+    // 获取可拖拽的目标元素
+    target = y(target, options.draggable, rootEl, true);
+
+    // 触发 dragOver 事件
+    et("dragOver");
+
+    // 如果事件被取消，返回
+    if (eB.eventCanceled) return completed;
+
+    // 如果目标在拖拽元素内部，或者是动画中的元素，返回 false
+    if (K.contains(event.target) || 
+        target.animated && target.animatingX && target.animatingY ||
+        currentSortable._ignoreWhileAnimating === target) {
+        return ea(false);
+    }
+
+    // 重置状态
+    eb = false;
+
+    // 检查是否可以放置
+    if (activeSortable && !options.disabled) {
+        var canInsert = sameGroup ? canSort : false;
+        var canPull = ec === this || 
+            (this.lastPutMode = el.checkPull(this, activeSortable, K, event)) && 
+            group.checkPut(this, activeSortable, K, event);
+
+        if (canInsert || canPull) {
+            // 获取拖拽方向（垂直/水平）
+            var direction = this._getDirection(event, target);
+            var dragRect = N(K);  // 获取拖拽元素的位置信息
+
+            et("dragOverValid");
+
+            if (eB.eventCanceled) return completed;
+
+            // 如果是相同组且可以排序
+            if (canInsert) {
+                Y = q;  // 设置父容器
+                en();   // 清理操作
+                this._hideClone();
+                et("revert");
+
+                if (!eB.eventCanceled) {
+                    if (cloneEl) {
+                        q.insertBefore(K, cloneEl);
+                    } else {
+                        q.appendChild(K);
+                    }
+                    return ea(true);
+                }
+            }
+
+            // 查找目标位置并插入
+            var nearestElement = T(rootEl, options.draggable);
+            
+            if (nearestElement) {
+                if (nearestElement === K) return ea(false);
+                
+                if (nearestElement && rootEl === event.target) {
+                    target = nearestElement;
+                }
+
+                if (target) {
+                    targetRect = N(target);
+                }
+
+                // 执行插入逻辑
+                if (eQ(q, rootEl, K, dragRect, target, targetRect, event, !!target) !== false) {
+                    en();
+                    if (nearestElement && nearestElement.nextSibling) {
+                        rootEl.insertBefore(K, nearestElement.nextSibling);
+                    } else {
+                        rootEl.appendChild(K);
+                    }
+                    Y = rootEl;
+                    ei();
+                    return ea(true);
+                }
+            }
+        }
+    }
+}
+
+//--------------------------------------------------------------------------
+// 关键变量说明
+//--------------------------------------------------------------------------
+// K        - 当前拖拽的元素 (dragEl)
+// q        - 拖拽元素的父容器
+// Y        - 目标容器
+// $        - 克隆元素 (cloneEl)
+// ec       - 来源 sortable 实例
+// el       - 目标组
+// eB.active - 当前活动的 sortable
+// N()      - 获取元素位置信息 (getRect)
+// y()      - 查找最近的 draggable 元素
+// T()      - 查找最近的 sortable 元素
+// en()     - 清理动画状态
+// ea()     - 完成拖拽操作
+// ei()     - 分发排序事件
+
+//--------------------------------------------------------------------------
+// _onDrop - 放置元素时触发
+//--------------------------------------------------------------------------
+function _onDrop(event) {
+    var rootEl = this.el;
+    var options = this.options;
+
+    // 获取拖拽元素和克隆元素的位置信息
+    er = S(K);    // 拖拽元素位置
+    eo = S(K, options.draggable);  // 可拖拽元素位置
+
+    // 触发 drop 事件
+    H("drop", this, { evt: event });
+    
+    // 触发 dragend 事件
+    H("dragend", this, { evt: event });
+    
+    // 检查是否需要还原
+    if (er !== eo) {
+        // 位置发生变化，执行排序更新
+        // ... (省略具体实现)
+    }
+    
+    // 清理状态
+    // ...
+}
+
+//--------------------------------------------------------------------------
+// 关键变量说明
+//--------------------------------------------------------------------------
+// er       - 拖拽元素原始位置
+// eo       - 拖拽元素新位置  
+// S()      - 获取/设置元素位置状态
+// H()      - 触发事件钩子

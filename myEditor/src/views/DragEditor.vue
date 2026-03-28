@@ -8,6 +8,7 @@ interface ComponentItem {
   id: string
   type: 'input' | 'button' | 'select'
   label: string
+  title: string // 组件标题
   width: string // 1/4, 1/3, 1/2, 1/1
   value?: string
 }
@@ -67,6 +68,7 @@ function handleDrop(e: DragEvent) {
     id: Date.now().toString(),
     type: dragType.value as 'input' | 'button' | 'select',
     label: getLabelByType(dragType.value),
+    title: getLabelByType(dragType.value), // 默认标题为组件类型
     width: '100%', // 默认 100% 宽度
   }
 
@@ -114,6 +116,13 @@ function handleStageClick(e: MouseEvent) {
 function updateWidth(width: string) {
   if (selectedComponent.value) {
     selectedComponent.value.width = width
+  }
+}
+
+// 更新选中组件的标题
+function updateTitle(title: string) {
+  if (selectedComponent.value) {
+    selectedComponent.value.title = title
   }
 }
 
@@ -236,6 +245,8 @@ function handleComponentDragEnd() {
             <div class="delete-btn" @click="deleteComponent(item.id, $event)">
               <el-icon><Delete /></el-icon>
             </div>
+            <!-- 标题栏 -->
+            <div class="component-title">{{ item.title }}</div>
             <!-- 组件内容 -->
             <div class="component-content">
               <el-input
@@ -270,6 +281,14 @@ function handleComponentDragEnd() {
       <h3 class="panel-title">属性设置</h3>
       <div class="properties-content">
         <template v-if="selectedComponent">
+          <div class="property-item">
+            <label>组件标题</label>
+            <el-input
+              :model-value="selectedComponent.title"
+              @update:model-value="updateTitle"
+              placeholder="输入组件标题"
+            />
+          </div>
           <div class="property-item">
             <label>组件类型</label>
             <el-input :model-value="selectedComponent.label" disabled />
@@ -418,7 +437,7 @@ function handleComponentDragEnd() {
 .component-wrapper {
   position: relative;
   padding: 12px;
-  border: 2px solid transparent;
+  border: 1px solid transparent;
   transition: all 0.2s;
   box-sizing: border-box;
   flex: 0 0 auto;
@@ -436,6 +455,23 @@ function handleComponentDragEnd() {
 
 .component-wrapper.selected .delete-btn {
   display: flex;
+}
+
+/* 组件标题栏 */
+.component-title {
+  font-size: 13px;
+  font-weight: 500;
+  color: #606266;
+  margin-bottom: 8px;
+  text-align: left;
+}
+
+.component-wrapper:hover .component-title {
+  color: #303133;
+}
+
+.component-wrapper.selected .component-title {
+  color: #409eff;
 }
 
 /* 拖拽目标高亮 */

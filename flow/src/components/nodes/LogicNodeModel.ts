@@ -2,12 +2,12 @@ import { type BaseNodeModel, type Model, LogicFlow } from "@logicflow/core";
 import { VueNodeModel } from "@logicflow/vue-node-registry";
 
 // 限制节点的连接.在这个model 里做了统一的连接限制
-// 节点需要再进一步自定义的，可以继承自 NodeConnectionLimitModel
+// 节点需要再进一步自定义的，可以继承自 BaseNodeModel
 // 别的节点不能连开始
 // 结束节点不能连别的
 // 节点不能连自己
 // 抄送节点不能连别的，抄送节点只能有一个接入点
-export default class NodeConnectionLimitModel extends VueNodeModel {
+export default class LogicNodeModel extends VueNodeModel {
   initNodeData(data: LogicFlow.NodeConfig): void {
     super.initNodeData(data);
 
@@ -102,70 +102,6 @@ export default class NodeConnectionLimitModel extends VueNodeModel {
     });
   }
 
-  // // 当前这个node作为source 时的要求
-  // getConnectedSourceRules(): Model.ConnectRule[] {
-  //   const rules = super.getConnectedSourceRules();
-
-  //   rules.push({
-  //     message: "节点不能连接自己",
-  //     validate: (source: BaseNodeModel, target: BaseNodeModel) => {
-  //       return source !== target;
-  //     },
-  //   });
-
-  //   rules.push({
-  //     message: "结束节点不能连接其他节点",
-  //     validate: (source: BaseNodeModel, target: BaseNodeModel) => {
-  //       // debugger;
-  //       return source.type != "end-node";
-  //     },
-  //   });
-
-  //   rules.push({
-  //     message: "抄送节点不能连接其他节点",
-  //     validate: (source: BaseNodeModel, target: BaseNodeModel) => {
-  //       return source.type != "copy-node";
-  //     }
-  //   })
-
-  //   return rules;
-  // }
-
-  // 当前这个node 作为target 时的要求
-  // getConnectedTargetRules(): Model.ConnectRule[] {
-  //   const rules = super.getConnectedTargetRules();
-
-  //   rules.push({
-  //     // 禁止连接自己
-  //     message: "节点不能连接自己",
-  //     validate: (source, target) => {
-  //       return source !== target;
-  //     },
-  //   });
-
-  //   rules.push({
-  //     message: "其他节点不能连接开始节点",
-  //     validate: (source: BaseNodeModel, target: BaseNodeModel) => {
-  //       // debugger;
-  //       return target.type != "start-node";
-  //     },
-  //   });
-
-  //   rules.push({
-  //     message: "抄送节点只能有一个接入点",
-  //     validate: (source?: BaseNodeModel, target?: BaseNodeModel) => {
-  //       if(target?.type == "copy-node") {
-  //         const incoming = target?.graphModel.getNodeIncomingNode(target.id)
-
-  //         return !incoming?.length;
-  //       }
-  //       return true
-  //     }
-  //   })
-
-  //   return rules;
-  // }
-
   // 自定义节点hover时的样式
   getOutlineStyle(): LogicFlow.OutlineTheme {
     const style = super.getOutlineStyle();
@@ -184,5 +120,67 @@ export default class NodeConnectionLimitModel extends VueNodeModel {
       return newStyle;
     }
     return style;
+  }
+// 设置节点的锚点
+  getDefaultAnchor(): Model.AnchorConfig[] {
+    console.log('getDefaultAnchor11111', this);
+    
+    const {width, height, x, y, id, type} = this as any
+    // console.log("🚀 ~ LogicNodeModel.ts:127 ~ LogicNodeModel ~ getDefaultAnchor ~ type:", type)
+    const inAnchor = {
+        x: x-width/2,
+        y: y,
+        id: `${id}-in`,
+        name: `${id}-in`,
+        cusType: 'in'
+      }
+      const outAnchor = {
+        x: x+width/2,
+        y: y,
+        id: `${id}-out`,
+        name: `${id}-out`,
+        cusType: 'out'
+      }
+    if(type == "start-node"){
+      return [
+        outAnchor
+      ]
+    } else if(type == "end-node"){
+      return [
+        inAnchor
+      ]
+    } else if(type == 'copy-node') {
+      return [
+        inAnchor
+      ]
+    } else {
+      return [inAnchor ,outAnchor]
+    }
+
+    // return super.getDefaultAnchor()
+  }
+
+  getTargetAnchor(position: LogicFlow.Point): Model.AnchorInfo {
+    const {type} = this as any
+    if(type == "start-node"){
+      return super.getTargetAnchor(position);
+    } else if(type == "end-node") {
+        // debugger
+      return super.getTargetAnchor(position);
+        
+    } else if(type == 'copy-node') {
+      return super.getTargetAnchor(position);
+    } else {
+      
+
+      // // this.anchors 为节点上所有锚点（已换算到画布坐标）
+        const anchors = this.anchors || [];
+        const incomeIndex = anchors.findIndex(item => item.cusType == 'in')
+         return {
+          index: incomeIndex,
+          anchor: anchors[incomeIndex],
+        };
+    }
+    // return super.getTargetAnchor(position);
   }
 }

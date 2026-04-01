@@ -16,10 +16,9 @@
   import StartNode from "./nodes/StartNode/StartNode.vue";
   import EndNode from "./nodes/EndNode/EndNode.vue";
   import CopyNode from "./nodes/CopyNode/CopyNode.vue";
-  import NodeConnectionLimitModel from "./nodes/NodeConnectionLimitModel";
-  import MyLogicNodeModel from "./nodes/MyLogicNodeModel";
+  import LogicNodeModel from "./nodes/LogicNodeModel";
+  // import MyLogicNodeModel from "./nodes/MyLogicNodeModel";
   import { InteractiveEdge } from "./edges";
-
 
   //TODO 注册插件,需要吗？？
   // LogicFlow.use(MiniMap);
@@ -50,7 +49,6 @@
   const containerRef = ref<HTMLElement>();
   const flowId = ref("");
   let lf: LogicFlow | null = null;
-
 
   // const validateConnection = (sourceNode?: LogicFlow.NodeData, targetNode?:LogicFlow.NodeData) => {
   //   if(!sourceNode || !targetNode) {
@@ -95,12 +93,12 @@
       plugins: [MiniMap, Menu],
       nodeTextEdit: false,
       edgeTextEdit: false,
-      edgeType: 'polyline', // 边连接的样式，polyline 折线。line 直线
+      edgeType: "polyline", // 边连接的样式，polyline 折线。line 直线
       style: {
         baseEdge: {
           // strokeDasharray: '5 5', // 定义全局的边都是灰色的虚线
-          stroke: '#aaa'
-        }
+          stroke: "#aaa",
+        },
       },
     });
 
@@ -109,7 +107,7 @@
       {
         type: "my-logic-node",
         component: MyLogicNode,
-        model: NodeConnectionLimitModel
+        model: LogicNodeModel,
       },
       lf,
     );
@@ -118,7 +116,7 @@
       {
         type: "start-node",
         component: StartNode,
-        model: NodeConnectionLimitModel // !!!使用vue组件做view，自定义model 做model，这个model 继承自 VueNodeModel 
+        model: LogicNodeModel, // !!!使用vue组件做view，自定义model 做model，这个model 继承自 VueNodeModel
       },
       lf,
     );
@@ -127,16 +125,19 @@
       {
         type: "end-node",
         component: EndNode,
-        model: NodeConnectionLimitModel
+        model: LogicNodeModel,
       },
       lf,
     );
 
-    register({
-      type: 'copy-node',
-      component: CopyNode,
-      model: NodeConnectionLimitModel
-    }, lf)
+    register(
+      {
+        type: "copy-node",
+        component: CopyNode,
+        model: LogicNodeModel,
+      },
+      lf,
+    );
 
     // 注册自定义交互边
     lf.register(InteractiveEdge);
@@ -144,9 +145,9 @@
     // lf.setDefaultEdgeType('interactive-edge');
 
     // 监听圆点点击事件（由 InteractiveEdge 通过 eventCenter 触发）
-    lf.on('edge:circle-click', ({ data }: any) => {
+    lf.on("edge:circle-click", ({ data }: any) => {
       if (data && data.id) {
-        emit('edge:circle-click', data.id);
+        emit("edge:circle-click", data.id);
       }
     });
 
@@ -156,28 +157,20 @@
       emit("graph:rendered", { graphModel });
     });
 
-    lf.on('connection:not-allowed', (data) => {
+    lf.on("connection:not-allowed", (data) => {
       // console.log(data);
-      emit('connection:not-allowed', data.msg);
+      emit("connection:not-allowed", data.msg);
     });
 
     // 节点click事件监听。 edge 有单独的 edge:click
     lf.on("node:click", ({ data }) => {
-      console.log("🚀 ~ LogicFlowPanel.vue:137 ~ data:", data)
+      console.log("🚀 ~ LogicFlowPanel.vue:137 ~ data:", data);
 
-      const nodeModel = lf?.getNodeModelById(data.id)
-      console.log("🚀 ~ LogicFlowPanel.vue:142 ~ nodeModel:", nodeModel)
+      const nodeModel = lf?.getNodeModelById(data.id);
+      console.log("🚀 ~ LogicFlowPanel.vue:142 ~ nodeModel:", nodeModel);
 
-
-      const edges = nodeModel?.graphModel.getNodeEdges(data.id)
-      console.log("🚀 ~ LogicFlowPanel.vue:144 ~ edges:", edges)
-
-
-
-      
-
-
-
+      const edges = nodeModel?.graphModel.getNodeEdges(data.id);
+      console.log("🚀 ~ LogicFlowPanel.vue:144 ~ edges:", edges);
 
       emit("node:click", data);
     });
@@ -204,7 +197,7 @@
     //   if(!canConnect) {
     //     lf?.deleteEdge(edgeId)
     //   }
-      
+
     // })
 
     // 如果有初始数据，渲染
@@ -214,10 +207,9 @@
       lf.render({});
     }
 
-    window.addEventListener('click', (e) => {
-      console.log('eeee', e);
-      
-    })
+    window.addEventListener("click", (e) => {
+      console.log("eeee", e);
+    });
   });
 
   // 监听 initData 变化

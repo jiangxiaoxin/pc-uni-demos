@@ -8,18 +8,17 @@ import { VueNodeModel } from "@logicflow/vue-node-registry";
 // 节点不能连自己
 // 抄送节点不能连别的，抄送节点只能有一个接入点
 export default class NodeConnectionLimitModel extends VueNodeModel {
-  // 当前这个node作为source 时的要求
-  getConnectedSourceRules(): Model.ConnectRule[] {
-    const rules = super.getConnectedSourceRules();
+  initNodeData(data: LogicFlow.NodeConfig): void {
+    super.initNodeData(data);
 
-    rules.push({
+    this.sourceRules.push({
       message: "节点不能连接自己",
       validate: (source: BaseNodeModel, target: BaseNodeModel) => {
         return source !== target;
       },
     });
 
-    rules.push({
+    this.sourceRules.push({
       message: "结束节点不能连接其他节点",
       validate: (source: BaseNodeModel, target: BaseNodeModel) => {
         // debugger;
@@ -27,21 +26,33 @@ export default class NodeConnectionLimitModel extends VueNodeModel {
       },
     });
 
-    rules.push({
+    this.sourceRules.push({
       message: "抄送节点不能连接其他节点",
       validate: (source: BaseNodeModel, target: BaseNodeModel) => {
         return source.type != "copy-node";
-      }
-    })
+      },
+    });
 
-    return rules;
-  }
+    this.sourceRules.push({
+      message: "节点之间不能多次连接",
+      validate: (source?: BaseNodeModel, target?: BaseNodeModel) => {
+        const outIds = source?.graphModel
+          .getNodeOutgoingNode(source.id)
+          .map((node) => node.id); // 获取节点所有的下一级节点
+        if (target && outIds?.indexOf(target.id) !== -1) {
+          return false;
+        }
+        const inIds = source?.graphModel
+          .getNodeIncomingNode(source.id)
+          .map((node) => node.id); // 获取节点所有的上一级节点
+        if (target && inIds?.indexOf(target.id) !== -1) {
+          return false;
+        }
+        return true;
+      },
+    });
 
-  // 当前这个node 作为target 时的要求
-  getConnectedTargetRules(): Model.ConnectRule[] {
-    const rules = super.getConnectedTargetRules();
-
-    rules.push({
+    this.targetRules.push({
       // 禁止连接自己
       message: "节点不能连接自己",
       validate: (source, target) => {
@@ -49,7 +60,7 @@ export default class NodeConnectionLimitModel extends VueNodeModel {
       },
     });
 
-    rules.push({
+    this.targetRules.push({
       message: "其他节点不能连接开始节点",
       validate: (source: BaseNodeModel, target: BaseNodeModel) => {
         // debugger;
@@ -57,20 +68,103 @@ export default class NodeConnectionLimitModel extends VueNodeModel {
       },
     });
 
-    rules.push({
+    this.targetRules.push({
       message: "抄送节点只能有一个接入点",
       validate: (source?: BaseNodeModel, target?: BaseNodeModel) => {
-        if(target?.type == "copy-node") {
-          const incoming = target?.graphModel.getNodeIncomingNode(target.id)
-          
+        if (target?.type == "copy-node") {
+          const incoming = target?.graphModel.getNodeIncomingNode(target.id);
+
           return !incoming?.length;
         }
-        return true
-      }
-    })
+        return true;
+      },
+    });
 
-    return rules;
+    this.targetRules.push({
+      message: "节点之间不能多次连接",
+      validate: (source?: BaseNodeModel, target?: BaseNodeModel) => {
+        const outIds = target?.graphModel
+          .getNodeOutgoingNode(target.id)
+          .map((node) => node.id); // 获取节点所有的下一级节点
+
+        if (source && outIds?.indexOf(source.id) !== -1) {
+          return false;
+        }
+
+        const inIds = target?.graphModel
+          .getNodeIncomingNode(target.id)
+          .map((node) => node.id); // 获取节点所有的上一级节点
+        if (source && inIds?.indexOf(source.id) !== -1) {
+          return false;
+        }
+        return true;
+      },
+    });
   }
+
+  // // 当前这个node作为source 时的要求
+  // getConnectedSourceRules(): Model.ConnectRule[] {
+  //   const rules = super.getConnectedSourceRules();
+
+  //   rules.push({
+  //     message: "节点不能连接自己",
+  //     validate: (source: BaseNodeModel, target: BaseNodeModel) => {
+  //       return source !== target;
+  //     },
+  //   });
+
+  //   rules.push({
+  //     message: "结束节点不能连接其他节点",
+  //     validate: (source: BaseNodeModel, target: BaseNodeModel) => {
+  //       // debugger;
+  //       return source.type != "end-node";
+  //     },
+  //   });
+
+  //   rules.push({
+  //     message: "抄送节点不能连接其他节点",
+  //     validate: (source: BaseNodeModel, target: BaseNodeModel) => {
+  //       return source.type != "copy-node";
+  //     }
+  //   })
+
+  //   return rules;
+  // }
+
+  // 当前这个node 作为target 时的要求
+  // getConnectedTargetRules(): Model.ConnectRule[] {
+  //   const rules = super.getConnectedTargetRules();
+
+  //   rules.push({
+  //     // 禁止连接自己
+  //     message: "节点不能连接自己",
+  //     validate: (source, target) => {
+  //       return source !== target;
+  //     },
+  //   });
+
+  //   rules.push({
+  //     message: "其他节点不能连接开始节点",
+  //     validate: (source: BaseNodeModel, target: BaseNodeModel) => {
+  //       // debugger;
+  //       return target.type != "start-node";
+  //     },
+  //   });
+
+  //   rules.push({
+  //     message: "抄送节点只能有一个接入点",
+  //     validate: (source?: BaseNodeModel, target?: BaseNodeModel) => {
+  //       if(target?.type == "copy-node") {
+  //         const incoming = target?.graphModel.getNodeIncomingNode(target.id)
+
+  //         return !incoming?.length;
+  //       }
+  //       return true
+  //     }
+  //   })
+
+  //   return rules;
+  // }
 
   // 自定义节点hover时的样式
   getOutlineStyle(): LogicFlow.OutlineTheme {

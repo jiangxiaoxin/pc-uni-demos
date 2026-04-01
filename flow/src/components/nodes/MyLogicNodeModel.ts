@@ -2,6 +2,11 @@ import type { BaseNodeModel, LogicFlow, Model } from "@logicflow/core";
 import NodeConnectionLimitModel from "./NodeConnectionLimitModel";
 
 export default class MyLogicNodeModel extends NodeConnectionLimitModel {
+
+  
+
+
+
   // 当这个节点作为source 时的限制
   getConnectedSourceRules(): Model.ConnectRule[] {
     const rules = super.getConnectedSourceRules();

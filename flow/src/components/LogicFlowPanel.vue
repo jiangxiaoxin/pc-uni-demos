@@ -108,7 +108,7 @@
       {
         type: "my-logic-node",
         component: MyLogicNode,
-        model: MyLogicNodeModel
+        model: NodeConnectionLimitModel
       },
       lf,
     );

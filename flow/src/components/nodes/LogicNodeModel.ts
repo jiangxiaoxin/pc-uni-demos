@@ -132,7 +132,8 @@ export default class LogicNodeModel extends VueNodeModel {
         y: y,
         id: `${id}-in`,
         name: `${id}-in`,
-        cusType: 'in'
+        cusType: 'in',
+        edgeAddable: false // ！！！不允许从这个锚点拖出去连线。这个点定义成了in，那就只能是别的地方拖过来，而不能往别的地方拖
       }
       const outAnchor = {
         x: x+width/2,

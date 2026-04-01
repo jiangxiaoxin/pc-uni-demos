@@ -1,0 +1,78 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<bpmn2:definitions xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xmlns:bpmn2="http://www.omg.org/spec/BPMN/20100524/MODEL"
+    xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI"
+    xmlns:dc="http://www.omg.org/spec/DD/20100524/DC"
+    xmlns:di="http://www.omg.org/spec/DD/20100524/DI" xmlns:flowable="http://flowable.org/bpmn"
+    id="diagram_jyx222" targetNamespace="http://flowable.org/bpmn"
+    xsi:schemaLocation="http://www.omg.org/spec/BPMN/20100524/MODEL BPMN20.xsd">
+    <bpmn2:process id="jyx222" name="jyx流程2" isExecutable="true">
+        <bpmn2:extensionElements>
+            <flowable:properties>
+                <flowable:property name="$OrangeDiagramType" value="1" />
+            </flowable:properties>
+        </bpmn2:extensionElements>
+        <bpmn2:startEvent id="Event_soNvq03f">
+            <bpmn2:outgoing>Flow_16v46by</bpmn2:outgoing>
+        </bpmn2:startEvent>
+        <bpmn2:userTask id="Activity_MaBbW4pW"
+            flowable:formKey="{&#34;routerName&#34;:&#34;jyxtestform&#34;,&#34;formAuth&#34;:{},&#34;readOnly&#34;:true,&#34;groupType&#34;:&#34;ASSIGNEE&#34;}">
+            <bpmn2:extensionElements>
+                <flowable:variableList />
+                <flowable:operationList />
+            </bpmn2:extensionElements>
+            <bpmn2:incoming>Flow_16v46by</bpmn2:incoming>
+            <bpmn2:outgoing>Flow_0hl1zap</bpmn2:outgoing>
+        </bpmn2:userTask>
+        <bpmn2:endEvent id="Event_4TwEallT">
+            <bpmn2:incoming>Flow_1k8u1wh</bpmn2:incoming>
+        </bpmn2:endEvent>
+        <bpmn2:userTask id="Activity_0j34zvj"
+            flowable:formKey="{&#34;routerName&#34;:&#34;jyxtestform&#34;,&#34;formAuth&#34;:{},&#34;readOnly&#34;:true,&#34;groupType&#34;:&#34;ASSIGNEE&#34;}"
+            flowable:assignee="admin">
+            <bpmn2:extensionElements>
+                <flowable:variableList />
+                <flowable:operationList />
+                <flowable:copyItemList />
+            </bpmn2:extensionElements>
+            <bpmn2:incoming>Flow_0hl1zap</bpmn2:incoming>
+            <bpmn2:outgoing>Flow_1k8u1wh</bpmn2:outgoing>
+        </bpmn2:userTask>
+        <bpmn2:sequenceFlow id="Flow_16v46by" sourceRef="Event_soNvq03f"
+            targetRef="Activity_MaBbW4pW" />
+        <bpmn2:sequenceFlow id="Flow_0hl1zap" sourceRef="Activity_MaBbW4pW"
+            targetRef="Activity_0j34zvj" />
+        <bpmn2:sequenceFlow id="Flow_1k8u1wh" sourceRef="Activity_0j34zvj"
+            targetRef="Event_4TwEallT" />
+    </bpmn2:process>
+    <bpmndi:BPMNDiagram id="BPMNDiagram_1">
+        <bpmndi:BPMNPlane id="BPMNPlane_1" bpmnElement="jyx222">
+            <bpmndi:BPMNEdge id="Flow_16v46by_di" bpmnElement="Flow_16v46by">
+                <di:waypoint x="86" y="68" />
+                <di:waypoint x="140" y="68" />
+            </bpmndi:BPMNEdge>
+            <bpmndi:BPMNEdge id="Flow_0hl1zap_di" bpmnElement="Flow_0hl1zap">
+                <di:waypoint x="190" y="108" />
+                <di:waypoint x="190" y="128" />
+            </bpmndi:BPMNEdge>
+            <bpmndi:BPMNEdge id="Flow_1k8u1wh_di" bpmnElement="Flow_1k8u1wh">
+                <di:waypoint x="190" y="208" />
+                <di:waypoint x="190" y="230" />
+                <di:waypoint x="158" y="230" />
+                <di:waypoint x="158" y="248" />
+            </bpmndi:BPMNEdge>
+            <bpmndi:BPMNShape id="Event_soNvq03f_di" bpmnElement="Event_soNvq03f">
+                <dc:Bounds x="50" y="50" width="36" height="36" />
+            </bpmndi:BPMNShape>
+            <bpmndi:BPMNShape id="Activity_MaBbW4pW_di" bpmnElement="Activity_MaBbW4pW">
+                <dc:Bounds x="140" y="28" width="100" height="80" />
+            </bpmndi:BPMNShape>
+            <bpmndi:BPMNShape id="Event_4TwEallT_di" bpmnElement="Event_4TwEallT">
+                <dc:Bounds x="140" y="248" width="36" height="36" />
+            </bpmndi:BPMNShape>
+            <bpmndi:BPMNShape id="Activity_0j34zvj_di" bpmnElement="Activity_0j34zvj">
+                <dc:Bounds x="140" y="128" width="100" height="80" />
+            </bpmndi:BPMNShape>
+        </bpmndi:BPMNPlane>
+    </bpmndi:BPMNDiagram>
+</bpmn2:definitions>

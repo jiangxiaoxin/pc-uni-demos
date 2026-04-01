@@ -1,0 +1,517 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<bpmn2:definitions xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xmlns:bpmn2="http://www.omg.org/spec/BPMN/20100524/MODEL"
+    xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI"
+    xmlns:dc="http://www.omg.org/spec/DD/20100524/DC"
+    xmlns:di="http://www.omg.org/spec/DD/20100524/DI"
+    xmlns:flowable="http://flowable.org/bpmn"
+    id="diagram_multi_approval"
+    targetNamespace="http://flowable.org/bpmn"
+    xsi:schemaLocation="http://www.omg.org/spec/BPMN/20100524/MODEL BPMN20.xsd">
+
+    <!-- 
+        多级审批流程
+        流程路径：开始 -> 组长审批 -> 人力审批 -> 经理审批 -> 法务审批 -> 结束
+        
+        审批规则：
+        1. 组长审批：1位审批人，同意继续，拒绝结束，回退到开始节点（流程重新发起）
+        2. 人力审批：2位审批人（并行，或签），任意一位同意继续，两位都拒绝结束，回退到组长审批
+        3. 经理审批：1位审批人，同意继续，拒绝结束，回退到人力审批，抄送总经理
+        4. 法务审批：2位审批人（并行，会签），所有人同意继续，任意一位拒绝结束，回退到经理审批
+        
+        回退实现：使用排他网关的条件连线将流程定向回上一审批节点
+    -->
+
+    <bpmn2:process id="multi_approval_process" name="多级审批流程" isExecutable="true">
+
+        <!-- ========== 开始节点 ========== -->
+        <bpmn2:startEvent id="StartEvent_1" name="开始">
+            <bpmn2:outgoing>Flow_start_to_leader</bpmn2:outgoing>
+        </bpmn2:startEvent>
+
+        <!-- ========== 组长审批节点 ========== -->
+        <!-- 单人审批，使用 assignee 指定单一审批人 -->
+        <bpmn2:userTask id="Task_Leader_Approval" name="组长审批"
+            flowable:assignee="${leaderAssignee}">
+            <bpmn2:documentation>组长审批节点，需要填写审批意见</bpmn2:documentation>
+            <bpmn2:extensionElements>
+                <!-- 审批意见表单字段 -->
+                <flowable:formProperty id="approvalComment" name="审批意见" type="string" required="true"/>
+                <!-- 操作列表：同意、拒绝、回退 -->
+                <flowable:operationList>
+                    <flowable:formOperation id="op_leader_agree" label="同意" type="agree" 
+                        showOrder="0" buttonStyle="primary" buttonPlain="false"/>
+                    <flowable:formOperation id="op_leader_reject" label="拒绝" type="refuse" 
+                        showOrder="1" buttonStyle="danger" buttonPlain="false"/>
+                    <flowable:formOperation id="op_leader_rollback" label="回退" type="rollback" 
+                        showOrder="2" buttonStyle="default" buttonPlain="true"/>
+                </flowable:operationList>
+            </bpmn2:extensionElements>
+            <bpmn2:incoming>Flow_start_to_leader</bpmn2:incoming>
+            <bpmn2:incoming>Flow_rollback_hr_to_leader</bpmn2:incoming>
+            <bpmn2:outgoing>Flow_leader_to_gateway</bpmn2:outgoing>
+        </bpmn2:userTask>
+
+        <!-- 组长审批后的排他网关 -->
+        <bpmn2:exclusiveGateway id="Gateway_Leader_Decision" name="组长审批决策">
+            <bpmn2:incoming>Flow_leader_to_gateway</bpmn2:incoming>
+            <bpmn2:outgoing>Flow_leader_agree</bpmn2:outgoing>
+            <bpmn2:outgoing>Flow_leader_reject</bpmn2:outgoing>
+            <bpmn2:outgoing>Flow_leader_rollback</bpmn2:outgoing>
+        </bpmn2:exclusiveGateway>
+
+        <!-- 组长审批 - 同意：流向人力审批 -->
+        <bpmn2:sequenceFlow id="Flow_leader_agree" name="同意" sourceRef="Gateway_Leader_Decision" targetRef="Task_HR_Approval">
+            <bpmn2:conditionExpression xsi:type="bpmn2:tFormalExpression">
+                <![CDATA[${action == 'agree'}]]>
+            </bpmn2:conditionExpression>
+        </bpmn2:sequenceFlow>
+
+        <!-- 组长审批 - 拒绝：流向结束 -->
+        <bpmn2:sequenceFlow id="Flow_leader_reject" name="拒绝" sourceRef="Gateway_Leader_Decision" targetRef="EndEvent_Rejected">
+            <bpmn2:conditionExpression xsi:type="bpmn2:tFormalExpression">
+                <![CDATA[${action == 'refuse'}]]>
+            </bpmn2:conditionExpression>
+        </bpmn2:sequenceFlow>
+
+        <!-- 组长审批 - 回退：流向流程重新开始（回到开始节点后的第一个任务） -->
+        <!-- 由于开始节点不能接受入站连线，回退操作实际上是重新触发当前任务 -->
+        <bpmn2:sequenceFlow id="Flow_leader_rollback" name="回退（重新发起）" sourceRef="Gateway_Leader_Decision" targetRef="Task_Leader_Approval">
+            <bpmn2:conditionExpression xsi:type="bpmn2:tFormalExpression">
+                <![CDATA[${action == 'rollback'}]]>
+            </bpmn2:conditionExpression>
+        </bpmn2:sequenceFlow>
+
+        <!-- ========== 人力审批节点 ========== -->
+        <!-- 多人并行审批（或签），使用多实例特性 -->
+        <bpmn2:userTask id="Task_HR_Approval" name="人力审批"
+            flowable:assignee="${hrAssignee}">
+            <bpmn2:documentation>人力审批节点，2位审批人并行处理（或签），任意一位同意即可继续</bpmn2:documentation>
+            <bpmn2:extensionElements>
+                <flowable:formProperty id="approvalComment" name="审批意见" type="string" required="true"/>
+                <flowable:operationList>
+                    <flowable:formOperation id="op_hr_agree" label="同意" type="agree" 
+                        showOrder="0" buttonStyle="primary" buttonPlain="false"/>
+                    <flowable:formOperation id="op_hr_reject" label="拒绝" type="refuse" 
+                        showOrder="1" buttonStyle="danger" buttonPlain="false"/>
+                    <flowable:formOperation id="op_hr_rollback" label="回退" type="rollback" 
+                        showOrder="2" buttonStyle="default" buttonPlain="true"/>
+                </flowable:operationList>
+            </bpmn2:extensionElements>
+            <bpmn2:multiInstanceLoopCharacteristics 
+                isSequential="false"
+                flowable:collection="${hrAssigneeList}"
+                flowable:elementVariable="hrAssignee">
+                <!-- 或签：任意一人同意即完成（使用完成条件控制） -->
+                <bpmn2:completionCondition xsi:type="bpmn2:tFormalExpression">
+                    <![CDATA[${nrOfCompletedInstances >= 1 && action == 'agree'}]]>
+                </bpmn2:completionCondition>
+            </bpmn2:multiInstanceLoopCharacteristics>
+            <bpmn2:incoming>Flow_leader_agree</bpmn2:incoming>
+            <bpmn2:incoming>Flow_rollback_manager_to_hr</bpmn2:incoming>
+            <bpmn2:outgoing>Flow_hr_to_gateway</bpmn2:outgoing>
+        </bpmn2:userTask>
+
+        <!-- 人力审批后的排他网关 -->
+        <bpmn2:exclusiveGateway id="Gateway_HR_Decision" name="人力审批决策">
+            <bpmn2:incoming>Flow_hr_to_gateway</bpmn2:incoming>
+            <bpmn2:outgoing>Flow_hr_agree</bpmn2:outgoing>
+            <bpmn2:outgoing>Flow_hr_reject</bpmn2:outgoing>
+            <bpmn2:outgoing>Flow_hr_rollback</bpmn2:outgoing>
+        </bpmn2:exclusiveGateway>
+
+        <!-- 人力审批 - 同意：流向经理审批 -->
+        <bpmn2:sequenceFlow id="Flow_hr_agree" name="同意" sourceRef="Gateway_HR_Decision" targetRef="Task_Manager_Approval">
+            <bpmn2:conditionExpression xsi:type="bpmn2:tFormalExpression">
+                <![CDATA[${action == 'agree'}]]>
+            </bpmn2:conditionExpression>
+        </bpmn2:sequenceFlow>
+
+        <!-- 人力审批 - 拒绝：流向结束 -->
+        <bpmn2:sequenceFlow id="Flow_hr_reject" name="拒绝" sourceRef="Gateway_HR_Decision" targetRef="EndEvent_Rejected">
+            <bpmn2:conditionExpression xsi:type="bpmn2:tFormalExpression">
+                <![CDATA[${action == 'refuse'}]]>
+            </bpmn2:conditionExpression>
+        </bpmn2:sequenceFlow>
+
+        <!-- 人力审批 - 回退：流回组长审批 -->
+        <bpmn2:sequenceFlow id="Flow_hr_rollback" name="回退" sourceRef="Gateway_HR_Decision" targetRef="Task_Leader_Approval">
+            <bpmn2:conditionExpression xsi:type="bpmn2:tFormalExpression">
+                <![CDATA[${action == 'rollback'}]]>
+            </bpmn2:conditionExpression>
+        </bpmn2:sequenceFlow>
+
+        <!-- ========== 经理审批节点 ========== -->
+        <!-- 单人审批，带抄送功能 -->
+        <bpmn2:userTask id="Task_Manager_Approval" name="经理审批"
+            flowable:assignee="${managerAssignee}">
+            <bpmn2:documentation>经理审批节点，需要填写审批意见，审批后抄送总经理</bpmn2:documentation>
+            <bpmn2:extensionElements>
+                <flowable:formProperty id="approvalComment" name="审批意见" type="string" required="true"/>
+                <flowable:operationList>
+                    <flowable:formOperation id="op_manager_agree" label="同意" type="agree" 
+                        showOrder="0" buttonStyle="primary" buttonPlain="false"/>
+                    <flowable:formOperation id="op_manager_reject" label="拒绝" type="refuse" 
+                        showOrder="1" buttonStyle="danger" buttonPlain="false"/>
+                    <flowable:formOperation id="op_manager_rollback" label="回退" type="rollback" 
+                        showOrder="2" buttonStyle="default" buttonPlain="true"/>
+                </flowable:operationList>
+                <!-- 抄送配置：抄送给总经理 -->
+                <flowable:copyItemList>
+                    <flowable:copyItem id="general_manager" type="user" name="总经理"/>
+                </flowable:copyItemList>
+            </bpmn2:extensionElements>
+            <bpmn2:incoming>Flow_hr_agree</bpmn2:incoming>
+            <bpmn2:incoming>Flow_rollback_legal_to_manager</bpmn2:incoming>
+            <bpmn2:outgoing>Flow_manager_to_gateway</bpmn2:outgoing>
+        </bpmn2:userTask>
+
+        <!-- 经理审批后的排他网关 -->
+        <bpmn2:exclusiveGateway id="Gateway_Manager_Decision" name="经理审批决策">
+            <bpmn2:incoming>Flow_manager_to_gateway</bpmn2:incoming>
+            <bpmn2:outgoing>Flow_manager_agree</bpmn2:outgoing>
+            <bpmn2:outgoing>Flow_manager_reject</bpmn2:outgoing>
+            <bpmn2:outgoing>Flow_manager_rollback</bpmn2:outgoing>
+        </bpmn2:exclusiveGateway>
+
+        <!-- 经理审批 - 同意：流向法务审批 -->
+        <bpmn2:sequenceFlow id="Flow_manager_agree" name="同意" sourceRef="Gateway_Manager_Decision" targetRef="Task_Legal_Approval">
+            <bpmn2:conditionExpression xsi:type="bpmn2:tFormalExpression">
+                <![CDATA[${action == 'agree'}]]>
+            </bpmn2:conditionExpression>
+        </bpmn2:sequenceFlow>
+
+        <!-- 经理审批 - 拒绝：流向结束 -->
+        <bpmn2:sequenceFlow id="Flow_manager_reject" name="拒绝" sourceRef="Gateway_Manager_Decision" targetRef="EndEvent_Rejected">
+            <bpmn2:conditionExpression xsi:type="bpmn2:tFormalExpression">
+                <![CDATA[${action == 'refuse'}]]>
+            </bpmn2:conditionExpression>
+        </bpmn2:sequenceFlow>
+
+        <!-- 经理审批 - 回退：流回人力审批 -->
+        <bpmn2:sequenceFlow id="Flow_manager_rollback" name="回退" sourceRef="Gateway_Manager_Decision" targetRef="Task_HR_Approval">
+            <bpmn2:conditionExpression xsi:type="bpmn2:tFormalExpression">
+                <![CDATA[${action == 'rollback'}]]>
+            </bpmn2:conditionExpression>
+        </bpmn2:sequenceFlow>
+
+        <!-- ========== 法务审批节点 ========== -->
+        <!-- 多人并行审批（会签），所有人同意才继续 -->
+        <bpmn2:userTask id="Task_Legal_Approval" name="法务审批"
+            flowable:assignee="${legalAssignee}">
+            <bpmn2:documentation>法务审批节点，2位审批人并行处理（会签），所有人同意才继续</bpmn2:documentation>
+            <bpmn2:extensionElements>
+                <flowable:formProperty id="approvalComment" name="审批意见" type="string" required="true"/>
+                <flowable:operationList>
+                    <flowable:formOperation id="op_legal_agree" label="同意" type="agree" 
+                        showOrder="0" buttonStyle="primary" buttonPlain="false"/>
+                    <flowable:formOperation id="op_legal_reject" label="拒绝" type="refuse" 
+                        showOrder="1" buttonStyle="danger" buttonPlain="false"/>
+                    <flowable:formOperation id="op_legal_rollback" label="回退" type="rollback" 
+                        showOrder="2" buttonStyle="default" buttonPlain="true"/>
+                </flowable:operationList>
+            </bpmn2:extensionElements>
+            <bpmn2:multiInstanceLoopCharacteristics 
+                isSequential="false"
+                flowable:collection="${legalAssigneeList}"
+                flowable:elementVariable="legalAssignee">
+                <!-- 会签：所有人完成才继续（默认条件：nrOfInstances == nrOfCompletedInstances） -->
+                <bpmn2:completionCondition xsi:type="bpmn2:tFormalExpression">
+                    <![CDATA[${nrOfInstances == nrOfCompletedInstances}]]>
+                </bpmn2:completionCondition>
+            </bpmn2:multiInstanceLoopCharacteristics>
+            <bpmn2:incoming>Flow_manager_agree</bpmn2:incoming>
+            <bpmn2:outgoing>Flow_legal_to_gateway</bpmn2:outgoing>
+        </bpmn2:userTask>
+
+        <!-- 法务审批后的排他网关 -->
+        <bpmn2:exclusiveGateway id="Gateway_Legal_Decision" name="法务审批决策">
+            <bpmn2:incoming>Flow_legal_to_gateway</bpmn2:incoming>
+            <bpmn2:outgoing>Flow_legal_agree</bpmn2:outgoing>
+            <bpmn2:outgoing>Flow_legal_reject</bpmn2:outgoing>
+            <bpmn2:outgoing>Flow_legal_rollback</bpmn2:outgoing>
+        </bpmn2:exclusiveGateway>
+
+        <!-- 法务审批 - 同意：流向正常结束 -->
+        <bpmn2:sequenceFlow id="Flow_legal_agree" name="同意" sourceRef="Gateway_Legal_Decision" targetRef="EndEvent_Approved">
+            <bpmn2:conditionExpression xsi:type="bpmn2:tFormalExpression">
+                <![CDATA[${action == 'agree'}]]>
+            </bpmn2:conditionExpression>
+        </bpmn2:sequenceFlow>
+
+        <!-- 法务审批 - 拒绝：流向结束 -->
+        <bpmn2:sequenceFlow id="Flow_legal_reject" name="拒绝" sourceRef="Gateway_Legal_Decision" targetRef="EndEvent_Rejected">
+            <bpmn2:conditionExpression xsi:type="bpmn2:tFormalExpression">
+                <![CDATA[${action == 'refuse'}]]>
+            </bpmn2:conditionExpression>
+        </bpmn2:sequenceFlow>
+
+        <!-- 法务审批 - 回退：流回经理审批 -->
+        <bpmn2:sequenceFlow id="Flow_legal_rollback" name="回退" sourceRef="Gateway_Legal_Decision" targetRef="Task_Manager_Approval">
+            <bpmn2:conditionExpression xsi:type="bpmn2:tFormalExpression">
+                <![CDATA[${action == 'rollback'}]]>
+            </bpmn2:conditionExpression>
+        </bpmn2:sequenceFlow>
+
+        <!-- ========== 结束节点 ========== -->
+        <!-- 审批通过结束 -->
+        <bpmn2:endEvent id="EndEvent_Approved" name="审批通过">
+            <bpmn2:incoming>Flow_legal_agree</bpmn2:incoming>
+        </bpmn2:endEvent>
+
+        <!-- 审批拒绝结束 -->
+        <bpmn2:endEvent id="EndEvent_Rejected" name="审批拒绝">
+            <bpmn2:incoming>Flow_leader_reject</bpmn2:incoming>
+            <bpmn2:incoming>Flow_hr_reject</bpmn2:incoming>
+            <bpmn2:incoming>Flow_manager_reject</bpmn2:incoming>
+            <bpmn2:incoming>Flow_legal_reject</bpmn2:incoming>
+        </bpmn2:endEvent>
+
+        <!-- ========== 基础连线（用于incoming/outgoing引用） ========== -->
+        <bpmn2:sequenceFlow id="Flow_start_to_leader" sourceRef="StartEvent_1" targetRef="Task_Leader_Approval"/>
+        <bpmn2:sequenceFlow id="Flow_leader_to_gateway" sourceRef="Task_Leader_Approval" targetRef="Gateway_Leader_Decision"/>
+        <bpmn2:sequenceFlow id="Flow_hr_to_gateway" sourceRef="Task_HR_Approval" targetRef="Gateway_HR_Decision"/>
+        <bpmn2:sequenceFlow id="Flow_manager_to_gateway" sourceRef="Task_Manager_Approval" targetRef="Gateway_Manager_Decision"/>
+        <bpmn2:sequenceFlow id="Flow_legal_to_gateway" sourceRef="Task_Legal_Approval" targetRef="Gateway_Legal_Decision"/>
+
+        <!-- 回退连线的占位定义（实际在上面已定义，这里是为了incoming/outgoing引用正确） -->
+        <bpmn2:sequenceFlow id="Flow_rollback_hr_to_leader" sourceRef="Gateway_HR_Decision" targetRef="Task_Leader_Approval"/>
+        <bpmn2:sequenceFlow id="Flow_rollback_manager_to_hr" sourceRef="Gateway_Manager_Decision" targetRef="Task_HR_Approval"/>
+        <bpmn2:sequenceFlow id="Flow_rollback_legal_to_manager" sourceRef="Gateway_Legal_Decision" targetRef="Task_Manager_Approval"/>
+
+    </bpmn2:process>
+
+    <!-- ========== BPMN 图形信息 (BPMNDI) ========== -->
+    <bpmndi:BPMNDiagram id="BPMNDiagram_MultiApproval">
+        <bpmndi:BPMNPlane id="BPMNPlane_MultiApproval" bpmnElement="multi_approval_process">
+            
+            <!-- 开始节点 -->
+            <bpmndi:BPMNShape id="StartEvent_1_di" bpmnElement="StartEvent_1">
+                <dc:Bounds x="100" y="200" width="36" height="36"/>
+                <bpmndi:BPMNLabel>
+                    <dc:Bounds x="107" y="243" width="22" height="14"/>
+                </bpmndi:BPMNLabel>
+            </bpmndi:BPMNShape>
+
+            <!-- 组长审批 -->
+            <bpmndi:BPMNShape id="Task_Leader_Approval_di" bpmnElement="Task_Leader_Approval">
+                <dc:Bounds x="200" y="178" width="120" height="80"/>
+            </bpmndi:BPMNShape>
+
+            <!-- 组长决策网关 -->
+            <bpmndi:BPMNShape id="Gateway_Leader_Decision_di" bpmnElement="Gateway_Leader_Decision" isMarkerVisible="true">
+                <dc:Bounds x="370" y="193" width="50" height="50"/>
+                <bpmndi:BPMNLabel>
+                    <dc:Bounds x="363" y="163" width="66" height="14"/>
+                </bpmndi:BPMNLabel>
+            </bpmndi:BPMNShape>
+
+            <!-- 人力审批 -->
+            <bpmndi:BPMNShape id="Task_HR_Approval_di" bpmnElement="Task_HR_Approval">
+                <dc:Bounds x="500" y="178" width="120" height="80"/>
+            </bpmndi:BPMNShape>
+
+            <!-- 人力决策网关 -->
+            <bpmndi:BPMNShape id="Gateway_HR_Decision_di" bpmnElement="Gateway_HR_Decision" isMarkerVisible="true">
+                <dc:Bounds x="670" y="193" width="50" height="50"/>
+                <bpmndi:BPMNLabel>
+                    <dc:Bounds x="663" y="163" width="66" height="14"/>
+                </bpmndi:BPMNLabel>
+            </bpmndi:BPMNShape>
+
+            <!-- 经理审批 -->
+            <bpmndi:BPMNShape id="Task_Manager_Approval_di" bpmnElement="Task_Manager_Approval">
+                <dc:Bounds x="800" y="178" width="120" height="80"/>
+            </bpmndi:BPMNShape>
+
+            <!-- 经理决策网关 -->
+            <bpmndi:BPMNShape id="Gateway_Manager_Decision_di" bpmnElement="Gateway_Manager_Decision" isMarkerVisible="true">
+                <dc:Bounds x="970" y="193" width="50" height="50"/>
+                <bpmndi:BPMNLabel>
+                    <dc:Bounds x="963" y="163" width="66" height="14"/>
+                </bpmndi:BPMNLabel>
+            </bpmndi:BPMNShape>
+
+            <!-- 法务审批 -->
+            <bpmndi:BPMNShape id="Task_Legal_Approval_di" bpmnElement="Task_Legal_Approval">
+                <dc:Bounds x="1100" y="178" width="120" height="80"/>
+            </bpmndi:BPMNShape>
+
+            <!-- 法务决策网关 -->
+            <bpmndi:BPMNShape id="Gateway_Legal_Decision_di" bpmnElement="Gateway_Legal_Decision" isMarkerVisible="true">
+                <dc:Bounds x="1270" y="193" width="50" height="50"/>
+                <bpmndi:BPMNLabel>
+                    <dc:Bounds x="1263" y="163" width="66" height="14"/>
+                </bpmndi:BPMNLabel>
+            </bpmndi:BPMNShape>
+
+            <!-- 审批通过结束 -->
+            <bpmndi:BPMNShape id="EndEvent_Approved_di" bpmnElement="EndEvent_Approved">
+                <dc:Bounds x="1400" y="200" width="36" height="36"/>
+                <bpmndi:BPMNLabel>
+                    <dc:Bounds x="1389" y="243" width="60" height="14"/>
+                </bpmndi:BPMNLabel>
+            </bpmndi:BPMNShape>
+
+            <!-- 审批拒绝结束 -->
+            <bpmndi:BPMNShape id="EndEvent_Rejected_di" bpmnElement="EndEvent_Rejected">
+                <dc:Bounds x="1277" y="350" width="36" height="36"/>
+                <bpmndi:BPMNLabel>
+                    <dc:Bounds x="1266" y="393" width="60" height="14"/>
+                </bpmndi:BPMNLabel>
+            </bpmndi:BPMNShape>
+
+            <!-- ========== 连线图形 ========== -->
+            <!-- 开始到组长 -->
+            <bpmndi:BPMNEdge id="Flow_start_to_leader_di" bpmnElement="Flow_start_to_leader">
+                <di:waypoint x="136" y="218"/>
+                <di:waypoint x="200" y="218"/>
+            </bpmndi:BPMNEdge>
+
+            <!-- 组长到网关 -->
+            <bpmndi:BPMNEdge id="Flow_leader_to_gateway_di" bpmnElement="Flow_leader_to_gateway">
+                <di:waypoint x="320" y="218"/>
+                <di:waypoint x="370" y="218"/>
+            </bpmndi:BPMNEdge>
+
+            <!-- 组长同意 -->
+            <bpmndi:BPMNEdge id="Flow_leader_agree_di" bpmnElement="Flow_leader_agree">
+                <di:waypoint x="420" y="218"/>
+                <di:waypoint x="500" y="218"/>
+                <bpmndi:BPMNLabel>
+                    <dc:Bounds x="450" y="200" width="22" height="14"/>
+                </bpmndi:BPMNLabel>
+            </bpmndi:BPMNEdge>
+
+            <!-- 组长拒绝 -->
+            <bpmndi:BPMNEdge id="Flow_leader_reject_di" bpmnElement="Flow_leader_reject">
+                <di:waypoint x="395" y="243"/>
+                <di:waypoint x="395" y="368"/>
+                <di:waypoint x="1277" y="368"/>
+                <bpmndi:BPMNLabel>
+                    <dc:Bounds x="400" y="300" width="22" height="14"/>
+                </bpmndi:BPMNLabel>
+            </bpmndi:BPMNEdge>
+
+            <!-- 组长回退（自循环） -->
+            <bpmndi:BPMNEdge id="Flow_leader_rollback_di" bpmnElement="Flow_leader_rollback">
+                <di:waypoint x="370" y="193"/>
+                <di:waypoint x="320" y="140"/>
+                <di:waypoint x="260" y="140"/>
+                <di:waypoint x="260" y="178"/>
+                <bpmndi:BPMNLabel>
+                    <dc:Bounds x="275" y="125" width="44" height="14"/>
+                </bpmndi:BPMNLabel>
+            </bpmndi:BPMNEdge>
+
+            <!-- 人力到网关 -->
+            <bpmndi:BPMNEdge id="Flow_hr_to_gateway_di" bpmnElement="Flow_hr_to_gateway">
+                <di:waypoint x="620" y="218"/>
+                <di:waypoint x="670" y="218"/>
+            </bpmndi:BPMNEdge>
+
+            <!-- 人力同意 -->
+            <bpmndi:BPMNEdge id="Flow_hr_agree_di" bpmnElement="Flow_hr_agree">
+                <di:waypoint x="720" y="218"/>
+                <di:waypoint x="800" y="218"/>
+                <bpmndi:BPMNLabel>
+                    <dc:Bounds x="750" y="200" width="22" height="14"/>
+                </bpmndi:BPMNLabel>
+            </bpmndi:BPMNEdge>
+
+            <!-- 人力拒绝 -->
+            <bpmndi:BPMNEdge id="Flow_hr_reject_di" bpmnElement="Flow_hr_reject">
+                <di:waypoint x="695" y="243"/>
+                <di:waypoint x="695" y="368"/>
+                <di:waypoint x="1277" y="368"/>
+                <bpmndi:BPMNLabel>
+                    <dc:Bounds x="700" y="300" width="22" height="14"/>
+                </bpmndi:BPMNLabel>
+            </bpmndi:BPMNEdge>
+
+            <!-- 人力回退 -->
+            <bpmndi:BPMNEdge id="Flow_hr_rollback_di" bpmnElement="Flow_hr_rollback">
+                <di:waypoint x="670" y="193"/>
+                <di:waypoint x="410" y="130"/>
+                <di:waypoint x="260" y="130"/>
+                <di:waypoint x="260" y="178"/>
+                <bpmndi:BPMNLabel>
+                    <dc:Bounds x="450" y="115" width="22" height="14"/>
+                </bpmndi:BPMNLabel>
+            </bpmndi:BPMNEdge>
+
+            <!-- 经理到网关 -->
+            <bpmndi:BPMNEdge id="Flow_manager_to_gateway_di" bpmnElement="Flow_manager_to_gateway">
+                <di:waypoint x="920" y="218"/>
+                <di:waypoint x="970" y="218"/>
+            </bpmndi:BPMNEdge>
+
+            <!-- 经理同意 -->
+            <bpmndi:BPMNEdge id="Flow_manager_agree_di" bpmnElement="Flow_manager_agree">
+                <di:waypoint x="1020" y="218"/>
+                <di:waypoint x="1100" y="218"/>
+                <bpmndi:BPMNLabel>
+                    <dc:Bounds x="1050" y="200" width="22" height="14"/>
+                </bpmndi:BPMNLabel>
+            </bpmndi:BPMNEdge>
+
+            <!-- 经理拒绝 -->
+            <bpmndi:BPMNEdge id="Flow_manager_reject_di" bpmnElement="Flow_manager_reject">
+                <di:waypoint x="995" y="243"/>
+                <di:waypoint x="995" y="368"/>
+                <di:waypoint x="1277" y="368"/>
+                <bpmndi:BPMNLabel>
+                    <dc:Bounds x="1000" y="300" width="22" height="14"/>
+                </bpmndi:BPMNLabel>
+            </bpmndi:BPMNEdge>
+
+            <!-- 经理回退 -->
+            <bpmndi:BPMNEdge id="Flow_manager_rollback_di" bpmnElement="Flow_manager_rollback">
+                <di:waypoint x="970" y="193"/>
+                <di:waypoint x="710" y="130"/>
+                <di:waypoint x="560" y="130"/>
+                <di:waypoint x="560" y="178"/>
+                <bpmndi:BPMNLabel>
+                    <dc:Bounds x="750" y="115" width="22" height="14"/>
+                </bpmndi:BPMNLabel>
+            </bpmndi:BPMNEdge>
+
+            <!-- 法务到网关 -->
+            <bpmndi:BPMNEdge id="Flow_legal_to_gateway_di" bpmnElement="Flow_legal_to_gateway">
+                <di:waypoint x="1220" y="218"/>
+                <di:waypoint x="1270" y="218"/>
+            </bpmndi:BPMNEdge>
+
+            <!-- 法务同意 -->
+            <bpmndi:BPMNEdge id="Flow_legal_agree_di" bpmnElement="Flow_legal_agree">
+                <di:waypoint x="1320" y="218"/>
+                <di:waypoint x="1400" y="218"/>
+                <bpmndi:BPMNLabel>
+                    <dc:Bounds x="1350" y="200" width="22" height="14"/>
+                </bpmndi:BPMNLabel>
+            </bpmndi:BPMNEdge>
+
+            <!-- 法务拒绝 -->
+            <bpmndi:BPMNEdge id="Flow_legal_reject_di" bpmnElement="Flow_legal_reject">
+                <di:waypoint x="1295" y="243"/>
+                <di:waypoint x="1295" y="350"/>
+                <bpmndi:BPMNLabel>
+                    <dc:Bounds x="1300" y="290" width="22" height="14"/>
+                </bpmndi:BPMNLabel>
+            </bpmndi:BPMNEdge>
+
+            <!-- 法务回退 -->
+            <bpmndi:BPMNEdge id="Flow_legal_rollback_di" bpmnElement="Flow_legal_rollback">
+                <di:waypoint x="1270" y="193"/>
+                <di:waypoint x="1010" y="130"/>
+                <di:waypoint x="860" y="130"/>
+                <di:waypoint x="860" y="178"/>
+                <bpmndi:BPMNLabel>
+                    <dc:Bounds x="1050" y="115" width="22" height="14"/>
+                </bpmndi:BPMNLabel>
+            </bpmndi:BPMNEdge>
+
+        </bpmndi:BPMNPlane>
+    </bpmndi:BPMNDiagram>
+
+</bpmn2:definitions>

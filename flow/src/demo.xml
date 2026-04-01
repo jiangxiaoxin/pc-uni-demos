@@ -1,0 +1,108 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<bpmn2:definitions xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xmlns:bpmn2="http://www.omg.org/spec/BPMN/20100524/MODEL"
+    xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI"
+    xmlns:dc="http://www.omg.org/spec/DD/20100524/DC"
+    xmlns:di="http://www.omg.org/spec/DD/20100524/DI" xmlns:flowable="http://flowable.org/bpmn"
+    id="diagram_jyxtest" targetNamespace="http://flowable.org/bpmn"
+    xsi:schemaLocation="http://www.omg.org/spec/BPMN/20100524/MODEL BPMN20.xsd">
+
+    <!-- process 是逻辑描述  -->
+    <bpmn2:process id="jyxtest" name="jyx测试流程" isExecutable="true">
+
+        <bpmn2:startEvent id="Event_007l2do" name="提交了就开始流程了">
+            <bpmn2:outgoing>Flow_0qaycz7</bpmn2:outgoing>
+        </bpmn2:startEvent>
+
+        <bpmn2:userTask id="Activity_0sj1ckw" name="组长审批"
+            flowable:formKey="{&#34;routerName&#34;:&#34;jyxtestform&#34;,&#34;formAuth&#34;:{},&#34;readOnly&#34;:true,&#34;groupType&#34;:&#34;ASSIGNEE&#34;}"
+            flowable:assignee="congqing">
+            <!-- formKey 和 assignee 是啥意思  -->
+             <!-- assignee 是这个人去审批 -->
+            <bpmn2:extensionElements>
+                <flowable:variableList />
+                <flowable:operationList>
+                    <flowable:formOperation id="1774862917114" label="同意" type="agree" showOrder="0"
+                        variableList="{}" buttonStyle="primary" buttonPlain="true" />
+                    <flowable:formOperation id="1774862921139" label="拒绝" type="refuse"
+                        showOrder="0" variableList="{}" buttonStyle="primary" buttonPlain="true" />
+                </flowable:operationList>
+                <!-- copyItemList 是干嘛的 ?? 这个节点的抄送,抄送给谁-->
+                <flowable:copyItemList>
+                    <flowable:copyItem id="admin" type="user" />
+                </flowable:copyItemList>
+            </bpmn2:extensionElements>
+            <bpmn2:incoming>Flow_0qaycz7</bpmn2:incoming>
+            <bpmn2:outgoing>Flow_07xbu8i</bpmn2:outgoing>
+        </bpmn2:userTask>
+
+
+        <bpmn2:sequenceFlow id="Flow_0qaycz7" sourceRef="Event_007l2do" targetRef="Activity_0sj1ckw" />
+
+        <bpmn2:userTask id="Activity_06evtjy" name="部门长审批"
+            flowable:formKey="{&#34;routerName&#34;:&#34;jyxtestform&#34;,&#34;formAuth&#34;:{},&#34;readOnly&#34;:true,&#34;groupType&#34;:&#34;ASSIGNEE&#34;}"
+            flowable:assignee="admin">
+            <bpmn2:extensionElements>
+                <flowable:operationList>
+                    <flowable:formOperation id="1774862859394" label="同意" type="agree" showOrder="0"
+                        variableList="{}" buttonStyle="primary" buttonPlain="true" />
+                    <flowable:formOperation id="1774862867612" label="拒绝" type="refuse"
+                        showOrder="0" variableList="{}" buttonStyle="primary" buttonPlain="true" />
+                </flowable:operationList>
+                <flowable:variableList />
+                <flowable:copyItemList />
+            </bpmn2:extensionElements>
+            <bpmn2:incoming>Flow_07xbu8i</bpmn2:incoming>
+            <bpmn2:outgoing>Flow_06zw73t</bpmn2:outgoing>
+        </bpmn2:userTask>
+
+
+        <bpmn2:sequenceFlow id="Flow_07xbu8i" sourceRef="Activity_0sj1ckw"
+            targetRef="Activity_06evtjy" />
+
+        <bpmn2:intermediateThrowEvent id="Event_1j7qjim" name="终于结束了">
+            <bpmn2:incoming>Flow_06zw73t</bpmn2:incoming>
+        </bpmn2:intermediateThrowEvent>
+
+        <bpmn2:sequenceFlow id="Flow_06zw73t" sourceRef="Activity_06evtjy" targetRef="Event_1j7qjim" />
+    </bpmn2:process>
+    <bpmndi:BPMNDiagram id="BPMNDiagram_1">
+        <!-- BPMNDiagram 描述了图中有哪些节点，哪些边，他们的位置，尺寸信息 -->
+        <!-- BPMNPlane 的 bpmnElement 就是 上面process 的id，要对应起来  -->
+         <!-- BPMNEdge 是边，id 以flow开头。 waypoint 是边的控制点，两个的是开始和结束为止，多个的是中间有折线 -->
+          <!-- BPMNShape 是图中的节点， 任务型的id 是 Activity 开头， 开始和结束的节点，是以 Event 开头-->
+           <!--  -->
+        <bpmndi:BPMNPlane id="BPMNPlane_1" bpmnElement="jyxtest">
+            <bpmndi:BPMNEdge id="Flow_0qaycz7_di" bpmnElement="Flow_0qaycz7">
+                <di:waypoint x="318" y="190" />
+                <di:waypoint x="370" y="190" />
+            </bpmndi:BPMNEdge>
+            <bpmndi:BPMNEdge id="Flow_07xbu8i_di" bpmnElement="Flow_07xbu8i">
+                <di:waypoint x="470" y="190" />
+                <di:waypoint x="530" y="190" />
+            </bpmndi:BPMNEdge>
+            <bpmndi:BPMNEdge id="Flow_06zw73t_di" bpmnElement="Flow_06zw73t">
+                <di:waypoint x="630" y="190" />
+                <di:waypoint x="692" y="190" />
+            </bpmndi:BPMNEdge>
+            <bpmndi:BPMNShape id="Event_007l2do_di" bpmnElement="Event_007l2do">
+                <dc:Bounds x="282" y="172" width="36" height="36" />
+                <bpmndi:BPMNLabel>
+                    <dc:Bounds x="263" y="215" width="77" height="27" />
+                </bpmndi:BPMNLabel>
+            </bpmndi:BPMNShape>
+            <bpmndi:BPMNShape id="Activity_0sj1ckw_di" bpmnElement="Activity_0sj1ckw">
+                <dc:Bounds x="370" y="150" width="100" height="80" />
+            </bpmndi:BPMNShape>
+            <bpmndi:BPMNShape id="Activity_06evtjy_di" bpmnElement="Activity_06evtjy">
+                <dc:Bounds x="530" y="150" width="100" height="80" />
+            </bpmndi:BPMNShape>
+            <bpmndi:BPMNShape id="Event_1j7qjim_di" bpmnElement="Event_1j7qjim">
+                <dc:Bounds x="692" y="172" width="36" height="36" />
+                <bpmndi:BPMNLabel>
+                    <dc:Bounds x="683" y="215" width="55" height="14" />
+                </bpmndi:BPMNLabel>
+            </bpmndi:BPMNShape>
+        </bpmndi:BPMNPlane>
+    </bpmndi:BPMNDiagram>
+</bpmn2:definitions>

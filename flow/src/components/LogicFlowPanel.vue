@@ -83,7 +83,7 @@
       stopScrollGraph: false,
       stopZoomGraph: false,
       stopMoveGraph: false,
-      adjustEdge: false, // 不允许拖动边，边是跟着节点的拖动自动改变的
+      adjustEdge: true, // 不允许拖动边，边是跟着节点的拖动自动改变的
       adjustEdgeStartAndEnd: true, // 虽然上面不让拖动边，但允许拖动改变边的开始和结束连接点
       adjustNodePosition: true,
       hideAnchors: props.readonly,

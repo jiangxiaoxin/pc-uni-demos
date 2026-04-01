@@ -1,6 +1,7 @@
 import { createRouter, createWebHistory } from 'vue-router'
 import FlowEditor from '../views/FlowEditor.vue'
 import FlowViewer from '../views/FlowViewer.vue'
+import XmlParserView from '../views/XmlParserView.vue'
 
 const router = createRouter({
   history: createWebHistory(),
@@ -14,6 +15,11 @@ const router = createRouter({
       path: '/view',
       name: 'FlowViewer',
       component: FlowViewer
+    },
+    {
+      path: '/xml',
+      name: 'XmlParser',
+      component: XmlParserView
     }
   ]
 })

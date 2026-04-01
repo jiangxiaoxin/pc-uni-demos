@@ -44,6 +44,7 @@
     (e: "edge:circle-click", edgeId: string): void;
     (e: "blank:click"): void;
     (e: "graph:rendered", data: any): void;
+    (e: "connection:not-allowed", msg: string): void;
   }>();
 
   const containerRef = ref<HTMLElement>();
@@ -153,6 +154,11 @@
     lf.on("graph:rendered", ({ graphModel }) => {
       flowId.value = graphModel.flowId!;
       emit("graph:rendered", { graphModel });
+    });
+
+    lf.on('connection:not-allowed', (data) => {
+      // console.log(data);
+      emit('connection:not-allowed', data.msg);
     });
 
     // 节点click事件监听。 edge 有单独的 edge:click

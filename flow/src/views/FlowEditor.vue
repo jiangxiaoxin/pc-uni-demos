@@ -89,6 +89,7 @@
           @edge:click="handleEdgeClick"
           @edge:circle-click="handleEdgeCircleClick"
           @blank:click="handleBlankClick"
+          @connection:not-allowed="handleConnectionNotAllowed"
         />
       </div>
 
@@ -461,6 +462,11 @@ import CopyNodeIcon from "../components/nodes/CopyNode/CopyNodeIcon.vue";
   const handleEdgeCircleClick = (edgeId: string) => {
     currentEdgeId.value = edgeId;
     edgeActionModalVisible.value = true;
+  };
+
+  // 连接不允许时的提示
+  const handleConnectionNotAllowed = (msg: string) => {
+    message.error(msg || '当前连接不被允许');
   };
 
   // Hello 按钮点击

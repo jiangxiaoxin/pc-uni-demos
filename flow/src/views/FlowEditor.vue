@@ -257,17 +257,6 @@ import EndNodeIcon from "../components/nodes/EndNode/EndNodeIcon.vue";
   // 节点类型定义
   const nodeTypes = [
     {
-      type: "my-logic-node",
-      color: "#1890ff", // 左侧节点栏内的颜色，需要跟画布中的保持一致
-      defaultConfig: {
-        width: 180,
-        height: 40,
-        title: "流程节点",
-        icon: 'my-logic-node',
-        hoverOutlineColor: "#1890ff",
-      },
-    },
-    {
       type: 'start-node',
       color: 'rgb(78, 184, 92)',
       defaultConfig: {
@@ -288,7 +277,19 @@ import EndNodeIcon from "../components/nodes/EndNode/EndNodeIcon.vue";
         icon: 'end-node',
         hoverOutlineColor: 'rgb(144, 155, 171)'
       }
-    }
+    },
+    {
+      type: "my-logic-node",
+      color: "#1890ff", // 左侧节点栏内的颜色，需要跟画布中的保持一致
+      defaultConfig: {
+        width: 180,
+        height: 40,
+        title: "流程节点",
+        icon: 'my-logic-node',
+        hoverOutlineColor: "#1890ff",
+      },
+    },
+    
   ];
 
   // 当前流程图数据
@@ -384,6 +385,19 @@ import EndNodeIcon from "../components/nodes/EndNode/EndNodeIcon.vue";
     if (!data) return;
 
     const nodeType = JSON.parse(data);
+    console.log("🚀 ~ FlowEditor.vue:388 ~ handleDrop ~ nodeType:", nodeType)
+    if(nodeType.type == 'start-node' || nodeType.type == 'end-node'){
+
+      const graphData = lfPanelRef.value?.getData();
+      console.log("🚀 ~ FlowEditor.vue:392 ~ handleDrop ~ graphData:", graphData)
+      const {nodes = []} = graphData as any
+      const exist = nodes.some(node => node.type == nodeType.type)
+      if(exist) {
+        message.warn("开始和结束节点只能添加一次");
+        return
+      }
+    }
+
     /**
      *  // TODO 
      * 先判断下节点的类型，如果是开始或者结束，并且画布中已经有了，则不允许添加
@@ -404,7 +418,7 @@ import EndNodeIcon from "../components/nodes/EndNode/EndNodeIcon.vue";
       x,
       y,
       properties: {
-        ...nodeType.defaultConfig, // 因为都是自定义节点，所以直接结构 defaultConfig
+        ...nodeType.defaultConfig, // 因为都是自定义节点，所以直接解构 defaultConfig
       },
     };
 

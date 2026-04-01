@@ -15,14 +15,15 @@
   import { MyLogicNode } from "./nodes";
   import StartNode from "./nodes/StartNode/StartNode.vue";
   import EndNode from "./nodes/EndNode/EndNode.vue";
+  import CopyNode from "./nodes/CopyNode/CopyNode.vue";
   import NodeConnectionLimitModel from "./nodes/NodeConnectionLimitModel";
   import MyLogicNodeModel from "./nodes/MyLogicNodeModel";
   import { InteractiveEdge } from "./edges";
 
 
   //TODO 注册插件,需要吗？？
-  LogicFlow.use(MiniMap);
-  LogicFlow.use(Menu);
+  // LogicFlow.use(MiniMap);
+  // LogicFlow.use(Menu);
 
   // 获取 TeleportContainer 组件
   const TeleportContainer = getTeleport();
@@ -129,6 +130,12 @@
       },
       lf,
     );
+
+    register({
+      type: 'copy-node',
+      component: CopyNode,
+      model: NodeConnectionLimitModel
+    }, lf)
 
     // 注册自定义交互边
     lf.register(InteractiveEdge);

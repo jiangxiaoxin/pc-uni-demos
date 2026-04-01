@@ -1,11 +1,12 @@
 import { type BaseNodeModel, type Model, LogicFlow } from "@logicflow/core";
 import { VueNodeModel } from "@logicflow/vue-node-registry";
 
-// 限制节点的连接
+// 限制节点的连接.在这个model 里做了统一的连接限制
 // 节点需要再进一步自定义的，可以继承自 NodeConnectionLimitModel
 // 别的节点不能连开始
 // 结束节点不能连别的
 // 节点不能连自己
+// 抄送节点不能连别的，抄送节点只能有一个接入点
 export default class NodeConnectionLimitModel extends VueNodeModel {
   // 当前这个node作为source 时的要求
   getConnectedSourceRules(): Model.ConnectRule[] {
@@ -25,6 +26,13 @@ export default class NodeConnectionLimitModel extends VueNodeModel {
         return source.type != "end-node";
       },
     });
+
+    rules.push({
+      message: "抄送节点不能连接其他节点",
+      validate: (source: BaseNodeModel, target: BaseNodeModel) => {
+        return source.type != "copy-node";
+      }
+    })
 
     return rules;
   }
@@ -48,6 +56,18 @@ export default class NodeConnectionLimitModel extends VueNodeModel {
         return target.type != "start-node";
       },
     });
+
+    rules.push({
+      message: "抄送节点只能有一个接入点",
+      validate: (source?: BaseNodeModel, target?: BaseNodeModel) => {
+        if(target?.type == "copy-node") {
+          const incoming = target?.graphModel.getNodeIncomingNode(target.id)
+          
+          return !incoming?.length;
+        }
+        return true
+      }
+    })
 
     return rules;
   }

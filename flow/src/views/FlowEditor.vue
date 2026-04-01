@@ -230,11 +230,13 @@
   import NodeIcon from "../components/nodes/NodeIcon.vue";
   import StartNodeIcon from "../components/nodes/StartNode/StartNodeIcon.vue";
 import EndNodeIcon from "../components/nodes/EndNode/EndNodeIcon.vue";
+import CopyNodeIcon from "../components/nodes/CopyNode/CopyNodeIcon.vue";
 
   const iconMap = {
     'start-node': StartNodeIcon,
     'my-logic-node': NodeIcon,
-    'end-node': EndNodeIcon
+    'end-node': EndNodeIcon,
+    'copy-node': CopyNodeIcon,
   }
 
   const lfPanelRef = ref<InstanceType<typeof LogicFlowPanel>>();
@@ -276,6 +278,17 @@ import EndNodeIcon from "../components/nodes/EndNode/EndNodeIcon.vue";
         title: "结束节点",
         icon: 'end-node',
         hoverOutlineColor: 'rgb(144, 155, 171)'
+      }
+    },
+    {
+      type: 'copy-node',
+      color: 'rgb(34, 201, 175)',
+      defaultConfig: {
+        width: 180,
+        height: 40,
+        title: "抄送节点",
+        icon: 'copy-node',
+        hoverOutlineColor: 'rgb(34, 201, 175)'
       }
     },
     {

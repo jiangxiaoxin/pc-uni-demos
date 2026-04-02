@@ -7,6 +7,20 @@
     <div class="node-content">
       <div class="node-title">{{ title }}</div>
     </div>
+
+    <!-- 右侧功能区 -->
+    <div class="node-actions-trigger">
+      <a-dropdown>
+        <UnorderedListOutlined />
+        <template #overlay>
+          <a-menu>
+            <a-menu-item @click="handleDelete" class="delete-menu-item">
+              <span class="delete-text">删除节点</span>
+            </a-menu-item>
+          </a-menu>
+        </template>
+      </a-dropdown>
+    </div>
   </div>
 </template>
 
@@ -14,6 +28,8 @@
 import { ref, inject, onMounted, onUnmounted } from 'vue'
 import { EventType } from '@logicflow/core'
 import { vueNodesMap } from '@logicflow/vue-node-registry'
+import { Modal } from 'ant-design-vue'
+import { UnorderedListOutlined } from '@ant-design/icons-vue'
 import CopyNodeIcon from './CopyNodeIcon.vue'
 
 // 注入节点和图形实例
@@ -25,6 +41,21 @@ const graph = getGraph()
 
 // 节点数据
 const title = ref(node.getData()?.properties?.title || '')
+
+// 删除节点
+const handleDelete = () => {
+  Modal.confirm({
+    title: '确认删除',
+    content: `确定要删除节点 "${title.value}" 吗？`,
+    okText: '删除',
+    okType: 'danger',
+    cancelText: '取消',
+    centered: true,
+    onOk: () => {
+      graph.deleteNode(node.id)
+    },
+  })
+}
 
 // 监听属性变化
 const handlePropertyChange = (eventData: any) => {
@@ -54,5 +85,19 @@ onUnmounted(() => {
 
 .node-left-bar {
     background-color: rgb(34, 201, 175);
+}
+
+/* 抄送节点标题颜色 - 青绿色系 */
+.node-title {
+  color: #13c2c2;
+}
+
+/* 删除菜单项样式 */
+.delete-menu-item:hover .delete-text {
+  color: #ff4d4f;
+}
+
+.delete-text {
+  color: #ff4d4f;
 }
 </style>

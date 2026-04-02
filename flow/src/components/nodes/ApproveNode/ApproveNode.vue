@@ -14,11 +14,8 @@
         <UnorderedListOutlined />
         <template #overlay>
           <a-menu>
-            <a-menu-item @click="handleCopy">
-              <span>复制节点</span>
-            </a-menu-item>
-            <a-menu-item @click="handleDelete">
-              <span>删除节点</span>
+            <a-menu-item @click="handleDelete" class="delete-menu-item">
+              <span class="delete-text">删除节点</span>
             </a-menu-item>
           </a-menu>
         </template>
@@ -45,16 +42,6 @@ const graph = getGraph()
 // 节点数据
 const nodeData = ref(node.getData())
 const title = ref(nodeData.value.properties?.title || '')
-
-// 复制节点
-const handleCopy = () => {
-  Modal.info({
-    title: '复制节点',
-    content: `节点 "${title.value}" 的复制功能开发中...`,
-    okText: '知道了',
-    centered: true,
-  })
-}
 
 // 删除节点
 const handleDelete = () => {
@@ -98,4 +85,18 @@ onUnmounted(() => {
 
 <style scoped lang="scss">
 @import url(../style.scss);
+
+/* 审批节点标题颜色 - 蓝色系 */
+.node-title {
+  color: #1890ff;
+}
+
+/* 删除菜单项样式 */
+.delete-menu-item:hover .delete-text {
+  color: #ff4d4f;
+}
+
+.delete-text {
+  color: #ff4d4f;
+}
 </style>

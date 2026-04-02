@@ -7,8 +7,8 @@ PC-UNI-H5 是一个基于 pnpm workspaces 管理的 monorepo 项目，包含以�
 1. **myEditor**: Vue 3 + Vite + TypeScript 编辑器，包含 JSON 编辑器和拖拽式组件编辑器
 2. **myViewer**: Uni-app 跨平台应用，用于接收表单配置并渲染动态表单
 3. **message-server**: Node.js HTTP 消息服务器，实现两个应用间的跨域通信
-4. **server**: Express + MySQL 后台服务，提供 RESTful API
-5. **flow**: 基于 LogicFlow 的流程图编辑器
+4. **server**: Express + MySQL 后台服务，提供 RESTful API（含体检套餐管理系统）
+5. **flow**: 基于 LogicFlow 的流程图编辑器，支持 BPMN 流程设计和 XML 解析
 
 ## 技术栈
 
@@ -62,6 +62,7 @@ pc-uni-h5/
 ├── pnpm-workspace.yaml       # pnpm 工作区配置
 ├── pnpm-lock.yaml            # pnpm 锁定文件
 ├── message-server.js         # 消息中转服务器
+├── database_schema.sql       # 体检套餐管理系统数据库设计
 ├── packages/                 # 共享包目录
 │   └── utils/                # 工具函数库 (@pc-uni-h5/utils)
 │       ├── package.json      # 包配置
@@ -86,64 +87,100 @@ pc-uni-h5/
 │       │   ├── MyFrame.vue       # iframe 手机模拟器
 │       │   ├── Preview.vue       # 响应式预览工具
 │       │   ├── Render.vue        # 渲染测试页面
-│       │   └── DragEditor.vue    # 拖拽式组件编辑器
+│       │   ├── DragEditor.vue    # 拖拽式组件编辑器 (原生)
+│       │   └── DragEditor2.vue   # 拖拽式组件编辑器 (vue-draggable-plus)
 │       ├── components/HelloWorld.vue
 │       └── assets/
-└── myViewer/                 # Uni-app 查看器应用
-    ├── package.json
-    ├── vite.config.ts        # Vite + uni 插件配置
-    ├── tsconfig.json         # TypeScript 配置
-    ├── index.html
-    └── src/
-        ├── main.ts           # SSR 应用入口
-        ├── App.vue
-        ├── manifest.json     # Uni-app 应用配置
-        ├── pages.json        # 页面路由配置 (3个页面)
-        ├── uni.scss          # 全局样式变量
-        ├── env.d.ts          # 环境类型声明
-        ├── shime-uni.d.ts    # Uni-app 类型补充
-        ├── components/
-        │   └── form-renderer/
-        │       ├── FormRenderer.vue    # 动态表单渲染器
-        │       └── types.ts            # 表单类型定义
-        ├── constants/
-        │   └── example-schema.ts       # 示例表单配置
-        └── pages/
-            ├── index/
-            │   ├── index.vue         # 主页面（表单展示）
-            │   └── components/
-            │       └── JsonNode.vue  # JSON 树形组件
-            ├── drag/drag.vue         # 拖拽页面
-            └── uni-editor/           # 可视化编辑器
-                ├── uni-editor.vue
-                └── components/
-                    └── ComponentPreview.vue
+├── myViewer/                 # Uni-app 查看器应用
+│   ├── package.json
+│   ├── vite.config.ts        # Vite + uni 插件配置
+│   ├── tsconfig.json         # TypeScript 配置
+│   ├── index.html
+│   └── src/
+│       ├── main.ts           # SSR 应用入口
+│       ├── App.vue
+│       ├── manifest.json     # Uni-app 应用配置
+│       ├── pages.json        # 页面路由配置 (3个页面)
+│       ├── uni.scss          # 全局样式变量
+│       ├── env.d.ts          # 环境类型声明
+│       ├── shime-uni.d.ts    # Uni-app 类型补充
+│       ├── components/
+│       │   └── form-renderer/
+│       │       ├── FormRenderer.vue    # 动态表单渲染器
+│       │       └── types.ts            # 表单类型定义
+│       ├── constants/
+│       │   └── example-schema.ts       # 示例表单配置
+│       └── pages/
+│           ├── index/
+│           │   ├── index.vue         # 主页面（表单展示）
+│           │   └── components/
+│           │       └── JsonNode.vue  # JSON 树形组件
+│           ├── drag/drag.vue         # 拖拽页面
+│           └── uni-editor/           # 可视化编辑器
+│               ├── uni-editor.vue
+│               └── components/
+│                   └── ComponentPreview.vue
 ├── server/                   # Express 后台服务
 │   ├── package.json
 │   ├── tsconfig.json
-│   ├── src/
-│   │   ├── app.ts            # 应用入口
-│   │   ├── routes/           # 路由定义
-│   │   ├── controllers/      # 控制器
-│   │   └── ...
-│   └── .env                  # 环境变量配置
+│   ├── .env                  # 环境变量配置
+│   ├── .env.example          # 环境变量示例
+│   ├── database.sql          # 数据库初始化脚本
+│   ├── init-db.js            # 数据库初始化脚本 (Node.js)
+│   └── src/
+│       ├── app.ts            # 应用入口
+│       ├── config/index.ts   # 配置管理
+│       ├── db/index.ts       # 数据库连接
+│       ├── middleware/
+│       │   └── errorHandler.ts   # 错误处理中间件
+│       ├── controllers/
+│       │   └── user.controller.ts
+│       ├── models/
+│       │   └── user.model.ts
+│       ├── routes/
+│       │   ├── index.ts      # 路由聚合
+│       │   └── user.routes.ts
+│       └── utils/
+│           └── response.ts   # 统一响应工具
 └── flow/                     # LogicFlow 流程图编辑器
     ├── package.json
     ├── vite.config.ts
     ├── src/
     │   ├── main.ts
     │   ├── App.vue
+    │   ├── router/index.ts   # 路由配置 (3个路由)
+    │   ├── style.css
     │   ├── components/
     │   │   ├── LogicFlowPanel.vue    # LogicFlow 画布组件
     │   │   ├── nodes/                # 自定义节点
-    │   │   │   ├── MyLogicNode.vue
-    │   │   │   ├── StartNode/
-    │   │   │   ├── EndNode/
-    │   │   │   └── index.ts
+    │   │   │   ├── StartNode/        # 开始节点
+    │   │   │   │   ├── StartNode.vue
+    │   │   │   │   └── StartNodeIcon.vue
+    │   │   │   ├── EndNode/          # 结束节点
+    │   │   │   │   ├── EndNode.vue
+    │   │   │   │   └── EndNodeIcon.vue
+    │   │   │   ├── ApproveNode/      # 审批节点
+    │   │   │   │   ├── ApproveNode.vue
+    │   │   │   │   └── NodeIcon.vue
+    │   │   │   ├── CopyNode/         # 抄送节点
+    │   │   │   │   ├── CopyNode.vue
+    │   │   │   │   └── CopyNodeIcon.vue
+    │   │   │   ├── LogicNodeModel.ts
+    │   │   │   ├── MyLogicNodeModel.ts
+    │   │   │   └── style.scss
     │   │   └── edges/
-    │   │       └── InteractiveEdge.ts
-    │   └── views/
-    │       └── FlowEditor.vue
+    │   │       ├── InteractiveEdge.ts  # 交互式边（带红色圆圈）
+    │   │       └── index.ts
+    │   ├── views/
+    │   │   ├── FlowEditor.vue      # 流程编辑器主页面
+    │   │   ├── FlowViewer.vue      # 流程查看器
+    │   │   └── XmlParserView.vue   # XML 解析视图
+    │   ├── utils/
+    │   │   └── xmlutils.ts         # XML 处理工具
+    │   └── config/
+    │       ├── peizhi.json         # 配置
+    │       ├── target.bpmn         # BPMN 模板
+    │       └── transformer.js      # 转换器
     └── vite.config.ts
 ```
 
@@ -358,6 +395,92 @@ interface FormLayout {
 }
 ```
 
+## 体检套餐管理系统
+
+### 数据库设计
+
+位于 `database_schema.sql`，包含以下核心表：
+
+#### 基础字典表
+| 表名 | 说明 |
+|------|------|
+| `gender` | 性别字典表（男/女/未知） |
+| `unit` | 物品单位表（支/瓶/次/项等） |
+| `order_status` | 订单状态表（待支付/已支付/待体检/体检中/已完成/已取消/已退款） |
+
+#### 业务主表
+| 表名 | 说明 |
+|------|------|
+| `customer` | 顾客信息表（姓名、性别、年龄、联系方式、身份证等） |
+| `item` | 物品表（物品编码、名称、单位、价格） |
+| `exam_item` | 体检项目表（项目名称、描述） |
+| `exam_package` | 体检套餐表（套餐名称、编码、原价、售价、上架状态） |
+
+#### 关联表
+| 表名 | 说明 |
+|------|------|
+| `exam_item_item` | 体检项目与物品关联表（多对多，含消耗数量） |
+| `package_exam_item` | 套餐与体检项目关联表（多对多，含排序） |
+
+#### 订单相关表
+| 表名 | 说明 |
+|------|------|
+| `order` | 订单表（订单号、顾客、套餐、状态、金额等） |
+| `order_status_log` | 订单状态变更日志表（审计用） |
+
+#### 视图
+| 视图名 | 说明 |
+|--------|------|
+| `v_order_detail` | 订单详情视图（联表查询） |
+| `v_package_detail` | 套餐明细视图（包含所有体检项目） |
+
+### 订单状态流转
+
+```
+待支付 -> 已支付 -> 待体检 -> 体检中 -> 已完成
+   |         |
+   v         v
+已取消    已退款
+```
+
+### 存储过程
+
+- `sp_generate_order_no`: 生成订单编号（格式：EX + 年月日 + 6位流水号）
+- `sp_create_order`: 创建订单（包含价格校验、订单号生成、日志记录）
+
+## Server API 接口
+
+### 路由结构
+
+```
+/api/v1/
+├── GET  /health              # 健康检查
+└── /users
+    ├── GET    /            # 获取所有用户
+    ├── GET    /:id         # 获取单个用户
+    ├── POST   /            # 创建用户
+    ├── PUT    /:id         # 更新用户
+    └── DELETE /:id         # 删除用户
+```
+
+### 响应格式
+
+```typescript
+// 成功响应
+{
+  success: true,
+  data: { ... },
+  message: '操作成功'
+}
+
+// 错误响应
+{
+  success: false,
+  data: null,
+  message: '错误信息'
+}
+```
+
 ## 常用命令
 
 ### 同时启动所有服务（推荐）
@@ -368,6 +491,12 @@ pnpm run dev
 - 消息服务器: http://localhost:3000
 - myEditor: http://localhost:5173
 - myViewer: http://localhost:5174
+
+### 启动所有服务（含 Flow）
+```bash
+pnpm run dev:all
+```
+额外启动 Flow 流程编辑器: http://localhost:5175
 
 ### 单独启动服务
 
@@ -404,6 +533,12 @@ pnpm run build:viewer
 
 # 构建 viewer 微信小程序
 pnpm run build:viewer:mp-weixin
+
+# 构建 flow 生产版本
+pnpm run build:flow
+
+# 构建所有项目
+pnpm run build:all
 ```
 
 ### myEditor 命令
@@ -440,6 +575,34 @@ pnpm run build:mp-weixin
 pnpm run type-check
 ```
 
+### Server 命令
+```bash
+cd server
+
+# 开发模式（带热重载）
+pnpm run dev
+
+# 初始化数据库
+pnpm run init-db
+
+# 删除所有表（危险操作）
+pnpm run drop-tables
+```
+
+### Flow 命令
+```bash
+cd flow
+
+# 开发模式
+pnpm run dev
+
+# 构建生产版本
+pnpm run build
+
+# 类型检查
+npx vue-tsc --noEmit
+```
+
 ## 开发工作流程
 
 ### 本地开发步骤
@@ -461,6 +624,24 @@ pnpm run type-check
 4. 在 myEditor 中输入 JSON Schema 配置，点击"确定"按钮发送
 
 5. 在 myViewer 中查看实时渲染的表单
+
+### 数据库初始化
+
+```bash
+cd server
+
+# 复制环境变量配置
+cp .env.example .env
+
+# 编辑 .env 文件配置数据库连接
+# DB_HOST=localhost
+# DB_USER=root
+# DB_PASSWORD=your_password
+# DB_NAME=health_exam_system
+
+# 初始化数据库
+pnpm run init-db
+```
 
 ### 使用示例配置
 
@@ -605,6 +786,7 @@ pnpm --filter @pc-uni-h5/utils run dev
 3. **XSS**: myViewer 使用 Vue 模板渲染，自动转义 HTML
 4. **内存存储**: 消息服务器只保存最新一条消息，重启后丢失
 5. **生产环境**: 当前架构仅适用于本地开发，生产环境需要额外的安全措施
+6. **数据库**: 使用环境变量管理敏感配置，支持软删除防止数据丢失
 
 ## 注意事项
 
@@ -618,6 +800,7 @@ pnpm --filter @pc-uni-h5/utils run dev
 3. **CORS 配置**: myEditor 的 Vite 配置已启用 CORS
 4. **长轮询机制**: myViewer 使用 30 秒超时的长轮询，错误时会 5 秒后重试
 5. **iframe 通信**: myEditor 的 Preview 和 MyFrame 视图支持通过 iframe 嵌套 myViewer，可用于 postMessage 通信测试
+6. **数据库连接**: 启动 server 前需确保 MySQL 服务已启动并配置正确的连接信息
 
 ---
 
@@ -625,11 +808,16 @@ pnpm --filter @pc-uni-h5/utils run dev
 
 ## 项目概述
 
-Flow 是一个基于 **LogicFlow** 的流程图编辑器，用于可视化编辑流程图，支持自定义节点和边。
+Flow 是一个基于 **LogicFlow** 的流程图编辑器，用于可视化编辑流程图，支持自定义节点和边，以及 BPMN 流程导出。
 
 **运行端口**: 5175
 
 **访问地址**: http://localhost:5175
+
+**路由**:
+- `/` - 流程编辑器（FlowEditor）
+- `/view` - 流程查看器（FlowViewer）
+- `/xml` - XML 解析视图（XmlParserView）
 
 ## 技术栈
 
@@ -647,18 +835,64 @@ flow/
 │   ├── components/
 │   │   ├── LogicFlowPanel.vue      # LogicFlow 画布组件
 │   │   ├── nodes/                  # 自定义节点
-│   │   │   ├── MyLogicNode.vue     # 通用逻辑节点
 │   │   │   ├── StartNode/          # 开始节点
+│   │   │   │   ├── StartNode.vue
+│   │   │   │   └── StartNodeIcon.vue
 │   │   │   ├── EndNode/            # 结束节点
-│   │   │   └── index.ts            # 节点导出
-│   │   └── edges/                  # 自定义边
-│   │       └── InteractiveEdge.ts  # 交互式边（带红色圆圈）
+│   │   │   │   ├── EndNode.vue
+│   │   │   │   └── EndNodeIcon.vue
+│   │   │   ├── ApproveNode/        # 审批节点
+│   │   │   │   ├── ApproveNode.vue
+│   │   │   │   └── NodeIcon.vue
+│   │   │   ├── CopyNode/           # 抄送节点
+│   │   │   │   ├── CopyNode.vue
+│   │   │   │   └── CopyNodeIcon.vue
+│   │   │   ├── LogicNodeModel.ts
+│   │   │   ├── MyLogicNodeModel.ts
+│   │   │   └── style.scss
+│   │   └── edges/
+│   │       ├── InteractiveEdge.ts  # 交互式边
+│   │       └── index.ts
 │   ├── views/
-│   │   └── FlowEditor.vue          # 流程编辑器主页面
-│   └── main.ts
+│   │   ├── FlowEditor.vue          # 流程编辑器主页面
+│   │   ├── FlowViewer.vue          # 流程查看器（只读）
+│   │   └── XmlParserView.vue       # XML 解析工具
+│   ├── utils/
+│   │   └── xmlutils.ts             # XML/BPMN 处理工具
+│   ├── config/
+│   │   ├── peizhi.json             # 流程配置
+│   │   ├── target.bpmn             # BPMN 模板文件
+│   │   └── transformer.js          # 数据转换器
+│   ├── router/
+│   │   └── index.ts                # Vue Router 配置
+│   ├── main.ts
+│   ├── App.vue
+│   └── style.css
 ├── package.json
 └── vite.config.ts
 ```
+
+## 自定义节点
+
+### StartNode - 开始节点
+- **类型**: `start`
+- **样式**: 圆形绿色节点
+- **用途**: 流程起点
+
+### EndNode - 结束节点
+- **类型**: `end`
+- **样式**: 圆形红色节点
+- **用途**: 流程终点
+
+### ApproveNode - 审批节点
+- **类型**: `approve`
+- **样式**: 圆角矩形蓝色节点
+- **用途**: 审批操作节点
+
+### CopyNode - 抄送节点
+- **类型**: `copy`
+- **样式**: 圆角矩形橙色节点
+- **用途**: 抄送通知节点
 
 ## 自定义边实现
 
@@ -691,11 +925,9 @@ export class InteractiveEdgeView extends PolylineEdge {
    */
   getAppendWidth(): any {
     const { model, graphModel } = this.props;
-    // 获取父类的选区（透明点击区域）
     const baseAppend = super.getAppendWidth();
     
     if (!model.isSelected) return baseAppend;
-    
     
     const points = model.pointsList || [];
     if (points.length < 2) return baseAppend;
@@ -711,7 +943,6 @@ export class InteractiveEdgeView extends PolylineEdge {
       h('circle', {
         cx: center.x, cy: center.y, r: r + 5,
         fill: 'transparent', cursor: 'pointer',
-
         onClick: (e: Event) => {
           e.stopPropagation();
           graphModel.eventCenter.emit('edge:circle-click', { 
@@ -727,8 +958,6 @@ export class InteractiveEdgeView extends PolylineEdge {
       }),
     ]);
     
-    // 合并原有选区和红圈
-    // 注意：红圈放在后面，确保在 DOM 中位于上层
     if (baseAppend) {
       return h('g', {}, [baseAppend, redCircle]);
     }
@@ -740,13 +969,10 @@ export class InteractiveEdgeView extends PolylineEdge {
 **关键技术点**:
 
 1. **getAppendWidth() 方法**: LogicFlow 推荐的重写方法，用于自定义边的选区和交互元素
-
 2. **pointerEvents 处理**:
    - 透明点击区: 直接接收点击事件
    - 可见红圈: `pointerEvents: 'none'` 让事件穿透到下层
-
 3. **事件通信**: 通过 `graphModel.eventCenter.emit()` 触发事件，在 `LogicFlowPanel.vue` 中监听
-
 4. **合并渲染**: 先调用 `super.getAppendWidth()` 保留原有选区功能，再添加红圈
 
 ## 使用方式
@@ -762,6 +988,14 @@ lf.on('edge:circle-click', ({ data }) => {
 });
 ```
 
+## BPMN 支持
+
+Flow 项目支持 BPMN 格式的流程图导出和导入，包含以下配置：
+
+- `target.bpmn` - BPMN 2.0 标准模板
+- `transformer.js` - LogicFlow 数据与 BPMN 数据互转
+- `xmlutils.ts` - XML 解析和生成工具
+
 ## 常用命令
 
 ```bash
@@ -769,7 +1003,32 @@ lf.on('edge:circle-click', ({ data }) => {
 cd flow
 pnpm run dev
 
+# 构建生产版本
+cd flow
+pnpm run build
+
 # 类型检查
 cd flow
 npx vue-tsc --noEmit
 ```
+
+## LogicFlow 扩展功能
+
+### 内置插件
+
+| 插件 | 说明 |
+|------|------|
+| `MiniMap` | 缩略图 |
+| `DndPanel` | 拖拽面板 |
+| `SelectionSelect` | 框选 |
+| `Menu` | 右键菜单 |
+
+### 快捷键
+
+| 快捷键 | 功能 |
+|--------|------|
+| `Ctrl + C` | 复制 |
+| `Ctrl + V` | 粘贴 |
+| `Ctrl + Z` | 撤销 |
+| `Ctrl + Y` | 重做 |
+| `Delete` | 删除选中元素 |

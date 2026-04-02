@@ -185,6 +185,16 @@
           show-icon
           style="margin-bottom: 16px"
         />
+        <div class="preview-actions">
+          <a-button type="primary" @click="handleCopyConfig">
+            <template #icon><copy-outlined /></template>
+            复制配置
+          </a-button>
+          <a-button @click="handleSaveJson">
+            <template #icon><download-outlined /></template>
+            保存JSON
+          </a-button>
+        </div>
         <pre class="preview-data">{{ previewModalData }}</pre>
       </div>
     </a-modal>
@@ -226,9 +236,11 @@
     UploadOutlined,
     DeleteOutlined,
     EyeOutlined,
+    CopyOutlined,
+    DownloadOutlined,
   } from "@ant-design/icons-vue";
   import LogicFlowPanel from "../components/LogicFlowPanel.vue";
-  import NodeIcon from "../components/nodes/NodeIcon.vue";
+  import NodeIcon from "../components/nodes/ApproveNode/NodeIcon.vue";
   import StartNodeIcon from "../components/nodes/StartNode/StartNodeIcon.vue";
 import EndNodeIcon from "../components/nodes/EndNode/EndNodeIcon.vue";
 import CopyNodeIcon from "../components/nodes/CopyNode/CopyNodeIcon.vue";
@@ -523,6 +535,49 @@ import CopyNodeIcon from "../components/nodes/CopyNode/CopyNodeIcon.vue";
     selectedNode.value = null;
     message.success("画布已清空");
   };
+
+  // 复制配置到剪贴板
+  const handleCopyConfig = async () => {
+    try {
+      await navigator.clipboard.writeText(previewModalData.value);
+      message.success("配置已复制到剪贴板");
+    } catch (err) {
+      message.error("复制失败，请手动复制");
+    }
+  };
+
+  // 保存JSON配置到本地
+  const handleSaveJson = () => {
+    // 解析当前配置数据
+    let configData: any;
+    try {
+      configData = JSON.parse(previewModalData.value);
+    } catch {
+      message.error("配置数据解析失败");
+      return;
+    }
+
+    // 如果没有 flowId，则创建
+    if (!configData.flowId) {
+      configData.flowId = `flow_${Date.now()}`;
+    }
+
+    // 更新预览数据（包含新生成的 flowId）
+    const jsonString = JSON.stringify(configData, null, 2);
+    previewModalData.value = jsonString;
+
+    const blob = new Blob([jsonString], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    const fileName = flowName.value ? `${flowName.value}.json` : 'flow-config.json';
+    link.download = fileName;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+    message.success("JSON配置已保存");
+  };
 </script>
 
 <style scoped>
@@ -678,5 +733,12 @@ import CopyNodeIcon from "../components/nodes/CopyNode/CopyNodeIcon.vue";
     padding: 16px;
     border-radius: 4px;
     border: 1px solid #e8e8e8;
+  }
+
+  .preview-actions {
+    margin-bottom: 12px;
+    display: flex;
+    justify-content: flex-end;
+    gap: 8px;
   }
 </style>

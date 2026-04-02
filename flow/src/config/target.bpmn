@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<bpmn2:definitions xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:bpmn2="http://www.omg.org/spec/BPMN/20100524/MODEL" xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI" xmlns:flowable="http://flowable.org/bpmn" xmlns:di="http://www.omg.org/spec/DD/20100524/DI" xmlns:dc="http://www.omg.org/spec/DD/20100524/DC" id="diagram_jyxflowid" targetNamespace="http://flowable.org/bpmn" xsi:schemaLocation="http://www.omg.org/spec/BPMN/20100524/MODEL BPMN20.xsd">
+  <bpmn2:process id="jyxflowid" name="jyx 流程" isExecutable="true">
+    <bpmn2:extensionElements>
+      <flowable:properties>
+        <flowable:property name="$OrangeDiagramType" value="0" />
+      </flowable:properties>
+    </bpmn2:extensionElements>
+    <bpmn2:startEvent id="Event_0ztxec1">
+      <bpmn2:outgoing>Flow_1nrn0t7</bpmn2:outgoing>
+    </bpmn2:startEvent>
+    <bpmn2:userTask id="Activity_0rwbf9c" flowable:formKey="{&#34;routerName&#34;:&#34;jyxtestform&#34;,&#34;formAuth&#34;:{},&#34;readOnly&#34;:true,&#34;groupType&#34;:&#34;ASSIGNEE&#34;}">
+      <bpmn2:extensionElements>
+        <flowable:variableList />
+        <flowable:operationList />
+      </bpmn2:extensionElements>
+      <bpmn2:incoming>Flow_1nrn0t7</bpmn2:incoming>
+      <bpmn2:outgoing>Flow_0jnijhx</bpmn2:outgoing>
+    </bpmn2:userTask>
+    <bpmn2:endEvent id="Event_0xgfyas">
+      <bpmn2:incoming>Flow_0jnijhx</bpmn2:incoming>
+    </bpmn2:endEvent>
+    <bpmn2:sequenceFlow id="Flow_1nrn0t7" sourceRef="Event_0ztxec1" targetRef="Activity_0rwbf9c" />
+    <bpmn2:sequenceFlow id="Flow_0jnijhx" sourceRef="Activity_0rwbf9c" targetRef="Event_0xgfyas" />
+  </bpmn2:process>
+  <bpmndi:BPMNDiagram id="BPMNDiagram_1">
+    <bpmndi:BPMNPlane id="BPMNPlane_1" bpmnElement="jyxflowid">
+      <bpmndi:BPMNEdge id="Flow_1nrn0t7_di" bpmnElement="Flow_1nrn0t7">
+        <di:waypoint x="358" y="220" />
+        <di:waypoint x="530" y="220" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_0jnijhx_di" bpmnElement="Flow_0jnijhx">
+        <di:waypoint x="630" y="220" />
+        <di:waypoint x="741" y="220" />
+        <di:waypoint x="741" y="340" />
+        <di:waypoint x="852" y="340" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNShape id="Event_0ztxec1_di" bpmnElement="Event_0ztxec1">
+        <dc:Bounds x="322" y="202" width="36" height="36" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Activity_0rwbf9c_di" bpmnElement="Activity_0rwbf9c">
+        <dc:Bounds x="530" y="180" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Event_0xgfyas_di" bpmnElement="Event_0xgfyas">
+        <dc:Bounds x="852" y="322" width="36" height="36" />
+      </bpmndi:BPMNShape>
+    </bpmndi:BPMNPlane>
+  </bpmndi:BPMNDiagram>
+</bpmn2:definitions>

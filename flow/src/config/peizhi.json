@@ -1,0 +1,213 @@
+{
+  "nodes": [
+    {
+      "id": "node_1775107564338",
+      "type": "start-node",
+      "x": 237,
+      "y": 152,
+      "properties": {
+        "width": 180,
+        "height": 40,
+        "title": "开始节点",
+        "icon": "start-node",
+        "hoverOutlineColor": "rgb(78, 184, 92)"
+      }
+    },
+    {
+      "id": "node_1775107567073",
+      "type": "my-logic-node",
+      "x": 517,
+      "y": 176,
+      "properties": {
+        "width": 180,
+        "height": 40,
+        "title": "流程节点",
+        "icon": "my-logic-node",
+        "hoverOutlineColor": "#1890ff"
+      }
+    },
+    {
+      "id": "node_1775107568775",
+      "type": "my-logic-node",
+      "x": 782,
+      "y": 184,
+      "properties": {
+        "width": 180,
+        "height": 40,
+        "title": "流程节点",
+        "icon": "my-logic-node",
+        "hoverOutlineColor": "#1890ff"
+      }
+    },
+    {
+      "id": "node_1775107570031",
+      "type": "copy-node",
+      "x": 608,
+      "y": 80,
+      "properties": {
+        "width": 180,
+        "height": 40,
+        "title": "抄送节点",
+        "icon": "copy-node",
+        "hoverOutlineColor": "rgb(34, 201, 175)"
+      }
+    },
+    {
+      "id": "node_1775107571776",
+      "type": "end-node",
+      "x": 1050,
+      "y": 196,
+      "properties": {
+        "width": 180,
+        "height": 40,
+        "title": "结束节点",
+        "icon": "end-node",
+        "hoverOutlineColor": "rgb(144, 155, 171)"
+      }
+    }
+  ],
+  "edges": [
+    {
+      "id": "8c43feba-8614-4578-9936-41318a5b6ab5",
+      "type": "polyline",
+      "properties": {},
+      "sourceNodeId": "node_1775107564338",
+      "targetNodeId": "node_1775107570031",
+      "sourceAnchorId": "node_1775107564338-out",
+      "targetAnchorId": "node_1775107570031-in",
+      "startPoint": {
+        "x": 327,
+        "y": 152
+      },
+      "endPoint": {
+        "x": 518,
+        "y": 80
+      },
+      "pointsList": [
+        {
+          "x": 327,
+          "y": 152
+        },
+        {
+          "x": 342,
+          "y": 152
+        },
+        {
+          "x": 342,
+          "y": 80
+        },
+        {
+          "x": 518,
+          "y": 80
+        }
+      ]
+    },
+    {
+      "id": "bdbfc049-bc0a-4f42-a8e5-809dd6ca7f7c",
+      "type": "polyline",
+      "properties": {},
+      "sourceNodeId": "node_1775107564338",
+      "targetNodeId": "node_1775107567073",
+      "sourceAnchorId": "node_1775107564338-out",
+      "targetAnchorId": "node_1775107567073-in",
+      "startPoint": {
+        "x": 327,
+        "y": 152
+      },
+      "endPoint": {
+        "x": 427,
+        "y": 176
+      },
+      "pointsList": [
+        {
+          "x": 327,
+          "y": 152
+        },
+        {
+          "x": 377,
+          "y": 152
+        },
+        {
+          "x": 377,
+          "y": 176
+        },
+        {
+          "x": 427,
+          "y": 176
+        }
+      ]
+    },
+    {
+      "id": "2f19bcec-4402-4053-84dc-3295948764f9",
+      "type": "polyline",
+      "properties": {},
+      "sourceNodeId": "node_1775107567073",
+      "targetNodeId": "node_1775107568775",
+      "sourceAnchorId": "node_1775107567073-out",
+      "targetAnchorId": "node_1775107568775-in",
+      "startPoint": {
+        "x": 607,
+        "y": 176
+      },
+      "endPoint": {
+        "x": 692,
+        "y": 184
+      },
+      "pointsList": [
+        {
+          "x": 607,
+          "y": 176
+        },
+        {
+          "x": 649.5,
+          "y": 176
+        },
+        {
+          "x": 649.5,
+          "y": 184
+        },
+        {
+          "x": 692,
+          "y": 184
+        }
+      ]
+    },
+    {
+      "id": "2852f57f-581d-4341-ba3c-b9489db3b3dc",
+      "type": "polyline",
+      "properties": {},
+      "sourceNodeId": "node_1775107568775",
+      "targetNodeId": "node_1775107571776",
+      "sourceAnchorId": "node_1775107568775-out",
+      "targetAnchorId": "node_1775107571776-in",
+      "startPoint": {
+        "x": 872,
+        "y": 184
+      },
+      "endPoint": {
+        "x": 960,
+        "y": 196
+      },
+      "pointsList": [
+        {
+          "x": 872,
+          "y": 184
+        },
+        {
+          "x": 916,
+          "y": 184
+        },
+        {
+          "x": 916,
+          "y": 196
+        },
+        {
+          "x": 960,
+          "y": 196
+        }
+      ]
+    }
+  ],
+  "flowName": "未命名流程",
+  "flowId": "flow_1775109704792"
+}

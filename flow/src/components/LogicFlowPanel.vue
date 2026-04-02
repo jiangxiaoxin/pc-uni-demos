@@ -12,12 +12,11 @@
   import { register, getTeleport } from "@logicflow/vue-node-registry";
   import "@logicflow/core/dist/index.css";
   import "@logicflow/extension/lib/style/index.css";
-  import { MyLogicNode } from "./nodes";
+  import ApproveNode from "./nodes/ApproveNode/ApproveNode.vue";
   import StartNode from "./nodes/StartNode/StartNode.vue";
   import EndNode from "./nodes/EndNode/EndNode.vue";
   import CopyNode from "./nodes/CopyNode/CopyNode.vue";
   import LogicNodeModel from "./nodes/LogicNodeModel";
-  // import MyLogicNodeModel from "./nodes/MyLogicNodeModel";
   import { InteractiveEdge } from "./edges";
 
   //TODO 注册插件,需要吗？？
@@ -106,7 +105,7 @@
     register(
       {
         type: "my-logic-node",
-        component: MyLogicNode,
+        component: ApproveNode,
         model: LogicNodeModel,
       },
       lf,

@@ -1,0 +1,183 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<bpmn2:definitions xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xmlns:bpmn2="http://www.omg.org/spec/BPMN/20100524/MODEL"
+  xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI" xmlns:flowable="http://flowable.org/bpmn"
+  xmlns:di="http://www.omg.org/spec/DD/20100524/DI"
+  xmlns:dc="http://www.omg.org/spec/DD/20100524/DC" id="diagram_flow_1775118515679"
+  targetNamespace="http://flowable.org/bpmn"
+  xsi:schemaLocation="http://www.omg.org/spec/BPMN/20100524/MODEL BPMN20.xsd">
+  <bpmn2:process id="flow_1775118515679" name="未命名流程" isExecutable="true">
+        <bpmn2:startEvent id="Event_node_1775108304513" name="开始节点">
+            <bpmn2:outgoing>Flow_e4d6cc5e_ff50_4759_884c_081d554652e7</bpmn2:outgoing>
+        </bpmn2:startEvent>
+        <bpmn2:userTask id="Activity_node_1775108306268" name="组长审批" flowable:formKey="{&quot;routerName&quot;:&quot;jyxtestform&quot;,&quot;formAuth&quot;:{},&quot;readOnly&quot;:true,&quot;groupType&quot;:&quot;ASSIGNEE&quot;}">
+            <bpmn2:extensionElements>
+                <flowable:variableList />
+                <flowable:copyItemList />
+                <flowable:operationList>
+                    <flowable:formOperation id="1775118159709" label="同意" type="agree" showOrder="0" variableList="{}" buttonStyle="primary" buttonPlain="false" />
+                    <flowable:formOperation id="1775118163709" label="拒绝" type="refuse" showOrder="1" variableList="{}" buttonStyle="primary" buttonPlain="false" />
+                </flowable:operationList>
+            </bpmn2:extensionElements>
+            <bpmn2:incoming>Flow_e4d6cc5e_ff50_4759_884c_081d554652e7</bpmn2:incoming>
+            <bpmn2:outgoing>Flow_8a28ac18_4351_4fb2_aad5_56549eef8b62</bpmn2:outgoing>
+            <bpmn2:outgoing>Flow_node_1775108306268_refuse_1775118163709</bpmn2:outgoing>
+        </bpmn2:userTask>
+        <bpmn2:userTask id="Activity_node_1775108308003" name="部长审批" flowable:formKey="{&quot;routerName&quot;:&quot;jyxtestform&quot;,&quot;formAuth&quot;:{},&quot;readOnly&quot;:true,&quot;groupType&quot;:&quot;ASSIGNEE&quot;}">
+            <bpmn2:extensionElements>
+                <flowable:variableList />
+                <flowable:copyItemList />
+                <flowable:operationList>
+                    <flowable:formOperation id="1775118159709" label="同意" type="agree" showOrder="0" variableList="{}" buttonStyle="primary" buttonPlain="false" />
+                    <flowable:formOperation id="1775118163709" label="拒绝" type="refuse" showOrder="1" variableList="{}" buttonStyle="primary" buttonPlain="false" />
+                </flowable:operationList>
+            </bpmn2:extensionElements>
+            <bpmn2:incoming>Flow_8a28ac18_4351_4fb2_aad5_56549eef8b62</bpmn2:incoming>
+            <bpmn2:outgoing>Flow_5c593fb4_bb1d_48ff_a43a_1b64bcc802cc</bpmn2:outgoing>
+            <bpmn2:outgoing>Flow_node_1775108308003_refuse_1775118163709</bpmn2:outgoing>
+        </bpmn2:userTask>
+        <bpmn2:userTask id="Activity_node_1775118485845" name="总经理审批" flowable:formKey="{&quot;routerName&quot;:&quot;jyxtestform&quot;,&quot;formAuth&quot;:{},&quot;readOnly&quot;:true,&quot;groupType&quot;:&quot;ASSIGNEE&quot;}">
+            <bpmn2:extensionElements>
+                <flowable:variableList />
+                <flowable:copyItemList />
+                <flowable:operationList>
+                    <flowable:formOperation id="1775118159709" label="同意" type="agree" showOrder="0" variableList="{}" buttonStyle="primary" buttonPlain="false" />
+                    <flowable:formOperation id="1775118163709" label="拒绝" type="refuse" showOrder="1" variableList="{}" buttonStyle="primary" buttonPlain="false" />
+                </flowable:operationList>
+            </bpmn2:extensionElements>
+            <bpmn2:incoming>Flow_5c593fb4_bb1d_48ff_a43a_1b64bcc802cc</bpmn2:incoming>
+            <bpmn2:outgoing>Flow_2089390b_d753_4029_9a00_0f2a04bcfa8d</bpmn2:outgoing>
+            <bpmn2:outgoing>Flow_node_1775118485845_refuse_1775118163709</bpmn2:outgoing>
+        </bpmn2:userTask>
+        <bpmn2:endEvent id="Event_node_1775108310060" name="结束节点">
+            <bpmn2:incoming>Flow_node_1775108306268_refuse_1775118163709</bpmn2:incoming>
+            <bpmn2:incoming>Flow_node_1775108308003_refuse_1775118163709</bpmn2:incoming>
+            <bpmn2:incoming>Flow_2089390b_d753_4029_9a00_0f2a04bcfa8d</bpmn2:incoming>
+            <bpmn2:incoming>Flow_node_1775118485845_refuse_1775118163709</bpmn2:incoming>
+        </bpmn2:endEvent>
+        <bpmn2:sequenceFlow id="Flow_e4d6cc5e_ff50_4759_884c_081d554652e7" sourceRef="Event_node_1775108304513" targetRef="Activity_node_1775108306268" />
+        <bpmn2:sequenceFlow id="Flow_8a28ac18_4351_4fb2_aad5_56549eef8b62" sourceRef="Activity_node_1775108306268" targetRef="Activity_node_1775108308003" name="组长审批同意">
+            <bpmn2:extensionElements>
+                <flowable:customCondition type="operation" operationType="agree" />
+            </bpmn2:extensionElements>
+            <bpmn2:conditionExpression xsi:type="bpmn2:tFormalExpression">${operationType == 'agree'}</bpmn2:conditionExpression>
+        </bpmn2:sequenceFlow>
+        <bpmn2:sequenceFlow id="Flow_node_1775108306268_refuse_1775118163709" sourceRef="Activity_node_1775108306268" targetRef="Event_node_1775108310060" name="组长审批拒绝">
+            <bpmn2:extensionElements>
+                <flowable:customCondition type="operation" operationType="refuse" />
+            </bpmn2:extensionElements>
+            <bpmn2:conditionExpression xsi:type="bpmn2:tFormalExpression">${operationType == 'refuse'}</bpmn2:conditionExpression>
+        </bpmn2:sequenceFlow>
+        <bpmn2:sequenceFlow id="Flow_5c593fb4_bb1d_48ff_a43a_1b64bcc802cc" sourceRef="Activity_node_1775108308003" targetRef="Activity_node_1775118485845" name="部长审批同意">
+            <bpmn2:extensionElements>
+                <flowable:customCondition type="operation" operationType="agree" />
+            </bpmn2:extensionElements>
+            <bpmn2:conditionExpression xsi:type="bpmn2:tFormalExpression">${operationType == 'agree'}</bpmn2:conditionExpression>
+        </bpmn2:sequenceFlow>
+        <bpmn2:sequenceFlow id="Flow_node_1775108308003_refuse_1775118163709" sourceRef="Activity_node_1775108308003" targetRef="Event_node_1775108310060" name="部长审批拒绝">
+            <bpmn2:extensionElements>
+                <flowable:customCondition type="operation" operationType="refuse" />
+            </bpmn2:extensionElements>
+            <bpmn2:conditionExpression xsi:type="bpmn2:tFormalExpression">${operationType == 'refuse'}</bpmn2:conditionExpression>
+        </bpmn2:sequenceFlow>
+        <bpmn2:sequenceFlow id="Flow_2089390b_d753_4029_9a00_0f2a04bcfa8d" sourceRef="Activity_node_1775118485845" targetRef="Event_node_1775108310060" name="总经理审批同意">
+            <bpmn2:extensionElements>
+                <flowable:customCondition type="operation" operationType="agree" />
+            </bpmn2:extensionElements>
+            <bpmn2:conditionExpression xsi:type="bpmn2:tFormalExpression">${operationType == 'agree'}</bpmn2:conditionExpression>
+        </bpmn2:sequenceFlow>
+        <bpmn2:sequenceFlow id="Flow_node_1775118485845_refuse_1775118163709" sourceRef="Activity_node_1775118485845" targetRef="Event_node_1775108310060" name="总经理审批拒绝">
+            <bpmn2:extensionElements>
+                <flowable:customCondition type="operation" operationType="refuse" />
+            </bpmn2:extensionElements>
+            <bpmn2:conditionExpression xsi:type="bpmn2:tFormalExpression">${operationType == 'refuse'}</bpmn2:conditionExpression>
+        </bpmn2:sequenceFlow>
+  </bpmn2:process>
+  <bpmndi:BPMNDiagram id="BPMNDiagram_1">
+    <bpmndi:BPMNPlane id="BPMNPlane_1" bpmnElement="flow_1775118515679">
+            <bpmndi:BPMNEdge id="Flow_e4d6cc5e_ff50_4759_884c_081d554652e7_di" bpmnElement="Flow_e4d6cc5e_ff50_4759_884c_081d554652e7">
+                <di:waypoint x="255" y="128" />
+                <di:waypoint x="387" y="128" />
+                <di:waypoint x="387" y="238" />
+                <di:waypoint x="442" y="238" />
+            </bpmndi:BPMNEdge>
+            <bpmndi:BPMNEdge id="Flow_8a28ac18_4351_4fb2_aad5_56549eef8b62_di" bpmnElement="Flow_8a28ac18_4351_4fb2_aad5_56549eef8b62">
+                <di:waypoint x="542" y="238" />
+                <di:waypoint x="662" y="238" />
+                <di:waypoint x="662" y="224" />
+                <di:waypoint x="782" y="224" />
+                <bpmndi:BPMNLabel>
+                    <dc:Bounds x="626" y="206" width="72" height="14" />
+                </bpmndi:BPMNLabel>
+            </bpmndi:BPMNEdge>
+            <bpmndi:BPMNEdge id="Flow_node_1775108306268_refuse_1775118163709_di" bpmnElement="Flow_node_1775108306268_refuse_1775118163709">
+                <di:waypoint x="542" y="238" />
+                <di:waypoint x="1294" y="238" />
+                <di:waypoint x="1294" y="137" />
+                <di:waypoint x="1174" y="137" />
+                <bpmndi:BPMNLabel>
+                    <dc:Bounds x="1258" y="119" width="72" height="14" />
+                </bpmndi:BPMNLabel>
+            </bpmndi:BPMNEdge>
+            <bpmndi:BPMNEdge id="Flow_5c593fb4_bb1d_48ff_a43a_1b64bcc802cc_di" bpmnElement="Flow_5c593fb4_bb1d_48ff_a43a_1b64bcc802cc">
+                <di:waypoint x="882" y="224" />
+                <di:waypoint x="937" y="224" />
+                <di:waypoint x="937" y="138.5" />
+                <di:waypoint x="839" y="138.5" />
+                <di:waypoint x="839" y="53" />
+                <di:waypoint x="894" y="53" />
+                <bpmndi:BPMNLabel>
+                    <dc:Bounds x="803" y="121" width="72" height="14" />
+                </bpmndi:BPMNLabel>
+            </bpmndi:BPMNEdge>
+            <bpmndi:BPMNEdge id="Flow_node_1775108308003_refuse_1775118163709_di" bpmnElement="Flow_node_1775108308003_refuse_1775118163709">
+                <di:waypoint x="882" y="224" />
+                <di:waypoint x="1294" y="224" />
+                <di:waypoint x="1294" y="137" />
+                <di:waypoint x="1174" y="137" />
+                <bpmndi:BPMNLabel>
+                    <dc:Bounds x="1258" y="119" width="72" height="14" />
+                </bpmndi:BPMNLabel>
+            </bpmndi:BPMNEdge>
+            <bpmndi:BPMNEdge id="Flow_2089390b_d753_4029_9a00_0f2a04bcfa8d_di" bpmnElement="Flow_2089390b_d753_4029_9a00_0f2a04bcfa8d">
+                <di:waypoint x="994" y="53" />
+                <di:waypoint x="1051" y="53" />
+                <di:waypoint x="1051" y="137" />
+                <di:waypoint x="1138" y="137" />
+                <bpmndi:BPMNLabel>
+                    <dc:Bounds x="1009" y="119" width="84" height="14" />
+                </bpmndi:BPMNLabel>
+            </bpmndi:BPMNEdge>
+            <bpmndi:BPMNEdge id="Flow_node_1775118485845_refuse_1775118163709_di" bpmnElement="Flow_node_1775118485845_refuse_1775118163709">
+                <di:waypoint x="994" y="53" />
+                <di:waypoint x="1294" y="53" />
+                <di:waypoint x="1294" y="137" />
+                <di:waypoint x="1174" y="137" />
+                <bpmndi:BPMNLabel>
+                    <dc:Bounds x="1252" y="119" width="84" height="14" />
+                </bpmndi:BPMNLabel>
+            </bpmndi:BPMNEdge>
+            <bpmndi:BPMNShape id="Event_node_1775108304513_di" bpmnElement="Event_node_1775108304513">
+                <dc:Bounds x="219" y="110" width="36" height="36" />
+                <bpmndi:BPMNLabel>
+                    <dc:Bounds x="210" y="153" width="54" height="14" />
+                </bpmndi:BPMNLabel>
+            </bpmndi:BPMNShape>
+            <bpmndi:BPMNShape id="Activity_node_1775108306268_di" bpmnElement="Activity_node_1775108306268">
+                <dc:Bounds x="442" y="198" width="100" height="80" />
+            </bpmndi:BPMNShape>
+            <bpmndi:BPMNShape id="Activity_node_1775108308003_di" bpmnElement="Activity_node_1775108308003">
+                <dc:Bounds x="782" y="184" width="100" height="80" />
+            </bpmndi:BPMNShape>
+            <bpmndi:BPMNShape id="Activity_node_1775118485845_di" bpmnElement="Activity_node_1775118485845">
+                <dc:Bounds x="894" y="13" width="100" height="80" />
+            </bpmndi:BPMNShape>
+            <bpmndi:BPMNShape id="Event_node_1775108310060_di" bpmnElement="Event_node_1775108310060">
+                <dc:Bounds x="1138" y="119" width="36" height="36" />
+                <bpmndi:BPMNLabel>
+                    <dc:Bounds x="1129" y="162" width="54" height="14" />
+                </bpmndi:BPMNLabel>
+            </bpmndi:BPMNShape>
+    </bpmndi:BPMNPlane>
+  </bpmndi:BPMNDiagram>
+</bpmn2:definitions>

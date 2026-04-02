@@ -1,10 +1,10 @@
 {
   "nodes": [
     {
-      "id": "node_1775107564338",
+      "id": "node_1775108304513",
       "type": "start-node",
       "x": 237,
-      "y": 152,
+      "y": 128,
       "properties": {
         "width": 180,
         "height": 40,
@@ -14,49 +14,36 @@
       }
     },
     {
-      "id": "node_1775107567073",
+      "id": "node_1775108306268",
       "type": "my-logic-node",
-      "x": 517,
-      "y": 176,
+      "x": 492,
+      "y": 238,
       "properties": {
         "width": 180,
         "height": 40,
-        "title": "流程节点",
+        "title": "组长审批",
         "icon": "my-logic-node",
         "hoverOutlineColor": "#1890ff"
       }
     },
     {
-      "id": "node_1775107568775",
+      "id": "node_1775108308003",
       "type": "my-logic-node",
-      "x": 782,
-      "y": 184,
+      "x": 832,
+      "y": 224,
       "properties": {
         "width": 180,
         "height": 40,
-        "title": "流程节点",
+        "title": "部长审批",
         "icon": "my-logic-node",
         "hoverOutlineColor": "#1890ff"
       }
     },
     {
-      "id": "node_1775107570031",
-      "type": "copy-node",
-      "x": 608,
-      "y": 80,
-      "properties": {
-        "width": 180,
-        "height": 40,
-        "title": "抄送节点",
-        "icon": "copy-node",
-        "hoverOutlineColor": "rgb(34, 201, 175)"
-      }
-    },
-    {
-      "id": "node_1775107571776",
+      "id": "node_1775108310060",
       "type": "end-node",
-      "x": 1050,
-      "y": 196,
+      "x": 1156,
+      "y": 137,
       "properties": {
         "width": 180,
         "height": 40,
@@ -64,151 +51,240 @@
         "icon": "end-node",
         "hoverOutlineColor": "rgb(144, 155, 171)"
       }
+    },
+    {
+      "id": "node_1775118485845",
+      "type": "my-logic-node",
+      "x": 944,
+      "y": 53,
+      "properties": {
+        "width": 180,
+        "height": 40,
+        "title": "总经理审批",
+        "icon": "my-logic-node",
+        "hoverOutlineColor": "#1890ff"
+      }
     }
   ],
   "edges": [
     {
-      "id": "8c43feba-8614-4578-9936-41318a5b6ab5",
+      "id": "e4d6cc5e-ff50-4759-884c-081d554652e7",
       "type": "polyline",
       "properties": {},
-      "sourceNodeId": "node_1775107564338",
-      "targetNodeId": "node_1775107570031",
-      "sourceAnchorId": "node_1775107564338-out",
-      "targetAnchorId": "node_1775107570031-in",
+      "sourceNodeId": "node_1775108304513",
+      "targetNodeId": "node_1775108306268",
+      "sourceAnchorId": "node_1775108304513-out",
+      "targetAnchorId": "node_1775108306268-in",
       "startPoint": {
         "x": 327,
-        "y": 152
+        "y": 128
       },
       "endPoint": {
-        "x": 518,
-        "y": 80
+        "x": 402,
+        "y": 238
       },
       "pointsList": [
         {
           "x": 327,
-          "y": 152
+          "y": 128
         },
         {
-          "x": 342,
-          "y": 152
+          "x": 387,
+          "y": 128
         },
         {
-          "x": 342,
-          "y": 80
+          "x": 387,
+          "y": 238
         },
         {
-          "x": 518,
-          "y": 80
+          "x": 402,
+          "y": 238
         }
       ]
     },
     {
-      "id": "bdbfc049-bc0a-4f42-a8e5-809dd6ca7f7c",
+      "id": "8a28ac18-4351-4fb2-aad5-56549eef8b62",
       "type": "polyline",
       "properties": {},
-      "sourceNodeId": "node_1775107564338",
-      "targetNodeId": "node_1775107567073",
-      "sourceAnchorId": "node_1775107564338-out",
-      "targetAnchorId": "node_1775107567073-in",
+      "sourceNodeId": "node_1775108306268",
+      "targetNodeId": "node_1775108308003",
+      "sourceAnchorId": "node_1775108306268-out",
+      "targetAnchorId": "node_1775108308003-in",
       "startPoint": {
-        "x": 327,
-        "y": 152
+        "x": 582,
+        "y": 238
       },
       "endPoint": {
-        "x": 427,
-        "y": 176
+        "x": 742,
+        "y": 224
       },
       "pointsList": [
         {
-          "x": 327,
-          "y": 152
+          "x": 582,
+          "y": 238
         },
         {
-          "x": 377,
-          "y": 152
+          "x": 662,
+          "y": 238
         },
         {
-          "x": 377,
-          "y": 176
+          "x": 662,
+          "y": 224
         },
         {
-          "x": 427,
-          "y": 176
+          "x": 742,
+          "y": 224
         }
       ]
     },
     {
-      "id": "2f19bcec-4402-4053-84dc-3295948764f9",
+      "id": "5c593fb4-bb1d-48ff-a43a-1b64bcc802cc",
       "type": "polyline",
       "properties": {},
-      "sourceNodeId": "node_1775107567073",
-      "targetNodeId": "node_1775107568775",
-      "sourceAnchorId": "node_1775107567073-out",
-      "targetAnchorId": "node_1775107568775-in",
+      "sourceNodeId": "node_1775108308003",
+      "targetNodeId": "node_1775118485845",
+      "sourceAnchorId": "node_1775108308003-out",
+      "targetAnchorId": "node_1775118485845-in",
       "startPoint": {
-        "x": 607,
-        "y": 176
+        "x": 922,
+        "y": 224
       },
       "endPoint": {
-        "x": 692,
-        "y": 184
+        "x": 854,
+        "y": 53
       },
       "pointsList": [
         {
-          "x": 607,
-          "y": 176
+          "x": 922,
+          "y": 224
         },
         {
-          "x": 649.5,
-          "y": 176
+          "x": 937,
+          "y": 224
         },
         {
-          "x": 649.5,
-          "y": 184
+          "x": 937,
+          "y": 138.5
         },
         {
-          "x": 692,
-          "y": 184
+          "x": 839,
+          "y": 138.5
+        },
+        {
+          "x": 839,
+          "y": 53
+        },
+        {
+          "x": 854,
+          "y": 53
         }
       ]
     },
     {
-      "id": "2852f57f-581d-4341-ba3c-b9489db3b3dc",
+      "id": "2089390b-d753-4029-9a00-0f2a04bcfa8d",
       "type": "polyline",
       "properties": {},
-      "sourceNodeId": "node_1775107568775",
-      "targetNodeId": "node_1775107571776",
-      "sourceAnchorId": "node_1775107568775-out",
-      "targetAnchorId": "node_1775107571776-in",
+      "sourceNodeId": "node_1775118485845",
+      "targetNodeId": "node_1775108310060",
+      "sourceAnchorId": "node_1775118485845-out",
+      "targetAnchorId": "node_1775108310060-in",
       "startPoint": {
-        "x": 872,
-        "y": 184
+        "x": 1034,
+        "y": 53
       },
       "endPoint": {
-        "x": 960,
-        "y": 196
+        "x": 1066,
+        "y": 137
       },
       "pointsList": [
         {
-          "x": 872,
-          "y": 184
+          "x": 1034,
+          "y": 53
         },
         {
-          "x": 916,
-          "y": 184
+          "x": 1051,
+          "y": 53
         },
         {
-          "x": 916,
-          "y": 196
+          "x": 1051,
+          "y": 137
         },
         {
-          "x": 960,
-          "y": 196
+          "x": 1066,
+          "y": 137
         }
       ]
     }
   ],
   "flowName": "未命名流程",
-  "flowId": "flow_1775109704792",
-  "isExecutable": true
+  "flowId": "flow_1775118515679",
+  "isExecutable": true,
+  "flowConfigs": {
+    "node_1775108306268": {
+      "operationList": [
+        {
+          "id": "1775118159709",
+          "label": "同意",
+          "type": "agree",
+          "showOrder": 0,
+          "buttonStyle": "primary",
+          "buttonPlain": false,
+          "variableList": {}
+        },
+        {
+          "id": "1775118163709",
+          "label": "拒绝",
+          "type": "refuse",
+          "showOrder": 1,
+          "buttonStyle": "primary",
+          "buttonPlain": false,
+          "variableList": {}
+        }
+      ]
+    },
+    "node_1775108308003": {
+      "operationList": [
+        {
+          "id": "1775118159709",
+          "label": "同意",
+          "type": "agree",
+          "showOrder": 0,
+          "buttonStyle": "primary",
+          "buttonPlain": false,
+          "variableList": {}
+        },
+        {
+          "id": "1775118163709",
+          "label": "拒绝",
+          "type": "refuse",
+          "showOrder": 1,
+          "buttonStyle": "primary",
+          "buttonPlain": false,
+          "variableList": {}
+        }
+      ]
+    },
+    "node_1775118485845": {
+      "operationList": [
+        {
+          "id": "1775118159709",
+          "label": "同意",
+          "type": "agree",
+          "showOrder": 0,
+          "buttonStyle": "primary",
+          "buttonPlain": false,
+          "variableList": {}
+        },
+        {
+          "id": "1775118163709",
+          "label": "拒绝",
+          "type": "refuse",
+          "showOrder": 1,
+          "buttonStyle": "primary",
+          "buttonPlain": false,
+          "variableList": {}
+        }
+      ]
+    }
+  }
 }

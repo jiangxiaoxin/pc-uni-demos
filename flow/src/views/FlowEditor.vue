@@ -37,6 +37,10 @@
           <template #icon><upload-outlined /></template>
           加载
         </a-button>
+        <a-button @click="handleImport">
+          <template #icon><import-outlined /></template>
+          导入JSON
+        </a-button>
         <a-button @click="handleClear">
           <template #icon><delete-outlined /></template>
           清空
@@ -219,6 +223,15 @@
         </a-space>
       </div>
     </a-modal>
+
+    <!-- 隐藏的文件输入框 -->
+    <input
+      ref="fileInputRef"
+      type="file"
+      accept=".json"
+      style="display: none"
+      @change="handleFileChange"
+    />
   </div>
 </template>
 
@@ -464,6 +477,10 @@ import CopyNodeIcon from "../components/nodes/CopyNode/CopyNodeIcon.vue";
       const previewData = {
         ...data,
         flowName: flowName.value,
+        // 如果没有 flowId，则自动生成
+        flowId: data.flowId || `flow_${Date.now()}`,
+        // 如果没有 isExecutable，则默认为 true
+        isExecutable: data.isExecutable !== undefined ? data.isExecutable : true,
       };
       previewModalData.value = JSON.stringify(previewData, null, 2);
       previewModalVisible.value = true;
@@ -502,6 +519,10 @@ import CopyNodeIcon from "../components/nodes/CopyNode/CopyNodeIcon.vue";
       const saveData = {
         ...data,
         flowName: flowName.value,
+        // 如果没有 flowId，则自动生成
+        flowId: data.flowId || `flow_${Date.now()}`,
+        // 如果没有 isExecutable，则默认为 true
+        isExecutable: data.isExecutable !== undefined ? data.isExecutable : true,
       };
       localStorage.setItem("flowData", JSON.stringify(saveData));
       message.success("流程图已保存");
@@ -546,6 +567,77 @@ import CopyNodeIcon from "../components/nodes/CopyNode/CopyNodeIcon.vue";
     }
   };
 
+  // 导入JSON配置
+  const fileInputRef = ref<HTMLInputElement | null>(null);
+
+  const handleImport = () => {
+    fileInputRef.value?.click();
+  };
+
+  const handleFileChange = (event: Event) => {
+    const target = event.target as HTMLInputElement;
+    const file = target.files?.[0];
+    
+    if (!file) return;
+
+    // 检查文件类型
+    if (!file.name.endsWith('.json')) {
+      message.error('请选择 JSON 格式的文件');
+      return;
+    }
+
+    const reader = new FileReader();
+    
+    reader.onload = (e) => {
+      try {
+        const content = e.target?.result as string;
+        const configData = JSON.parse(content);
+
+        // 验证数据结构
+        if (!configData.nodes || !Array.isArray(configData.nodes)) {
+          message.error('无效的流程配置：缺少 nodes 数组');
+          return;
+        }
+
+        if (!configData.edges || !Array.isArray(configData.edges)) {
+          message.error('无效的流程配置：缺少 edges 数组');
+          return;
+        }
+
+        // 恢复流程名称
+        if (configData.flowName) {
+          flowName.value = configData.flowName;
+          localStorage.setItem(FLOW_NAME_KEY, configData.flowName);
+        }
+
+        // 渲染到画布
+        lfPanelRef.value?.setData({
+          nodes: configData.nodes,
+          edges: configData.edges,
+        });
+
+        // 清空选中状态
+        selectedNode.value = null;
+        selectedEdge.value = null;
+
+        message.success('流程配置导入成功');
+      } catch (error) {
+        message.error('文件解析失败：' + (error as Error).message);
+      } finally {
+        // 清空 input 值，允许重复选择同一文件
+        if (fileInputRef.value) {
+          fileInputRef.value.value = '';
+        }
+      }
+    };
+
+    reader.onerror = () => {
+      message.error('文件读取失败');
+    };
+
+    reader.readAsText(file);
+  };
+
   // 保存JSON配置到本地
   const handleSaveJson = () => {
     // 解析当前配置数据
@@ -562,7 +654,12 @@ import CopyNodeIcon from "../components/nodes/CopyNode/CopyNodeIcon.vue";
       configData.flowId = `flow_${Date.now()}`;
     }
 
-    // 更新预览数据（包含新生成的 flowId）
+    // 如果没有 isExecutable，则默认为 true
+    if (configData.isExecutable === undefined) {
+      configData.isExecutable = true;
+    }
+
+    // 更新预览数据（包含新生成的字段）
     const jsonString = JSON.stringify(configData, null, 2);
     previewModalData.value = jsonString;
 

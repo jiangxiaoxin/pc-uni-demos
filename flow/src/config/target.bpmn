@@ -1,48 +1,227 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<bpmn2:definitions xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:bpmn2="http://www.omg.org/spec/BPMN/20100524/MODEL" xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI" xmlns:flowable="http://flowable.org/bpmn" xmlns:di="http://www.omg.org/spec/DD/20100524/DI" xmlns:dc="http://www.omg.org/spec/DD/20100524/DC" id="diagram_jyxflowid" targetNamespace="http://flowable.org/bpmn" xsi:schemaLocation="http://www.omg.org/spec/BPMN/20100524/MODEL BPMN20.xsd">
+<bpmn2:definitions xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xmlns:bpmn2="http://www.omg.org/spec/BPMN/20100524/MODEL"
+  xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI" xmlns:flowable="http://flowable.org/bpmn"
+  xmlns:di="http://www.omg.org/spec/DD/20100524/DI"
+  xmlns:dc="http://www.omg.org/spec/DD/20100524/DC" id="diagram_jyxflowid"
+  targetNamespace="http://flowable.org/bpmn"
+  xsi:schemaLocation="http://www.omg.org/spec/BPMN/20100524/MODEL BPMN20.xsd">
   <bpmn2:process id="jyxflowid" name="jyx 流程" isExecutable="true">
-    <bpmn2:extensionElements>
-      <flowable:properties>
-        <flowable:property name="$OrangeDiagramType" value="0" />
-      </flowable:properties>
-    </bpmn2:extensionElements>
-    <bpmn2:startEvent id="Event_0ztxec1">
-      <bpmn2:outgoing>Flow_1nrn0t7</bpmn2:outgoing>
+
+    <bpmn2:startEvent id="Event_0upqaab" name="任务开始了">
+      <bpmn2:outgoing>Flow_0mn83a0</bpmn2:outgoing>
+      <bpmn2:outgoing>Flow_0as0u50</bpmn2:outgoing>
+      <bpmn2:outgoing>Flow_0ypwy6e</bpmn2:outgoing>
     </bpmn2:startEvent>
-    <bpmn2:userTask id="Activity_0rwbf9c" flowable:formKey="{&#34;routerName&#34;:&#34;jyxtestform&#34;,&#34;formAuth&#34;:{},&#34;readOnly&#34;:true,&#34;groupType&#34;:&#34;ASSIGNEE&#34;}">
+    <bpmn2:userTask id="Activity_04sz8el" name="组长审批"
+      flowable:formKey="{&#34;routerName&#34;:&#34;jyxtestform&#34;,&#34;formAuth&#34;:{},&#34;readOnly&#34;:true,&#34;groupType&#34;:&#34;ASSIGNEE&#34;}">
       <bpmn2:extensionElements>
         <flowable:variableList />
-        <flowable:operationList />
+        <flowable:copyItemList />
+        <flowable:operationList>
+          <flowable:formOperation id="1775118150749" label="同意" type="agree" showOrder="0"
+            variableList="{}" buttonStyle="primary" buttonPlain="true" />
+          <flowable:formOperation id="1775118154025" label="拒绝" type="refuse" showOrder="0"
+            variableList="{}" buttonStyle="primary" buttonPlain="true" />
+        </flowable:operationList>
       </bpmn2:extensionElements>
-      <bpmn2:incoming>Flow_1nrn0t7</bpmn2:incoming>
-      <bpmn2:outgoing>Flow_0jnijhx</bpmn2:outgoing>
+      <bpmn2:incoming>Flow_0mn83a0</bpmn2:incoming>
+      <bpmn2:incoming>Flow_0as0u50</bpmn2:incoming>
+      <bpmn2:incoming>Flow_0ypwy6e</bpmn2:incoming>
+      <bpmn2:outgoing>Flow_095dl8t</bpmn2:outgoing>
+      <bpmn2:outgoing>Flow_09jr12v</bpmn2:outgoing>
     </bpmn2:userTask>
-    <bpmn2:endEvent id="Event_0xgfyas">
-      <bpmn2:incoming>Flow_0jnijhx</bpmn2:incoming>
+    <bpmn2:sequenceFlow id="Flow_0mn83a0" sourceRef="Event_0upqaab" targetRef="Activity_04sz8el" />
+    <bpmn2:userTask id="Activity_07f7fsf" name="部长审批"
+      flowable:formKey="{&#34;routerName&#34;:&#34;jyxtestform&#34;,&#34;formAuth&#34;:{},&#34;readOnly&#34;:true,&#34;groupType&#34;:&#34;ASSIGNEE&#34;}">
+      <bpmn2:extensionElements>
+        <flowable:variableList />
+        <flowable:copyItemList />
+        <flowable:operationList>
+          <flowable:formOperation id="1775118159709" label="同意" type="agree" showOrder="0"
+            variableList="{}" buttonStyle="primary" buttonPlain="true" />
+          <flowable:formOperation id="1775118163709" label="拒绝" type="refuse" showOrder="0"
+            variableList="{}" buttonStyle="primary" buttonPlain="true" />
+        </flowable:operationList>
+      </bpmn2:extensionElements>
+      <bpmn2:incoming>Flow_095dl8t</bpmn2:incoming>
+      <bpmn2:outgoing>Flow_0ihlzss</bpmn2:outgoing>
+      <bpmn2:outgoing>Flow_1ieguin</bpmn2:outgoing>
+    </bpmn2:userTask>
+    <bpmn2:sequenceFlow id="Flow_095dl8t" name="组长同意" sourceRef="Activity_04sz8el"
+      targetRef="Activity_07f7fsf">
+      <bpmn2:extensionElements>
+        <flowable:customCondition type="operation" operationType="agree" />
+      </bpmn2:extensionElements>
+      <bpmn2:conditionExpression xsi:type="bpmn2:tFormalExpression">${operationType == 'agree'}</bpmn2:conditionExpression>
+    </bpmn2:sequenceFlow>
+    <bpmn2:endEvent id="Event_0ddyccy" name="任务结束了">
+      <bpmn2:incoming>Flow_052n5kp</bpmn2:incoming>
+      <bpmn2:incoming>Flow_09jr12v</bpmn2:incoming>
+      <bpmn2:incoming>Flow_1ieguin</bpmn2:incoming>
+      <bpmn2:incoming>Flow_0cw7ils</bpmn2:incoming>
+      <bpmn2:incoming>Flow_05ikfal</bpmn2:incoming>
     </bpmn2:endEvent>
-    <bpmn2:sequenceFlow id="Flow_1nrn0t7" sourceRef="Event_0ztxec1" targetRef="Activity_0rwbf9c" />
-    <bpmn2:sequenceFlow id="Flow_0jnijhx" sourceRef="Activity_0rwbf9c" targetRef="Event_0xgfyas" />
+    <bpmn2:userTask id="Activity_0vrfayt" name="总经理审批"
+      flowable:formKey="{&#34;routerName&#34;:&#34;jyxtestform&#34;,&#34;formAuth&#34;:{},&#34;readOnly&#34;:true,&#34;groupType&#34;:&#34;ASSIGNEE&#34;}">
+      <bpmn2:extensionElements>
+        <flowable:copyItemList />
+        <flowable:variableList />
+        <flowable:operationList>
+          <flowable:formOperation id="1775118172332" label="同意" type="agree" showOrder="0"
+            variableList="{}" buttonStyle="primary" buttonPlain="true" />
+          <flowable:formOperation id="1775118175278" label="拒绝" type="refuse" showOrder="0"
+            variableList="{}" buttonStyle="primary" buttonPlain="true" />
+        </flowable:operationList>
+      </bpmn2:extensionElements>
+      <bpmn2:incoming>Flow_0ihlzss</bpmn2:incoming>
+      <bpmn2:outgoing>Flow_052n5kp</bpmn2:outgoing>
+      <bpmn2:outgoing>Flow_0cw7ils</bpmn2:outgoing>
+      <bpmn2:outgoing>Flow_05ikfal</bpmn2:outgoing>
+    </bpmn2:userTask>
+    <bpmn2:sequenceFlow id="Flow_0ihlzss" name="部长同意" sourceRef="Activity_07f7fsf"
+      targetRef="Activity_0vrfayt">
+      <bpmn2:extensionElements>
+        <flowable:customCondition type="operation" operationType="agree" />
+      </bpmn2:extensionElements>
+      <bpmn2:conditionExpression xsi:type="bpmn2:tFormalExpression">${operationType == 'agree'}</bpmn2:conditionExpression>
+    </bpmn2:sequenceFlow>
+    <bpmn2:sequenceFlow id="Flow_052n5kp" name="总经理同意" sourceRef="Activity_0vrfayt"
+      targetRef="Event_0ddyccy" />
+    <bpmn2:sequenceFlow id="Flow_0as0u50" sourceRef="Event_0upqaab" targetRef="Activity_04sz8el" />
+    <bpmn2:sequenceFlow id="Flow_0ypwy6e" sourceRef="Event_0upqaab" targetRef="Activity_04sz8el" />
+    <bpmn2:sequenceFlow id="Flow_09jr12v" name="组长拒绝" sourceRef="Activity_04sz8el"
+      targetRef="Event_0ddyccy">
+      <bpmn2:extensionElements>
+        <flowable:customCondition type="operation" operationType="refuse" />
+      </bpmn2:extensionElements>
+      <bpmn2:conditionExpression xsi:type="bpmn2:tFormalExpression">${operationType == 'refuse'}</bpmn2:conditionExpression>
+    </bpmn2:sequenceFlow>
+    <bpmn2:sequenceFlow id="Flow_1ieguin" name="部长拒绝" sourceRef="Activity_07f7fsf"
+      targetRef="Event_0ddyccy">
+      <bpmn2:extensionElements>
+        <flowable:customCondition type="operation" operationType="refuse" />
+      </bpmn2:extensionElements>
+      <bpmn2:conditionExpression xsi:type="bpmn2:tFormalExpression">${operationType == 'refuse'}</bpmn2:conditionExpression>
+    </bpmn2:sequenceFlow>
+    <bpmn2:sequenceFlow id="Flow_0cw7ils" name="总经理同意" sourceRef="Activity_0vrfayt"
+      targetRef="Event_0ddyccy">
+      <bpmn2:extensionElements>
+        <flowable:customCondition type="operation" operationType="agree" />
+      </bpmn2:extensionElements>
+      <bpmn2:conditionExpression xsi:type="bpmn2:tFormalExpression">${operationType == 'agree'}</bpmn2:conditionExpression>
+    </bpmn2:sequenceFlow>
+    <bpmn2:sequenceFlow id="Flow_05ikfal" name="总经理拒绝" sourceRef="Activity_0vrfayt"
+      targetRef="Event_0ddyccy">
+      <bpmn2:extensionElements>
+        <flowable:customCondition type="operation" operationType="refuse" />
+      </bpmn2:extensionElements>
+      <bpmn2:conditionExpression xsi:type="bpmn2:tFormalExpression">${operationType == 'refuse'}</bpmn2:conditionExpression>
+    </bpmn2:sequenceFlow>
   </bpmn2:process>
   <bpmndi:BPMNDiagram id="BPMNDiagram_1">
     <bpmndi:BPMNPlane id="BPMNPlane_1" bpmnElement="jyxflowid">
-      <bpmndi:BPMNEdge id="Flow_1nrn0t7_di" bpmnElement="Flow_1nrn0t7">
-        <di:waypoint x="358" y="220" />
-        <di:waypoint x="530" y="220" />
+      <bpmndi:BPMNEdge id="Flow_0mn83a0_di" bpmnElement="Flow_0mn83a0">
+        <di:waypoint x="328" y="230" />
+        <di:waypoint x="364" y="230" />
+        <di:waypoint x="364" y="130" />
+        <di:waypoint x="400" y="130" />
       </bpmndi:BPMNEdge>
-      <bpmndi:BPMNEdge id="Flow_0jnijhx_di" bpmnElement="Flow_0jnijhx">
-        <di:waypoint x="630" y="220" />
-        <di:waypoint x="741" y="220" />
-        <di:waypoint x="741" y="340" />
-        <di:waypoint x="852" y="340" />
+      <bpmndi:BPMNEdge id="Flow_095dl8t_di" bpmnElement="Flow_095dl8t">
+        <di:waypoint x="500" y="130" />
+        <di:waypoint x="520" y="130" />
+        <di:waypoint x="520" y="330" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="513" y="177" width="44" height="14" />
+        </bpmndi:BPMNLabel>
       </bpmndi:BPMNEdge>
-      <bpmndi:BPMNShape id="Event_0ztxec1_di" bpmnElement="Event_0ztxec1">
-        <dc:Bounds x="322" y="202" width="36" height="36" />
+      <bpmndi:BPMNEdge id="Flow_0ihlzss_di" bpmnElement="Flow_0ihlzss">
+        <di:waypoint x="570" y="370" />
+        <di:waypoint x="685" y="370" />
+        <di:waypoint x="685" y="440" />
+        <di:waypoint x="730" y="440" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="678" y="399" width="44" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_052n5kp_di" bpmnElement="Flow_052n5kp">
+        <di:waypoint x="830" y="440" />
+        <di:waypoint x="926" y="440" />
+        <di:waypoint x="926" y="230" />
+        <di:waypoint x="1022" y="230" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="914" y="332" width="55" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_0as0u50_di" bpmnElement="Flow_0as0u50">
+        <di:waypoint x="328" y="230" />
+        <di:waypoint x="364" y="230" />
+        <di:waypoint x="364" y="130" />
+        <di:waypoint x="400" y="130" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_0ypwy6e_di" bpmnElement="Flow_0ypwy6e">
+        <di:waypoint x="328" y="230" />
+        <di:waypoint x="364" y="230" />
+        <di:waypoint x="364" y="130" />
+        <di:waypoint x="400" y="130" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_09jr12v_di" bpmnElement="Flow_09jr12v">
+        <di:waypoint x="500" y="130" />
+        <di:waypoint x="761" y="130" />
+        <di:waypoint x="761" y="40" />
+        <di:waypoint x="1040" y="40" />
+        <di:waypoint x="1040" y="212" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="724" y="74" width="44" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_1ieguin_di" bpmnElement="Flow_1ieguin">
+        <di:waypoint x="570" y="370" />
+        <di:waypoint x="796" y="370" />
+        <di:waypoint x="796" y="110" />
+        <di:waypoint x="1040" y="110" />
+        <di:waypoint x="1040" y="212" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="791" y="240" width="44" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_0cw7ils_di" bpmnElement="Flow_0cw7ils">
+        <di:waypoint x="830" y="440" />
+        <di:waypoint x="926" y="440" />
+        <di:waypoint x="926" y="230" />
+        <di:waypoint x="1022" y="230" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="914" y="332" width="55" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_05ikfal_di" bpmnElement="Flow_05ikfal">
+        <di:waypoint x="820" y="480" />
+        <di:waypoint x="1040" y="480" />
+        <di:waypoint x="1040" y="248" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="903" y="462" width="55" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNShape id="Event_0upqaab_di" bpmnElement="Event_0upqaab">
+        <dc:Bounds x="292" y="212" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="284" y="255" width="54" height="14" />
+        </bpmndi:BPMNLabel>
       </bpmndi:BPMNShape>
-      <bpmndi:BPMNShape id="Activity_0rwbf9c_di" bpmnElement="Activity_0rwbf9c">
-        <dc:Bounds x="530" y="180" width="100" height="80" />
+      <bpmndi:BPMNShape id="Event_0ddyccy_di" bpmnElement="Event_0ddyccy">
+        <dc:Bounds x="1022" y="212" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1068" y="223" width="54" height="14" />
+        </bpmndi:BPMNLabel>
       </bpmndi:BPMNShape>
-      <bpmndi:BPMNShape id="Event_0xgfyas_di" bpmnElement="Event_0xgfyas">
-        <dc:Bounds x="852" y="322" width="36" height="36" />
+      <bpmndi:BPMNShape id="Activity_04sz8el_di" bpmnElement="Activity_04sz8el">
+        <dc:Bounds x="400" y="90" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Activity_0vrfayt_di" bpmnElement="Activity_0vrfayt">
+        <dc:Bounds x="730" y="400" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Activity_07f7fsf_di" bpmnElement="Activity_07f7fsf">
+        <dc:Bounds x="470" y="330" width="100" height="80" />
       </bpmndi:BPMNShape>
     </bpmndi:BPMNPlane>
   </bpmndi:BPMNDiagram>

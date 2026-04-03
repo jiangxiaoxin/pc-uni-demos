@@ -15,6 +15,8 @@
     "@logicflow/vue-node-registry": "^1.1.12",
     "@pc-uni-h5/utils": "workspace:*",
     "ant-design-vue": "^4.2.6",
+    "bpmn-js": "^18.14.0",
+    "bpmn-moddle": "^10.0.0",
     "vue": "^3.5.30",
     "vue-router": "^4.6.4"
   },

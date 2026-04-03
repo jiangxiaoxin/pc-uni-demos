@@ -28,6 +28,7 @@
       <router-link to="/">流程编辑器</router-link>
       <router-link to="/view">流程查看器</router-link>
       <router-link to="/xml" class="active">XML 解析</router-link>
+      <router-link to="/json-to-xml">JSON 转 XML</router-link>
     </div>
   </div>
 </template>

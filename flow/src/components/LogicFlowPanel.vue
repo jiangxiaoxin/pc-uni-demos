@@ -89,7 +89,7 @@
       hoverOutline: !props.readonly,
       nodeSelectedOutline: !props.readonly,
       snapline: true,
-      plugins: [MiniMap, Menu],
+      // plugins: [MiniMap, Menu],
       nodeTextEdit: false,
       edgeTextEdit: false,
       edgeType: "polyline", // 边连接的样式，polyline 折线。line 直线
@@ -99,6 +99,7 @@
           stroke: "#aaa",
         },
       },
+
     });
 
     // 注册自定义 Vue 节点

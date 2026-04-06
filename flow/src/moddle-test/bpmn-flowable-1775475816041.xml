@@ -1,0 +1,61 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<bpmn2:definitions xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xmlns:bpmn2="http://www.omg.org/spec/BPMN/20100524/MODEL"
+  xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI"
+  xmlns:dc="http://www.omg.org/spec/DD/20100524/DC" xmlns:flowable="http://flowable.org/bpmn"
+  xmlns:di="http://www.omg.org/spec/DD/20100524/DI" id="Definitions_1"
+  targetNamespace="http://bpmn.io/schema/bpmn" exporter="Camunda Modeler" exporterVersion="4.1.0"
+  xsi:schemaLocation="http://www.omg.org/spec/BPMN/20100524/MODEL BPMN20.xsd">
+  <bpmn2:process id="Process_1" name="未定义的流程" isExecutable="false">
+    <bpmn2:startEvent id="Event_1czh4ij" name="我是开始flowable" time="1775475816027">
+      <bpmn2:outgoing>Flow_1863d41</bpmn2:outgoing>
+    </bpmn2:startEvent>
+    <bpmn2:userTask id="Activity_0q1jsmb" name="审批任务" flowable:assignee="${assignee}"
+      flowable:formKey="{&#34;routerName&#34;:&#34;approvalForm&#34;,&#34;formAuth&#34;:{},&#34;readOnly&#34;:true,&#34;groupType&#34;:&#34;ASSIGNEE&#34;}"
+      flowable:dueDate="${dateTime().plusDays(3).toDate()}">
+      <bpmn2:extensionElements>
+        <flowable:variableList />
+        <flowable:copyItemList>
+          <flowable:copyItem id="hr" type="user" />
+        </flowable:copyItemList>
+        <flowable:operationList>
+          <flowable:formOperation id="op_001" label="同意" type="agree" showOrder="0"
+            variableList="{}" buttonStyle="primary" buttonPlain="true" />
+          <flowable:formOperation id="op_002" label="拒绝" type="refuse" showOrder="1"
+            variableList="{}" buttonStyle="danger" buttonPlain="true" />
+        </flowable:operationList>
+      </bpmn2:extensionElements>
+      <bpmn2:incoming>Flow_1863d41</bpmn2:incoming>
+    </bpmn2:userTask>
+    <bpmn2:sequenceFlow id="Flow_1863d41" name="同意" sourceRef="Event_1czh4ij"
+      targetRef="Activity_0q1jsmb">
+      <bpmn2:extensionElements>
+        <flowable:customCondition type="operation" operationType="agree" />
+      </bpmn2:extensionElements>
+      <bpmn2:conditionExpression xsi:type="bpmn2:tFormalExpression">${operationType == 'agree'}</bpmn2:conditionExpression>
+    </bpmn2:sequenceFlow>
+  </bpmn2:process>
+  <bpmndi:BPMNDiagram id="BPMNDiagram_1">
+    <bpmndi:BPMNPlane id="BPMNPlane_1" bpmnElement="Process_1">
+      <bpmndi:BPMNShape id="Event_1czh4ij_di" bpmnElement="Event_1czh4ij">
+        <dc:Bounds x="182" y="82" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="178" y="125" width="45" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Activity_0q1jsmb_di" bpmnElement="Activity_0q1jsmb">
+        <dc:Bounds x="350" y="160" width="100" height="80" />
+        <bpmndi:BPMNLabel />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge id="Flow_1863d41_di" bpmnElement="Flow_1863d41">
+        <di:waypoint x="218" y="100" />
+        <di:waypoint x="280" y="100" />
+        <di:waypoint x="280" y="200" />
+        <di:waypoint x="350" y="200" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="284" y="147" width="23" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+    </bpmndi:BPMNPlane>
+  </bpmndi:BPMNDiagram>
+</bpmn2:definitions>

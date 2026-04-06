@@ -29,6 +29,32 @@ export default function demo(modeler) {
       time: Date.now(),
     });
 
-    modeler.saveXML({ format: true }).then(({ xml }) => console.info(xml));
+    const endEvent = elementFactory.createShape({
+      type: "bpmn:EndEvent",
+    });
+
+    modeling.createShape(endEvent, { x: 400, y: 100 }, process);
+
+    // 要想更新属性，必须先createShape 到 process，这样才不会报错 
+    modeling.updateProperties(endEvent, {
+      name: "我是个结束点",
+    });
+
+    modeling.connect(startEvent, endEvent);
+
+    // modeler.saveXML({ format: true }).then(({ xml }) => {
+    //   console.info(xml);
+  
+    //   // 保存 XML 到文件
+    //   const blob = new Blob([xml], { type: "application/xml" });
+    //   const url = URL.createObjectURL(blob);
+    //   const link = document.createElement("a");
+    //   link.href = url;
+    //   link.download = `bpmn-${Date.now()}.xml`;
+    //   document.body.appendChild(link);
+    //   link.click();
+    //   document.body.removeChild(link);
+    //   URL.revokeObjectURL(url);
+    // });
   });
 }

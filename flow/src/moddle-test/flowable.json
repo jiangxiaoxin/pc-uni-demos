@@ -1,0 +1,89 @@
+{
+  "name": "Flowable",
+  "uri": "http://flowable.org/bpmn",
+  "prefix": "flowable",
+  "xml": {
+    "tagAlias": "lowerCase"
+  },
+  "associations": [],
+  "types": [
+    {
+      "name": "FormOperation",
+      "superClass": ["Element"],
+      "meta": {
+        "allowedIn": ["flowable:operationList"]
+      },
+      "properties": [
+        { "name": "id", "type": "String", "isAttr": true },
+        { "name": "label", "type": "String", "isAttr": true },
+        { "name": "type", "type": "String", "isAttr": true },
+        { "name": "showOrder", "type": "Integer", "isAttr": true },
+        { "name": "variableList", "type": "String", "isAttr": true },
+        { "name": "buttonStyle", "type": "String", "isAttr": true },
+        { "name": "buttonPlain", "type": "String", "isAttr": true }
+      ]
+    },
+    {
+      "name": "operationList",
+      "superClass": ["Element"],
+      "meta": {
+        "allowedIn": ["bpmn:UserTask", "bpmn:ExtensionElements"]
+      },
+      "properties": [
+        { "name": "formOperation", "type": "flowable:FormOperation", "isMany": true }
+      ]
+    },
+    {
+      "name": "variableList",
+      "superClass": ["Element"],
+      "meta": {
+        "allowedIn": ["bpmn:UserTask", "bpmn:ExtensionElements"]
+      },
+      "properties": []
+    },
+    {
+      "name": "CopyItem",
+      "superClass": ["Element"],
+      "meta": {
+        "allowedIn": ["flowable:copyItemList"]
+      },
+      "properties": [
+        { "name": "id", "type": "String", "isAttr": true },
+        { "name": "type", "type": "String", "isAttr": true }
+      ]
+    },
+    {
+      "name": "copyItemList",
+      "superClass": ["Element"],
+      "meta": {
+        "allowedIn": ["bpmn:UserTask", "bpmn:ExtensionElements"]
+      },
+      "properties": [
+        { "name": "copyItem", "type": "flowable:CopyItem", "isMany": true }
+      ]
+    },
+    {
+      "name": "customCondition",
+      "superClass": ["Element"],
+      "meta": {
+        "allowedIn": ["bpmn:SequenceFlow", "bpmn:ExtensionElements"]
+      },
+      "properties": [
+        { "name": "type", "type": "String", "isAttr": true },
+        { "name": "operationType", "type": "String", "isAttr": true }
+      ]
+    },
+    {
+      "name": "FlowableUserTask",
+      "extends": ["bpmn:UserTask"],
+      "properties": [
+        { "name": "assignee", "type": "String", "isAttr": true, "ns": { "name": "flowable:assignee" } },
+        { "name": "formKey", "type": "String", "isAttr": true, "ns": { "name": "flowable:formKey" } },
+        { "name": "dueDate", "type": "String", "isAttr": true, "ns": { "name": "flowable:dueDate" } },
+        { "name": "candidateUsers", "type": "String", "isAttr": true, "ns": { "name": "flowable:candidateUsers" } },
+        { "name": "candidateGroups", "type": "String", "isAttr": true, "ns": { "name": "flowable:candidateGroups" } }
+      ]
+    }
+  ],
+  "enumerations": []
+}

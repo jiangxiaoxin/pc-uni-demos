@@ -4,6 +4,7 @@ import FlowViewer from '../views/FlowViewer.vue'
 import XmlParserView from '../views/XmlParserView.vue'
 import JsonToXmlView from '../views/JsonToXmlView.vue'
 import moddle from '../views/moddle.vue'
+import SqlEditor from '../views/SqlEditor.vue'
 
 const router = createRouter({
   history: createWebHistory(),
@@ -32,6 +33,10 @@ const router = createRouter({
       path: '/moddle',
       name: 'Moddle',
       component: moddle
+    },{
+      path: '/sql',
+      name: 'sql',
+      component: SqlEditor
     }
   ]
 })

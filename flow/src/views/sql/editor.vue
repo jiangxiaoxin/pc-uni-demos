@@ -81,6 +81,7 @@
 
   const emit = defineEmits<{
     (e: "node-select", node: SqlNodeData): void;
+    (e: "node-delete", nodeId: string): void;
     (e: "blank-click"): void;
   }>();
 
@@ -105,11 +106,10 @@
     lf.focusOn(nodeId);
   };
 
-  const updateNodeName = (nodeId: string, name: string) => {
+  const updateNodeTitle = (nodeId: string, title: string) => {
     if (!lf) return;
     lf.setProperties(nodeId, {
-      title: name,
-      name,
+      title,
     });
   };
 
@@ -212,6 +212,12 @@
 
     lf.on("blank:click", () => {
       emit("blank-click");
+    });
+
+    lf.on("node:delete", ({ data }) => {
+      if (data?.id) {
+        emit("node-delete", data.id);
+      }
     });
 
     lf.on("edge:add", ({ data }) => {
@@ -353,7 +359,7 @@
     resize: resizeEditor,
     focusNode,
     centerGraph,
-    updateNodeName,
+    updateNodeTitle,
   });
 </script>
 

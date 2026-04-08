@@ -2,6 +2,7 @@
   <div
     class="sql-node"
     :style="{ width: nodeWidth + 'px', height: nodeHeight + 'px' }"
+    :title="nodeTitle"
   >
     <div
       class="node-left-bar"

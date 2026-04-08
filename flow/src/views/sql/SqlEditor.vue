@@ -24,6 +24,7 @@
         ref="editorRef"
         class="editor-area"
         @node-select="handleNodeSelect"
+        @node-delete="handleNodeDelete"
         @blank-click="handleBlankClick"
       />
       <property
@@ -44,7 +45,7 @@
   interface EditorExpose {
     resize: () => void;
     focusNode: (nodeId: string) => void;
-    updateNodeName: (nodeId: string, name: string) => void;
+    updateNodeTitle: (nodeId: string, title: string) => void;
   }
 
   interface SqlNodeData {
@@ -78,17 +79,25 @@
     editorRef.value?.resize();
   };
 
+  const handleNodeDelete = async (nodeId: string) => {
+    if (selectedNode.value?.id !== nodeId) return;
+
+    selectedNode.value = null;
+    propertyVisible.value = false;
+    await nextTick();
+    editorRef.value?.resize();
+  };
+
   const handleSubmitName = (name: string) => {
     const currentNode = selectedNode.value;
     if (!currentNode) return;
 
-    editorRef.value?.updateNodeName(currentNode.id, name);
+    editorRef.value?.updateNodeTitle(currentNode.id, name);
     selectedNode.value = {
       ...currentNode,
       properties: {
         ...currentNode.properties,
         title: name,
-        name,
       },
     };
   };

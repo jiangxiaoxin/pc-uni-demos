@@ -34,6 +34,7 @@
       background: {
         backgroundColor: "#f8f9fa",
       },
+      isSilentMode: false,
       stopScrollGraph: false,
       stopZoomGraph: false,
       stopMoveGraph: false,
@@ -44,6 +45,9 @@
       nodeTextEdit: false,
       edgeTextEdit: false,
       edgeType: "polyline",
+      hideAnchors: false,
+      hoverOutline: true,
+      nodeSelectedOutline: true,
       keyboard: {
         enabled: true,
       },
@@ -90,9 +94,26 @@
       console.log("取消选中");
     });
 
+    // 监听连接事件
+    lf.on("edge:add", ({ data }) => {
+      console.log("🚀 连线添加成功:", data);
+    });
+
+    lf.on("connection:not-allowed", ({ msg }) => {
+      console.warn("🚫 连接被阻止:", msg);
+      message.warning(msg || "当前连接不被允许");
+    });
+
     // 渲染空数据
     lf.render({});
   });
+
+  // 检查画布中是否已存在某类型节点
+  const hasNodeType = (type: string): boolean => {
+    if (!lf) return false;
+    const graphData = lf.getGraphData();
+    return graphData.nodes?.some((node) => node.type === type) || false;
+  };
 
   // 拖拽放置
   const handleDrop = (event: DragEvent) => {
@@ -104,6 +125,12 @@
     const container = containerRef.value;
     if (!container) return;
 
+    // 规则: 整个画布只能有一个数据输出节点
+    if (nodeType.type === "out-node" && hasNodeType("out-node")) {
+      message.warning("画布中只能有一个数据输出节点");
+      return;
+    }
+
     const rect = container.getBoundingClientRect();
     const x = event.clientX - rect.left;
     const y = event.clientY - rect.top;
@@ -111,7 +138,7 @@
     // 使用自定义节点类型
     const newNode = {
       id: `${nodeType.type}_${Date.now()}`,
-      type: nodeType.type, // 使用实际的节点类型，而非 "rect"
+      type: nodeType.type,
       x,
       y,
       properties: {

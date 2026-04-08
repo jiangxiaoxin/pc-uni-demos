@@ -112,7 +112,7 @@
       },
       style: {
         baseEdge: {
-          stroke: "#aaa",
+          stroke: "#0369A1",
         },
       },
     });

@@ -1,7 +1,52 @@
 <template>
   <div class="editor-wrapper" @drop="handleDrop" @dragover.prevent>
+    <!-- 右上角按钮面板 -->
+    <div class="toolbar-panel">
+      <a-space>
+        <a-button type="primary" @click="handleSave">
+          <template #icon><SaveOutlined /></template>
+          保存
+        </a-button>
+        <a-button @click="handleLoad">
+          <template #icon><UploadOutlined /></template>
+          加载
+        </a-button>
+        <a-button @click="handlePreview">
+          <template #icon><EyeOutlined /></template>
+          预览
+        </a-button>
+        <a-button danger @click="handleClear">
+          <template #icon><DeleteOutlined /></template>
+          清空
+        </a-button>
+      </a-space>
+    </div>
     <div ref="containerRef" class="logic-flow-container"></div>
     <TeleportContainer :flow-id="flowId" />
+
+    <!-- 预览弹框 -->
+    <a-modal
+      v-model:open="previewVisible"
+      title="流程配置预览"
+      width="800px"
+      :footer="null"
+    >
+      <div class="preview-content">
+        <a-alert
+          message="以下是当前流程图的完整配置数据"
+          type="info"
+          show-icon
+          style="margin-bottom: 16px"
+        />
+        <div class="preview-actions">
+          <a-button type="primary" @click="handleCopyConfig">
+            <template #icon><CopyOutlined /></template>
+            复制配置
+          </a-button>
+        </div>
+        <pre class="preview-data">{{ previewData }}</pre>
+      </div>
+    </a-modal>
   </div>
 </template>
 
@@ -9,7 +54,14 @@
   import LogicFlow from "@logicflow/core";
   import "@logicflow/core/dist/index.css";
   import { onMounted, onUnmounted, ref } from "vue";
-  import { message } from "ant-design-vue";
+  import { message, Modal } from "ant-design-vue";
+  import {
+    SaveOutlined,
+    UploadOutlined,
+    EyeOutlined,
+    DeleteOutlined,
+    CopyOutlined,
+  } from "@ant-design/icons-vue";
   import { register, getTeleport } from "@logicflow/vue-node-registry";
   import SqlNode from "./nodes/SqlNode.vue";
   import SqlNodeModel from "./nodes/SqlNodeModel";
@@ -21,6 +73,13 @@
   let lf: LogicFlow | null = null;
   const containerRef = ref<HTMLElement>();
   const flowId = ref("");
+
+  // 预览弹框状态
+  const previewVisible = ref(false);
+  const previewData = ref("");
+
+  // localStorage key
+  const STORAGE_KEY = "sql_editor_flow_data";
 
   onMounted(() => {
     if (!containerRef.value) return;
@@ -157,6 +216,65 @@
     message.success(`已添加 ${nodeType.name} 节点`);
   };
 
+  // 保存配置到本地
+  const handleSave = () => {
+    if (!lf) return;
+    const data = lf.getGraphData();
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+    message.success("流程配置已保存到本地");
+  };
+
+  // 从本地加载配置
+  const handleLoad = () => {
+    if (!lf) return;
+    const savedData = localStorage.getItem(STORAGE_KEY);
+    if (savedData) {
+      try {
+        const data = JSON.parse(savedData);
+        lf.render(data);
+        message.success("流程配置已加载");
+      } catch (e) {
+        message.error("加载失败：配置数据损坏");
+      }
+    } else {
+      message.warning("没有找到保存的配置");
+    }
+  };
+
+  // 预览配置
+  const handlePreview = () => {
+    if (!lf) return;
+    const data = lf.getGraphData();
+    previewData.value = JSON.stringify(data, null, 2);
+    previewVisible.value = true;
+  };
+
+  // 复制配置到剪贴板
+  const handleCopyConfig = async () => {
+    try {
+      await navigator.clipboard.writeText(previewData.value);
+      message.success("配置已复制到剪贴板");
+    } catch (err) {
+      message.error("复制失败，请手动复制");
+    }
+  };
+
+  // 清空舞台
+  const handleClear = () => {
+    Modal.confirm({
+      title: "确认清空",
+      content: "确定要清空所有节点和连线吗？此操作不可恢复。",
+      okText: "清空",
+      okType: "danger",
+      cancelText: "取消",
+      onOk: () => {
+        if (!lf) return;
+        lf.clearData();
+        message.success("舞台已清空");
+      },
+    });
+  };
+
   onUnmounted(() => {
     if (lf) {
       lf.destroy();
@@ -176,5 +294,37 @@
   .logic-flow-container {
     width: 100%;
     height: 100%;
+  }
+
+  /* 右上角工具栏面板 */
+  .toolbar-panel {
+    position: absolute;
+    top: 16px;
+    right: 16px;
+    z-index: 10;
+    background: #fff;
+    padding: 12px 16px;
+    border-radius: 8px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+  }
+
+  /* 预览弹框内容 */
+  .preview-content {
+    .preview-actions {
+      margin-bottom: 12px;
+      display: flex;
+      justify-content: flex-end;
+    }
+
+    .preview-data {
+      max-height: 500px;
+      overflow: auto;
+      font-size: 12px;
+      background: #f5f5f5;
+      padding: 16px;
+      border-radius: 4px;
+      border: 1px solid #e8e8e8;
+      margin: 0;
+    }
   }
 </style>

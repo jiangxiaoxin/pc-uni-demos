@@ -210,31 +210,31 @@
       emit("node-select", data as SqlNodeData);
     });
 
-    lf.on("blank:dragstart", () => {
-      console.log('dragstartttttttttttt');
-    });
+    // lf.on("blank:dragstart", () => {
+    //   console.log('dragstartttttttttttt');
+    // });
 
-    lf.on("blank:drop", () => {
-      console.log('dropppppppppppppppppppp');
-    });
+    // lf.on("blank:drop", () => {
+    //   console.log('dropppppppppppppppppppp');
+    // });
 
     lf.on("blank:click", () => {
       console.log('blank:clickkkkkkkkkkkkkkk');
       emit("blank-click");
     });
 
-    lf.on("blank:mousedown", ({e}) => {
-      console.log('blank mousedown', e);      
-    })
+    // lf.on("blank:mousedown", ({e}) => {
+    //   console.log('blank mousedown', e);      
+    // })
 
-    lf.on("blank:mousemove", () => {
-      console.log('blank mousemove');
-    })
+    // lf.on("blank:mousemove", () => {
+    //   console.log('blank mousemove');
+    // })
 
-    lf.on("blank:mouseup", () => {
-      console.log('blank mouseup');
+    // lf.on("blank:mouseup", () => {
+    //   console.log('blank mouseup');
     
-    })
+    // })
 
     lf.on("node:delete", ({ data }) => {
       if (data?.id) {
@@ -242,16 +242,16 @@
       }
     });
 
-    lf.on("edge:add", ({ data }) => {
-      console.log("连线添加成功:", data);
-    });
+    // lf.on("edge:add", ({ data }) => {
+    //   console.log("连线添加成功:", data);
+    // });
 
     lf.on("connection:not-allowed", ({ msg }) => {
       console.warn("连接被阻止:", msg);
       message.warning(msg || "当前连接不被允许");
     });
 
-    lf.render({});
+    lf.render({}); //TODO 初始化时可以传入配置，直接绘制
 
     resizeObserver = new ResizeObserver(() => {
       resizeEditor();

@@ -8,7 +8,7 @@
 <script setup lang="ts">
   import { ref, onMounted, onUnmounted, watch } from "vue";
   import LogicFlow from "@logicflow/core";
-  import { MiniMap, Menu } from "@logicflow/extension";
+  // import { MiniMap, Menu } from "@logicflow/extension";
   import { register, getTeleport } from "@logicflow/vue-node-registry";
   import "@logicflow/core/dist/index.css";
   import "@logicflow/extension/lib/style/index.css";

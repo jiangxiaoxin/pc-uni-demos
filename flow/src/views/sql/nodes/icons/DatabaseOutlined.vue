@@ -1,5 +1,7 @@
 <template>
-  <svg viewBox="0 0 24 24" width="14" height="14" fill="currentColor">
-    <path d="M12 2C7.58 2 4 4.24 4 7v10c0 2.76 3.58 5 8 5s8-2.24 8-5V7c0-2.76-3.58-5-8-5zm0 2c3.31 0 6 1.79 6 4s-2.69 4-6 4-6-1.79-6-4 2.69-4 6-4zm0 14c-3.31 0-6-1.79-6-4v-2.5c1.47 1.32 3.69 2.25 6 2.25s4.53-.93 6-2.25V14c0 2.21-2.69 4-6 4z"/>
+  <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+    <ellipse cx="12" cy="5" rx="8" ry="3"/>
+    <path d="M4 5v12c0 1.66 3.58 3 8 3s8-1.34 8-3V5"/>
+    <path d="M4 11c0 1.66 3.58 3 8 3s8-1.34 8-3"/>
   </svg>
 </template>

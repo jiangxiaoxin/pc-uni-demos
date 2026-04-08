@@ -58,12 +58,12 @@ const graph = getGraph()
 
 // 节点数据
 const nodeData = ref(node.getData())
-console.log("🚀 ~ SqlNode.vue:61 ~ nodeData:", nodeData)
+console.log("🚀 ~ SqlNode.vue:61 ~ nodeData:", nodeData.value)
 
 
 // 计算属性
 const nodeTitle = computed(() => {
-  
+
   return nodeData.value.properties?.title || nodeData.value.properties?.name || '未命名'
 })
 

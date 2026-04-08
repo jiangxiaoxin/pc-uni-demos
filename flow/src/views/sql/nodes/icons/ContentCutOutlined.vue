@@ -1,5 +1,9 @@
 <template>
-  <svg viewBox="0 0 24 24" width="14" height="14" fill="currentColor">
-    <path d="M9.64 7.64c.23-.5.36-1.05.36-1.64 0-2.21-1.79-4-4-4S2 3.79 2 6s1.79 4 4 4c.59 0 1.14-.13 1.64-.36L10 12l-2.36 2.36C7.14 14.13 6.59 14 6 14c-2.21 0-4 1.79-4 4s1.79 4 4 4 4-1.79 4-4c0-.59-.13-1.14-.36-1.64L12 14l7 7h3v-1L9.64 7.64zM6 8c-1.1 0-2-.89-2-2s.9-2 2-2 2 .89 2 2-.9 2-2 2zm0 12c-1.1 0-2-.89-2-2s.9-2 2-2 2 .89 2 2-.9 2-2 2zm6-7c-.55 0-1-.45-1-1s.45-1 1-1 1 .45 1 1-.45 1-1 1zm13-3l-3-3v2h-3v2h3v2l3-3z"/>
+  <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+    <circle cx="6" cy="6" r="3"/>
+    <circle cx="6" cy="18" r="3"/>
+    <line x1="20" y1="4" x2="8.12" y2="15.88"/>
+    <line x1="14.47" y1="14.48" x2="20" y2="20"/>
+    <line x1="8.12" y1="8.12" x2="12" y2="12"/>
   </svg>
 </template>

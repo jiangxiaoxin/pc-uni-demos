@@ -22,7 +22,7 @@ export interface NodeType {
 export const nodeTypes: NodeType[] = [
   {
     type: "in-node",
-    name: "输入",
+    name: "数据输入",
     title: "数据输入",
     icon: "database",
     color: "#1890ff",
@@ -34,7 +34,7 @@ export const nodeTypes: NodeType[] = [
   },
   {
     type: "out-node",
-    name: "输出",
+    name: "数据输出",
     title: "数据输出",
     icon: "export",
     color: "#52c41a",
@@ -47,7 +47,7 @@ export const nodeTypes: NodeType[] = [
   {
     type: "join-node",
     name: "横向连接",
-    title: "JOIN",
+    title: "横向连接",
     icon: "join",
     color: "#722ed1",
     anchors: { in: true, out: true },
@@ -59,7 +59,7 @@ export const nodeTypes: NodeType[] = [
   {
     type: "union-node",
     name: "追加合并",
-    title: "UNION",
+    title: "追加合并",
     icon: "merge",
     color: "#2f54eb",
     anchors: { in: true, out: true },
@@ -71,7 +71,7 @@ export const nodeTypes: NodeType[] = [
   {
     type: "group-node",
     name: "分组汇总",
-    title: "GROUP BY",
+    title: "分组汇总",
     icon: "functions",
     color: "#eb2f96",
     anchors: { in: true, out: true },
@@ -83,7 +83,7 @@ export const nodeTypes: NodeType[] = [
   {
     type: "where-node",
     name: "数据筛选",
-    title: "WHERE",
+    title: "数据筛选",
     icon: "filter",
     color: "#fa8c16",
     anchors: { in: true, out: true },
@@ -95,7 +95,7 @@ export const nodeTypes: NodeType[] = [
   {
     type: "field-node",
     name: "字段设置",
-    title: "AS",
+    title: "字段设置",
     icon: "text",
     color: "#13c2c2",
     anchors: { in: true, out: true },
@@ -107,7 +107,7 @@ export const nodeTypes: NodeType[] = [
   {
     type: "distinct-node",
     name: "去重",
-    title: "DISTINCT",
+    title: "去重",
     icon: "cut",
     color: "#fa541c",
     anchors: { in: true, out: true },

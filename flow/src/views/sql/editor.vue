@@ -210,9 +210,31 @@
       emit("node-select", data as SqlNodeData);
     });
 
+    lf.on("blank:dragstart", () => {
+      console.log('dragstartttttttttttt');
+    });
+
+    lf.on("blank:drop", () => {
+      console.log('dropppppppppppppppppppp');
+    });
+
     lf.on("blank:click", () => {
+      console.log('blank:clickkkkkkkkkkkkkkk');
       emit("blank-click");
     });
+
+    lf.on("blank:mousedown", ({e}) => {
+      console.log('blank mousedown', e);      
+    })
+
+    lf.on("blank:mousemove", () => {
+      console.log('blank mousemove');
+    })
+
+    lf.on("blank:mouseup", () => {
+      console.log('blank mouseup');
+    
+    })
 
     lf.on("node:delete", ({ data }) => {
       if (data?.id) {

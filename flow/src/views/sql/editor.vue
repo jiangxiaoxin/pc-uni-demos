@@ -105,35 +105,45 @@
     lf.focusOn(nodeId);
   };
 
-  const getGraphNodes = () => lf?.getGraphData().nodes || [];
+  const updateNodeName = (nodeId: string, name: string) => {
+    if (!lf) return;
+    lf.setProperties(nodeId, {
+      title: name,
+      name,
+    });
+  };
+
+  const getGraphNodes = () => lf?.getGraphData()?.nodes || [];
 
   const centerGraph = () => {
     if (!lf) return false;
 
-    const nodes = getGraphNodes();
-    if (nodes.length === 0) {
-      message.warning("画布中没有节点");
-      return false;
-    }
+    // const nodes = getGraphNodes();
+    // if (nodes.length === 0) {
+    //   message.warning("画布中没有节点");
+    //   return false;
+    // }
 
-    let minX = Infinity;
-    let minY = Infinity;
-    let maxX = -Infinity;
-    let maxY = -Infinity;
+    // let minX = Infinity;
+    // let minY = Infinity;
+    // let maxX = -Infinity;
+    // let maxY = -Infinity;
 
-    nodes.forEach((node) => {
-      const width = Number(node.properties?.width) || 180;
-      const height = Number(node.properties?.height) || 40;
-      minX = Math.min(minX, node.x - width / 2);
-      minY = Math.min(minY, node.y - height / 2);
-      maxX = Math.max(maxX, node.x + width / 2);
-      maxY = Math.max(maxY, node.y + height / 2);
-    });
+    // nodes.forEach((node) => {
+    //   const width = Number(node.properties?.width) || 180;
+    //   const height = Number(node.properties?.height) || 40;
+    //   minX = Math.min(minX, node.x - width / 2);
+    //   minY = Math.min(minY, node.y - height / 2);
+    //   maxX = Math.max(maxX, node.x + width / 2);
+    //   maxY = Math.max(maxY, node.y + height / 2);
+    // });
 
-    lf.focusOn({
-      x: (minX + maxX) / 2,
-      y: (minY + maxY) / 2,
-    });
+    // lf.focusOn({
+    //   x: (minX + maxX) / 2,
+    //   y: (minY + maxY) / 2,
+    // });
+
+    lf.translateCenter();
 
     return true;
   };
@@ -343,6 +353,7 @@
     resize: resizeEditor,
     focusNode,
     centerGraph,
+    updateNodeName,
   });
 </script>
 

@@ -26,7 +26,11 @@
         @node-select="handleNodeSelect"
         @blank-click="handleBlankClick"
       />
-      <property :visible="propertyVisible" :node-data="selectedNode" />
+      <property
+        :visible="propertyVisible"
+        :node-data="selectedNode"
+        @submit-name="handleSubmitName"
+      />
     </div>
   </div>
 </template>
@@ -40,6 +44,7 @@
   interface EditorExpose {
     resize: () => void;
     focusNode: (nodeId: string) => void;
+    updateNodeName: (nodeId: string, name: string) => void;
   }
 
   interface SqlNodeData {
@@ -71,6 +76,21 @@
     propertyVisible.value = false;
     await nextTick();
     editorRef.value?.resize();
+  };
+
+  const handleSubmitName = (name: string) => {
+    const currentNode = selectedNode.value;
+    if (!currentNode) return;
+
+    editorRef.value?.updateNodeName(currentNode.id, name);
+    selectedNode.value = {
+      ...currentNode,
+      properties: {
+        ...currentNode.properties,
+        title: name,
+        name,
+      },
+    };
   };
 </script>
 

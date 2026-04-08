@@ -1,6 +1,5 @@
 <template>
   <div class="sql-editor">
-    <!-- 左侧节点列表 -->
     <div class="node-panel">
       <div class="panel-title">SQL 节点</div>
       <div class="node-list">
@@ -20,27 +19,58 @@
       </div>
     </div>
 
-    <!-- 右侧区域 -->
     <div class="right-area">
-      <!-- 上方：LogicFlow 编辑器 -->
-      <editor />
-
-      <!-- 下方：属性编辑区域 -->
-      <property />
+      <editor
+        ref="editorRef"
+        class="editor-area"
+        @node-select="handleNodeSelect"
+        @blank-click="handleBlankClick"
+      />
+      <property :visible="propertyVisible" :node-data="selectedNode" />
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
+  import { nextTick, ref } from "vue";
   import { nodeTypes } from "./menus";
   import editor from "./editor.vue";
   import property from "./property.vue";
 
-  // 拖拽开始
-  const handleDragStart = (event: DragEvent, node: any) => {
+  interface EditorExpose {
+    resize: () => void;
+    focusNode: (nodeId: string) => void;
+  }
+
+  interface SqlNodeData {
+    id: string;
+    type: string;
+    properties?: Record<string, unknown>;
+  }
+
+  const editorRef = ref<EditorExpose | null>(null);
+  const propertyVisible = ref(false);
+  const selectedNode = ref<SqlNodeData | null>(null);
+
+  const handleDragStart = (event: DragEvent, node: unknown) => {
     if (event.dataTransfer) {
       event.dataTransfer.setData("application/json", JSON.stringify(node));
     }
+  };
+
+  const handleNodeSelect = async (node: SqlNodeData) => {
+    selectedNode.value = node;
+    propertyVisible.value = true;
+    await nextTick();
+    editorRef.value?.resize();
+    // editorRef.value?.focusNode(node.id);
+  };
+
+  const handleBlankClick = async () => {
+    selectedNode.value = null;
+    propertyVisible.value = false;
+    await nextTick();
+    editorRef.value?.resize();
   };
 </script>
 
@@ -52,7 +82,6 @@
     background: #f5f5f5;
   }
 
-  /* 左侧节点面板 */
   .node-panel {
     width: 160px;
     background: #fff;
@@ -107,11 +136,16 @@
     font-weight: 500;
   }
 
-  /* 右侧区域 */
   .right-area {
     flex: 1;
     display: flex;
     flex-direction: column;
     overflow: hidden;
+    min-width: 0;
+  }
+
+  .editor-area {
+    flex: 1;
+    min-height: 0;
   }
 </style>

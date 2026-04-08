@@ -56,7 +56,7 @@
 <script setup lang="ts">
   import LogicFlow from "@logicflow/core";
   import "@logicflow/core/dist/index.css";
-  import { onMounted, onUnmounted, ref } from "vue";
+  import { nextTick, onMounted, onUnmounted, ref } from "vue";
   import { message, Modal } from "ant-design-vue";
   import {
     SaveOutlined,
@@ -71,15 +71,72 @@
   import SqlNodeModel from "./nodes/SqlNodeModel";
   import { nodeTypes } from "./menus";
 
+  interface SqlNodeData {
+    id: string;
+    type: string;
+    x: number;
+    y: number;
+    properties?: Record<string, unknown>;
+  }
+
+  const emit = defineEmits<{
+    (e: "node-select", node: SqlNodeData): void;
+    (e: "blank-click"): void;
+  }>();
+
   const TeleportContainer = getTeleport();
 
   let lf: LogicFlow | null = null;
+  let resizeObserver: ResizeObserver | null = null;
   const containerRef = ref<HTMLElement>();
   const flowId = ref("");
   const previewVisible = ref(false);
   const previewData = ref("");
 
   const STORAGE_KEY = "sql_editor_flow_data";
+
+  const resizeEditor = () => {
+    lf?.resize();
+  };
+
+  const focusNode = (nodeId: string) => {
+    if (!lf) return;
+    resizeEditor();
+    lf.focusOn(nodeId);
+  };
+
+  const getGraphNodes = () => lf?.getGraphData().nodes || [];
+
+  const centerGraph = () => {
+    if (!lf) return false;
+
+    const nodes = getGraphNodes();
+    if (nodes.length === 0) {
+      message.warning("画布中没有节点");
+      return false;
+    }
+
+    let minX = Infinity;
+    let minY = Infinity;
+    let maxX = -Infinity;
+    let maxY = -Infinity;
+
+    nodes.forEach((node) => {
+      const width = Number(node.properties?.width) || 180;
+      const height = Number(node.properties?.height) || 40;
+      minX = Math.min(minX, node.x - width / 2);
+      minY = Math.min(minY, node.y - height / 2);
+      maxX = Math.max(maxX, node.x + width / 2);
+      maxY = Math.max(maxY, node.y + height / 2);
+    });
+
+    lf.focusOn({
+      x: (minX + maxX) / 2,
+      y: (minY + maxY) / 2,
+    });
+
+    return true;
+  };
 
   onMounted(() => {
     if (!containerRef.value) return;
@@ -140,11 +197,11 @@
     });
 
     lf.on("node:click", ({ data }) => {
-      console.log("选中节点:", data);
+      emit("node-select", data as SqlNodeData);
     });
 
     lf.on("blank:click", () => {
-      console.log("取消选中");
+      emit("blank-click");
     });
 
     lf.on("edge:add", ({ data }) => {
@@ -157,12 +214,16 @@
     });
 
     lf.render({});
+
+    resizeObserver = new ResizeObserver(() => {
+      resizeEditor();
+    });
+    resizeObserver.observe(containerRef.value);
   });
 
   const hasNodeType = (type: string): boolean => {
     if (!lf) return false;
-    const graphData = lf.getGraphData();
-    return graphData.nodes?.some((node) => node.type === type) || false;
+    return getGraphNodes().some((node) => node.type === type);
   };
 
   const handleDrop = (event: DragEvent) => {
@@ -205,12 +266,11 @@
 
   const handleSave = () => {
     if (!lf) return;
-    const data = lf.getGraphData();
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(lf.getGraphData()));
     message.success("流程配置已保存到本地");
   };
 
-  const handleLoad = () => {
+  const handleLoad = async () => {
     if (!lf) return;
 
     const savedData = localStorage.getItem(STORAGE_KEY);
@@ -220,8 +280,9 @@
     }
 
     try {
-      const data = JSON.parse(savedData);
-      lf.render(data);
+      lf.render(JSON.parse(savedData));
+      await nextTick();
+      resizeEditor();
       message.success("流程配置已加载");
     } catch {
       message.error("加载失败：配置数据损坏");
@@ -243,40 +304,13 @@
     }
   };
 
-  const handleCenter = () => {
+  const handleCenter = async () => {
     if (!lf) return;
-
-    // const nodes = lf.getGraphData().nodes || [];
-    // if (nodes.length === 0) {
-    //   message.warning("画布中没有节点");
-    //   return;
-    // }
-
-    // let minX = Infinity;
-    // let minY = Infinity;
-    // let maxX = -Infinity;
-    // let maxY = -Infinity;
-
-    // nodes.forEach((node) => {
-    //   const width = Number(node.properties?.width) || 180;
-    //   const height = Number(node.properties?.height) || 40;
-    //   minX = Math.min(minX, node.x - width / 2);
-    //   minY = Math.min(minY, node.y - height / 2);
-    //   maxX = Math.max(maxX, node.x + width / 2);
-    //   maxY = Math.max(maxY, node.y + height / 2);
-    // });
-
-    // const centerX = (minX + maxX) / 2;
-    // const centerY = (minY + maxY) / 2;
-
-    // lf.focusOn({
-    //   x: centerX,
-    //   y: centerY,
-    // });
-
-    lf.translateCenter()
-
-    message.success("节点已居中显示");
+    await nextTick();
+    resizeEditor();
+    if (centerGraph()) {
+      message.success("节点已居中显示");
+    }
   };
 
   const handleClear = () => {
@@ -289,16 +323,26 @@
       onOk: () => {
         if (!lf) return;
         lf.clearData();
+        emit("blank-click");
         message.success("画布已清空");
       },
     });
   };
 
   onUnmounted(() => {
+    resizeObserver?.disconnect();
+    resizeObserver = null;
+
     if (lf) {
       lf.destroy();
       lf = null;
     }
+  });
+
+  defineExpose({
+    resize: resizeEditor,
+    focusNode,
+    centerGraph,
   });
 </script>
 
@@ -307,6 +351,7 @@
     flex: 1;
     position: relative;
     overflow: hidden;
+    min-height: 0;
   }
 
   .logic-flow-container {

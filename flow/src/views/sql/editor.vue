@@ -117,6 +117,14 @@
       },
     });
 
+    // 修改对齐线样式
+    lf.setTheme({
+      snapline: {
+        stroke: "#1E90FF", // 对齐线颜色
+        strokeWidth: 1, // 对齐线宽度
+      },
+    });
+
     // // 注册 Delete 键删除选中的元素
     // lf.keyboard.on("delete", () => {
     //   const selectedElements = lf?.getSelectElements(false);
@@ -134,7 +142,7 @@
           component: SqlNode,
           model: SqlNodeModel,
         },
-        lf
+        lf,
       );
     });
 

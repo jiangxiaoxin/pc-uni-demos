@@ -32,16 +32,29 @@
         :node-data="selectedNode"
         @submit-name="handleSubmitName"
         @submit-property="handleSubmitProperty"
+        @change-input-source="handleChangeInputSource"
       />
     </div>
+
+    <InputNodeBindModal
+      v-model:open="bindModalVisible"
+      :sources="inputNodeMockSources"
+      :initial-binding="pendingInputBinding"
+      @confirm="handleConfirmInputBinding"
+    />
   </div>
 </template>
 
 <script setup lang="ts">
-  import { nextTick, ref } from "vue";
+  import { nextTick, ref, watch } from "vue";
   import { nodeTypes } from "./menus";
   import editor from "./editor.vue";
   import property from "./property.vue";
+  import InputNodeBindModal from "./InputNodeBindModal.vue";
+  import {
+    inputNodeMockSources,
+    type BoundInputSource,
+  } from "./inputNodeMock";
 
   interface EditorExpose {
     resize: () => void;
@@ -62,6 +75,23 @@
   const editorRef = ref<EditorExpose | null>(null);
   const propertyVisible = ref(false);
   const selectedNode = ref<SqlNodeData | null>(null);
+  const bindModalVisible = ref(false);
+  const pendingBindNode = ref<SqlNodeData | null>(null);
+  const pendingInputBinding = ref<BoundInputSource | null>(null);
+
+  watch(bindModalVisible, (visible) => {
+    if (visible) return;
+    if (!pendingBindNode.value?.properties?.inputBinding) {
+      pendingBindNode.value = null;
+      pendingInputBinding.value = null;
+      return;
+    }
+    if (selectedNode.value?.id === pendingBindNode.value.id) {
+      propertyVisible.value = true;
+    }
+    pendingBindNode.value = null;
+    pendingInputBinding.value = null;
+  });
 
   const handleDragStart = (event: DragEvent, node: unknown) => {
     if (event.dataTransfer) {
@@ -70,16 +100,30 @@
   };
 
   const handleNodeSelect = async (node: SqlNodeData) => {
+    if (node.type === "in-node" && !node.properties?.inputBinding) {
+      pendingBindNode.value = node;
+      pendingInputBinding.value = null;
+      propertyVisible.value = false;
+      selectedNode.value = null;
+      bindModalVisible.value = true;
+      await nextTick();
+      editorRef.value?.resize();
+      return;
+    }
+
     selectedNode.value = node;
     propertyVisible.value = true;
+    bindModalVisible.value = false;
     await nextTick();
     editorRef.value?.resize();
-    // editorRef.value?.focusNode(node.id);
   };
 
   const handleBlankClick = async () => {
     selectedNode.value = null;
     propertyVisible.value = false;
+    bindModalVisible.value = false;
+    pendingBindNode.value = null;
+    pendingInputBinding.value = null;
     await nextTick();
     editorRef.value?.resize();
   };
@@ -93,16 +137,20 @@
     editorRef.value?.resize();
   };
 
+  const ensureNodeProperties = (node: SqlNodeData) => {
+    if (!node.properties) {
+      node.properties = {};
+    }
+    return node.properties;
+  };
+
   const handleSubmitName = (name: string) => {
     const currentNode = selectedNode.value;
     if (!currentNode) return;
 
     editorRef.value?.updateNodeTitle(currentNode.id, name);
 
-    if (!currentNode.properties) {
-      currentNode.properties = {};
-    }
-    currentNode.properties.title = name;
+    ensureNodeProperties(currentNode).title = name;
   };
 
   const handleSubmitProperty = (payload: { key: string; value: string }) => {
@@ -113,10 +161,39 @@
       [payload.key]: payload.value,
     });
 
-    if (!currentNode.properties) {
-      currentNode.properties = {};
-    }
-    currentNode.properties[payload.key] = payload.value;
+    ensureNodeProperties(currentNode)[payload.key] = payload.value;
+  };
+
+  const handleChangeInputSource = () => {
+    const currentNode = selectedNode.value;
+    if (!currentNode || currentNode.type !== "in-node") return;
+
+    pendingBindNode.value = currentNode;
+    pendingInputBinding.value = (currentNode.properties?.inputBinding ||
+      null) as BoundInputSource | null;
+    bindModalVisible.value = true;
+    propertyVisible.value = false;
+  };
+
+  const handleConfirmInputBinding = async (binding: BoundInputSource) => {
+    const currentNode = pendingBindNode.value;
+    if (!currentNode) return;
+
+    editorRef.value?.updateNodeProperties(currentNode.id, {
+      inputBinding: binding,
+      title: binding.sourceName,
+    });
+
+    ensureNodeProperties(currentNode).inputBinding = binding;
+    ensureNodeProperties(currentNode).title = binding.sourceName;
+    selectedNode.value = currentNode;
+    pendingBindNode.value = null;
+    pendingInputBinding.value = binding;
+    bindModalVisible.value = false;
+    propertyVisible.value = true;
+
+    await nextTick();
+    editorRef.value?.resize();
   };
 </script>
 

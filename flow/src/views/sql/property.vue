@@ -6,7 +6,7 @@
           <component :is="nodeIconComponent" class="property-node-icon" />
           <div class="property-node-type">{{ nodeTypeLabel }}</div>
           <div class="property-name-field">
-            <span class="property-name-label">节点名称:</span>
+            <!-- <span class="property-name-label">节点名称:</span> -->
             <a-input
               v-model:value="editableName"
               class="property-node-input"
@@ -59,20 +59,10 @@
 
         <template v-else-if="activeTab === 'preview'">
           <template v-if="isInputNode && inputBinding">
-            <div class="property-preview-card property-preview-card--grow">
-              <div class="property-preview-header">
-                <span>数据预览</span>
-                <span class="property-preview-count">{{ inputPreviewRows.length }} 行</span>
-              </div>
-              <a-table
-                :columns="previewTableColumns"
-                :data-source="inputPreviewRows"
-                :pagination="false"
-                size="small"
-                :scroll="{ x: 'max-content', y: 260 }"
-                row-key="__previewKey"
-              />
-            </div>
+            <NodePreviewTableSection
+              :payload="inputBinding"
+              :fetcher="fetchInputPreviewByBinding"
+            />
           </template>
 
           <template v-else>
@@ -102,23 +92,16 @@
   import { getNodeTypeConfig } from "./menus";
   import { defaultSqlNodeIcon, sqlNodeIconMap } from "./nodes/iconMap";
   import InputNodeConfigSection from "./InputNodeConfigSection.vue";
+  import NodePreviewTableSection from "./NodePreviewTableSection.vue";
   import {
-    getPreviewRowsByBinding,
+    fetchInputPreviewByBinding,
     type BoundInputSource,
-    type InputField,
   } from "./inputNodeMock";
 
   interface SqlNodeData {
     id: string;
     type: string;
     properties?: Record<string, unknown>;
-  }
-
-  interface TableColumn {
-    title: string;
-    dataIndex: string;
-    key: string;
-    width?: number;
   }
 
   const emit = defineEmits<{
@@ -188,22 +171,6 @@
     const binding = props.nodeData?.properties?.inputBinding;
     if (!binding || typeof binding !== "object") return null;
     return binding as BoundInputSource;
-  });
-
-  const previewTableColumns = computed<TableColumn[]>(() => {
-    return (inputBinding.value?.fields || []).map((field: InputField) => ({
-      title: field.name,
-      dataIndex: field.key,
-      key: field.key,
-      width: 180,
-    }));
-  });
-
-  const inputPreviewRows = computed(() => {
-    return getPreviewRowsByBinding(inputBinding.value).map((row, index) => ({
-      __previewKey: `${props.nodeData?.id || "node"}-${index}`,
-      ...row,
-    }));
   });
 
   watch(
@@ -297,12 +264,12 @@
     white-space: nowrap;
   }
 
-  .property-name-label {
-    flex-shrink: 0;
-    font-size: 13px;
-    color: #475569;
-    white-space: nowrap;
-  }
+  // .property-name-label {
+  //   flex-shrink: 0;
+  //   font-size: 13px;
+  //   color: #475569;
+  //   white-space: nowrap;
+  // }
 
   .property-name-field {
     display: flex;
@@ -396,31 +363,16 @@
     min-height: 0;
   }
 
-  .property-preview-header {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 4px;
-    min-height: 20px;
-    font-size: 13px;
-    font-weight: 600;
-    color: #334155;
-  }
-
-  .property-preview-count {
-    font-size: 12px;
-    font-weight: 500;
-    color: #64748b;
-  }
-
-  .property-preview-card :deep(.ant-table-wrapper),
-  .property-preview-card :deep(.ant-spin-nested-loading),
-  .property-preview-card :deep(.ant-spin-container),
-  .property-preview-card :deep(.ant-table),
-  .property-preview-card :deep(.ant-table-container) {
-    height: 100%;
-    min-height: 0;
-  }
+  // .property-preview-header {
+  //   display: flex;
+  //   align-items: center;
+  //   justify-content: space-between;
+  //   gap: 4px;
+  //   min-height: 20px;
+  //   font-size: 13px;
+  //   font-weight: 600;
+  //   color: #334155;
+  // }
 
   .property-preview-content {
     height: 100%;

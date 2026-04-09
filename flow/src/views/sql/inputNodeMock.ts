@@ -18,6 +18,11 @@ export interface BoundInputSource {
   fields: InputField[];
 }
 
+export interface InputPreviewResult {
+  columns: InputField[];
+  rows: Record<string, unknown>[];
+}
+
 const createRows = <T>(factory: (index: number) => T, count = 10): T[] => {
   return Array.from({ length: count }, (_, index) => factory(index));
 };
@@ -530,4 +535,20 @@ export const getPreviewRowsByBinding = (binding?: BoundInputSource | null) => {
     });
     return nextRow;
   });
+};
+
+export const fetchInputPreviewByBinding = async (
+  binding?: BoundInputSource | null,
+): Promise<InputPreviewResult> => {
+  await new Promise((resolve) => {
+    window.setTimeout(resolve, 250);
+  });
+
+  if (!binding) {
+    return { columns: [], rows: [] };
+  }
+
+  const columns = binding.fields || [];
+  const rows = getPreviewRowsByBinding(binding);
+  return { columns, rows };
 };

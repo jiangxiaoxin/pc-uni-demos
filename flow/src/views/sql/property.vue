@@ -76,7 +76,7 @@
           <div class="property-remark">
             <a-textarea
               v-model:value="editableRemark"
-              :auto-size="{ minRows: 6, maxRows: 10 }"
+              class="property-remark-input"
               placeholder="请输入节点备注"
               @blur="handleSubmitRemark"
             />
@@ -264,13 +264,6 @@
     white-space: nowrap;
   }
 
-  // .property-name-label {
-  //   flex-shrink: 0;
-  //   font-size: 13px;
-  //   color: #475569;
-  //   white-space: nowrap;
-  // }
-
   .property-name-field {
     display: flex;
     align-items: center;
@@ -363,17 +356,6 @@
     min-height: 0;
   }
 
-  // .property-preview-header {
-  //   display: flex;
-  //   align-items: center;
-  //   justify-content: space-between;
-  //   gap: 4px;
-  //   min-height: 20px;
-  //   font-size: 13px;
-  //   font-weight: 600;
-  //   color: #334155;
-  // }
-
   .property-preview-content {
     height: 100%;
     margin: 0;
@@ -386,6 +368,20 @@
   }
 
   .property-remark {
-    padding: 6px;
+    flex: 1;
+    min-height: 0;
+    padding: 6px 12px 40px; // 底下空间大，是为了留下可blur的空间
+    display: flex;
+    overflow-y: auto;
+  }
+
+  .property-remark-input {
+    width: 100%;
+    height: 100%;
+  }
+
+  .property-remark-input :deep(.ant-input) {
+    height: 100%;
+    resize: none;
   }
 </style>

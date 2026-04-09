@@ -105,6 +105,7 @@
   const fieldsLoading = ref(false);
   const shouldRestoreInitialSelection = ref(false);
   const hasInitialized = ref(false);
+  let fieldRequestToken = 0;
 
   const selectedSource = computed(() => {
     return props.sources.find((source) => source.id === currentSourceId.value);
@@ -114,9 +115,42 @@
     return currentFields.value.length > 0 && selectedFieldKeys.value.length === currentFields.value.length;
   });
 
+  const loadFieldsBySource = async (sourceId: string) => {
+    if (!sourceId) {
+      currentFields.value = [];
+      selectedFieldKeys.value = [];
+      fieldsLoading.value = false;
+      return;
+    }
+
+    const requestToken = ++fieldRequestToken;
+    fieldsLoading.value = true;
+    const fields = await fetchInputSourceFields(sourceId);
+    if (requestToken !== fieldRequestToken || currentSourceId.value !== sourceId) {
+      return;
+    }
+
+    currentFields.value = fields;
+    if (
+      shouldRestoreInitialSelection.value &&
+      props.initialBinding?.sourceId === sourceId &&
+      (props.initialBinding?.fields?.length || 0) > 0
+    ) {
+      selectedFieldKeys.value = (props.initialBinding?.fields || [])
+        .map((field) => field.key)
+        .filter((key) => fields.some((field) => field.key === key));
+    } else {
+      selectedFieldKeys.value = fields.map((field) => field.key);
+    }
+
+    shouldRestoreInitialSelection.value = false;
+    hasInitialized.value = true;
+    fieldsLoading.value = false;
+  };
+
   watch(
     () => [props.open, props.initialBinding?.sourceId],
-    () => {
+    async () => {
       if (!props.open) return;
 
       const sourceId = props.initialBinding?.sourceId || "";
@@ -125,42 +159,7 @@
       selectedFieldKeys.value = [];
       shouldRestoreInitialSelection.value = Boolean(sourceId);
       hasInitialized.value = false;
-    },
-    { immediate: true },
-  );
-
-  watch(
-    currentSourceId,
-    async (sourceId) => {
-      if (!sourceId) {
-        currentFields.value = [];
-        selectedFieldKeys.value = [];
-        fieldsLoading.value = false;
-        return;
-      }
-
-      fieldsLoading.value = true;
-      const fields = await fetchInputSourceFields(sourceId);
-      if (currentSourceId.value !== sourceId) {
-        fieldsLoading.value = false;
-        return;
-      }
-
-      currentFields.value = fields;
-      if (
-        shouldRestoreInitialSelection.value &&
-        props.initialBinding?.sourceId === sourceId &&
-        (props.initialBinding?.fields?.length || 0) > 0
-      ) {
-        selectedFieldKeys.value = (props.initialBinding?.fields || [])
-          .map((field) => field.key)
-          .filter((key) => fields.some((field) => field.key === key));
-      } else {
-        selectedFieldKeys.value = fields.map((field) => field.key);
-      }
-      shouldRestoreInitialSelection.value = false;
-      hasInitialized.value = true;
-      fieldsLoading.value = false;
+      await loadFieldsBySource(sourceId);
     },
     { immediate: true },
   );
@@ -169,6 +168,7 @@
     if (currentSourceId.value === sourceId && hasInitialized.value) return;
     shouldRestoreInitialSelection.value = false;
     currentSourceId.value = sourceId;
+    void loadFieldsBySource(sourceId);
   };
 
   const handleToggleSelectAll = () => {

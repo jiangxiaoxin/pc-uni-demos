@@ -1,4 +1,4 @@
-<template>
+﻿<template>
   <div class="property-panel" :class="{ 'property-panel--visible': visible }">
     <template v-if="visible && nodeData">
       <div class="property-top">
@@ -35,52 +35,10 @@
       <div class="property-bottom">
         <template v-if="activeTab === 'config'">
           <template v-if="isInputNode && inputBinding">
-            <div class="input-config-layout">
-              <div class="input-config-sidebar">
-                <div class="input-config-card">
-                  <div class="input-config-card__header">
-                    <span>数据源</span>
-                    <a-button size="small" type="link" @click="emit('change-input-source')">
-                      更改数据源
-                    </a-button>
-                  </div>
-                  <div class="input-config-source-name">{{ inputBinding.sourceName }}</div>
-                </div>
-
-                <div class="input-config-card input-config-card--grow">
-                  <div class="input-config-card__header">
-                    <span>字段列表</span>
-                    <span class="input-config-count">{{ inputBinding.fields.length }} 个字段</span>
-                  </div>
-                  <div class="input-config-fields">
-                    <div
-                      v-for="field in inputBinding.fields"
-                      :key="field.key"
-                      class="input-config-field"
-                    >
-                      <span class="input-config-field__name">{{ field.name }}</span>
-                      <span class="input-config-field__type">{{ field.type }}</span>
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              <div class="input-config-main">
-                <div class="input-config-card input-config-card--grow">
-                  <div class="input-config-card__header">
-                    <span>字段结构</span>
-                  </div>
-                  <a-table
-                    :columns="fieldTableColumns"
-                    :data-source="inputBinding.fields"
-                    :pagination="false"
-                    size="small"
-                    :scroll="{ y: 220 }"
-                    row-key="key"
-                  />
-                </div>
-              </div>
-            </div>
+            <InputNodeConfigSection
+              :input-binding="inputBinding"
+              @change-source="emit('change-input-source')"
+            />
           </template>
 
           <template v-else>
@@ -101,10 +59,10 @@
 
         <template v-else-if="activeTab === 'preview'">
           <template v-if="isInputNode && inputBinding">
-            <div class="input-config-card input-config-card--grow">
-              <div class="input-config-card__header">
+            <div class="property-preview-card property-preview-card--grow">
+              <div class="property-preview-header">
                 <span>数据预览</span>
-                <span class="input-config-count">{{ inputPreviewRows.length }} 行</span>
+                <span class="property-preview-count">{{ inputPreviewRows.length }} 行</span>
               </div>
               <a-table
                 :columns="previewTableColumns"
@@ -118,19 +76,21 @@
           </template>
 
           <template v-else>
-            <div class="property-preview-card">
+            <div class="property-preview-card property-preview-card--grow">
               <pre class="property-preview-content">{{ previewContent }}</pre>
             </div>
           </template>
         </template>
 
         <template v-else>
-          <a-textarea
-            v-model:value="editableRemark"
-            :auto-size="{ minRows: 6, maxRows: 10 }"
-            placeholder="请输入节点备注"
-            @blur="handleSubmitRemark"
-          />
+          <div class="property-remark">
+            <a-textarea
+              v-model:value="editableRemark"
+              :auto-size="{ minRows: 6, maxRows: 10 }"
+              placeholder="请输入节点备注"
+              @blur="handleSubmitRemark"
+            />
+          </div>
         </template>
       </div>
     </template>
@@ -141,6 +101,7 @@
   import { computed, ref, watch } from "vue";
   import { getNodeTypeConfig } from "./menus";
   import { defaultSqlNodeIcon, sqlNodeIconMap } from "./nodes/iconMap";
+  import InputNodeConfigSection from "./InputNodeConfigSection.vue";
   import {
     getPreviewRowsByBinding,
     type BoundInputSource,
@@ -229,11 +190,6 @@
     return binding as BoundInputSource;
   });
 
-  const fieldTableColumns = computed<TableColumn[]>(() => [
-    { title: "字段名称", dataIndex: "name", key: "name" },
-    { title: "字段类型", dataIndex: "type", key: "type", width: 180 },
-  ]);
-
   const previewTableColumns = computed<TableColumn[]>(() => {
     return (inputBinding.value?.fields || []).map((field: InputField) => ({
       title: field.name,
@@ -297,23 +253,22 @@
       height 0.24s ease,
       border-top-width 0.24s ease,
       padding 0.24s ease;
-    padding: 0 20px;
     box-sizing: border-box;
   }
 
   .property-panel--visible {
     height: 400px;
     border-top-width: 1px;
-    padding: 16px 20px;
+    padding-top: 6px;
   }
 
   .property-top {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    gap: 12px;
-    min-height: 40px;
-    padding-bottom: 12px;
+    gap: 8px;
+    min-height: 36px;
+    padding: 0 6px 6px;
     flex-wrap: wrap;
     border-bottom: 1px solid #e5e7eb;
   }
@@ -322,7 +277,7 @@
   .property-tabs {
     display: inline-flex;
     align-items: center;
-    gap: 8px;
+    gap: 6px;
     flex-wrap: wrap;
     min-width: 0;
   }
@@ -353,23 +308,23 @@
   .property-name-field {
     display: flex;
     align-items: center;
-    gap: 8px;
+    gap: 4px;
     min-width: 240px;
     max-width: 100%;
-    margin-left: 12px;
+    margin-left: 4px;
   }
 
   .property-node-input {
     flex: 1;
     min-width: 0;
-    height: 32px;
-    padding: 0 10px;
+    height: 30px;
+    padding: 0 8px;
     border: 1px solid #dbe2ea;
     border-radius: 8px;
     background: #f8fafc;
 
     :deep(.ant-input) {
-      height: 30px;
+      height: 28px;
       padding: 0;
       font-size: 14px;
       font-weight: 500;
@@ -379,8 +334,8 @@
   }
 
   .property-tab {
-    height: 32px;
-    padding: 0 12px;
+    height: 28px;
+    padding: 0 10px;
     border: 1px solid #dbe2ea;
     border-radius: 999px;
     background: #f8fafc;
@@ -402,9 +357,8 @@
     min-height: 0;
     display: flex;
     flex-direction: column;
-    gap: 12px;
+    gap: 4px;
     overflow: auto;
-    padding-top: 16px;
   }
 
   .property-row {
@@ -430,104 +384,57 @@
     word-break: break-all;
   }
 
-  .property-preview-card,
-  .input-config-card {
+  .property-preview-card {
     min-height: 0;
-    padding: 14px 16px;
-    background: #f8fafc;
-    border: 1px solid #e2e8f0;
-    border-radius: 10px;
+    padding: 4px 6px;
+    background: transparent;
   }
 
-  .property-preview-card,
-  .input-config-card--grow {
+  .property-preview-card--grow {
     flex: 1;
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
+  }
+
+  .property-preview-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 4px;
+    min-height: 20px;
+    font-size: 13px;
+    font-weight: 600;
+    color: #334155;
+  }
+
+  .property-preview-count {
+    font-size: 12px;
+    font-weight: 500;
+    color: #64748b;
+  }
+
+  .property-preview-card :deep(.ant-table-wrapper),
+  .property-preview-card :deep(.ant-spin-nested-loading),
+  .property-preview-card :deep(.ant-spin-container),
+  .property-preview-card :deep(.ant-table),
+  .property-preview-card :deep(.ant-table-container) {
+    height: 100%;
+    min-height: 0;
   }
 
   .property-preview-content {
     height: 100%;
     margin: 0;
     overflow: auto;
-    font-size: 12px;
-    line-height: 1.6;
-    color: #0f172a;
     white-space: pre-wrap;
     word-break: break-word;
-  }
-
-  .input-config-layout {
-    display: grid;
-    grid-template-columns: 280px minmax(0, 1fr);
-    gap: 12px;
-    min-height: 0;
-    flex: 1;
-  }
-
-  .input-config-sidebar,
-  .input-config-main {
-    display: flex;
-    flex-direction: column;
-    gap: 12px;
-    min-height: 0;
-  }
-
-  .input-config-card__header {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 12px;
-    margin-bottom: 12px;
-    font-size: 13px;
-    font-weight: 600;
-    color: #334155;
-  }
-
-  .input-config-source-name {
-    font-size: 14px;
-    font-weight: 600;
+    font-size: 12px;
+    line-height: 1.5;
     color: #0f172a;
   }
 
-  .input-config-count {
-    font-size: 12px;
-    font-weight: 500;
-    color: #64748b;
-  }
-
-  .input-config-fields {
-    display: flex;
-    flex-direction: column;
-    gap: 8px;
-    overflow: auto;
-  }
-
-  .input-config-field {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 12px;
-    padding: 10px 12px;
-    border: 1px solid #e2e8f0;
-    border-radius: 8px;
-    background: #fff;
-  }
-
-  .input-config-field__name {
-    min-width: 0;
-    font-size: 13px;
-    color: #0f172a;
-    word-break: break-all;
-  }
-
-  .input-config-field__type {
-    flex-shrink: 0;
-    font-size: 12px;
-    color: #64748b;
-  }
-
-  .property-bottom :deep(.ant-input),
-  .property-bottom :deep(.ant-input-affix-wrapper),
-  .property-bottom :deep(.ant-input-textarea textarea) {
-    border-radius: 8px;
+  .property-remark {
+    padding: 6px;
   }
 </style>

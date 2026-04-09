@@ -37,7 +37,6 @@
           size="small"
           :scroll="{ x: configHeaderScrollX, y: configTableScrollY }"
           row-key="__configKey"
-          table-layout="fixed"
         />
       </div>
     </div>
@@ -58,6 +57,8 @@
     key: string;
     width?: number;
     ellipsis?: boolean;
+    customHeaderCell?: () => { style: Record<string, string> };
+    customCell?: () => { style: Record<string, string> };
   }
 
   defineEmits<{
@@ -73,8 +74,18 @@
       title: field.name,
       dataIndex: field.key,
       key: field.key,
-      width: 160,
+      width: 120,
       ellipsis: true,
+      customHeaderCell: () => ({
+        style: {
+          minWidth: "100px",
+        },
+      }),
+      customCell: () => ({
+        style: {
+          minWidth: "100px",
+        },
+      }),
     }));
   });
 
@@ -89,10 +100,10 @@
   });
 
   const configHeaderScrollX = computed(() => {
-    return Math.max(selectedFieldHeaderColumns.value.length * 160, 320);
+    return Math.max(selectedFieldHeaderColumns.value.length * 100, 320);
   });
 
-  const configTableScrollY = "calc(100% - 36px)";
+  const configTableScrollY = "calc(100% - 40px)";
 </script>
 
 <style scoped lang="scss">
@@ -221,7 +232,25 @@
     min-height: 0;
   }
 
+  .input-config-main :deep(.config-table .ant-table-container) {
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
+  }
+
   .input-config-main :deep(.config-table .ant-table-body) {
-    overflow-y: auto;
+    flex: 1;
+    min-height: 0;
+    overflow: auto;
+  }
+
+  .input-config-main :deep(.config-table .ant-table-placeholder),
+  .input-config-main
+    :deep(.config-table .ant-table-tbody > .ant-table-placeholder > .ant-table-cell) {
+    height: 100%;
+  }
+
+  .input-config-main :deep(.config-table .ant-empty) {
+    margin-block: 0;
   }
 </style>

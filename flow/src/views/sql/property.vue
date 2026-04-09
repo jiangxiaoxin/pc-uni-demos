@@ -259,7 +259,6 @@
   .property-panel--visible {
     height: 400px;
     border-top-width: 1px;
-    padding-top: 6px;
   }
 
   .property-top {
@@ -268,7 +267,7 @@
     justify-content: space-between;
     gap: 8px;
     min-height: 36px;
-    padding: 0 6px 6px;
+    padding: 6px;
     flex-wrap: wrap;
     border-bottom: 1px solid #e5e7eb;
   }

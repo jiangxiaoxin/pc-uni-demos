@@ -31,6 +31,7 @@
         :visible="propertyVisible"
         :node-data="selectedNode"
         @submit-name="handleSubmitName"
+        @submit-property="handleSubmitProperty"
       />
     </div>
   </div>
@@ -46,6 +47,10 @@
     resize: () => void;
     focusNode: (nodeId: string) => void;
     updateNodeTitle: (nodeId: string, title: string) => void;
+    updateNodeProperties: (
+      nodeId: string,
+      properties: Record<string, unknown>,
+    ) => void;
   }
 
   interface SqlNodeData {
@@ -93,13 +98,25 @@
     if (!currentNode) return;
 
     editorRef.value?.updateNodeTitle(currentNode.id, name);
-    selectedNode.value = {
-      ...currentNode,
-      properties: {
-        ...currentNode.properties,
-        title: name,
-      },
-    };
+
+    if (!currentNode.properties) {
+      currentNode.properties = {};
+    }
+    currentNode.properties.title = name;
+  };
+
+  const handleSubmitProperty = (payload: { key: string; value: string }) => {
+    const currentNode = selectedNode.value;
+    if (!currentNode) return;
+
+    editorRef.value?.updateNodeProperties(currentNode.id, {
+      [payload.key]: payload.value,
+    });
+
+    if (!currentNode.properties) {
+      currentNode.properties = {};
+    }
+    currentNode.properties[payload.key] = payload.value;
   };
 </script>
 

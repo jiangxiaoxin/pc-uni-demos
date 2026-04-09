@@ -113,6 +113,14 @@
     });
   };
 
+  const updateNodeProperties = (
+    nodeId: string,
+    properties: Record<string, unknown>,
+  ) => {
+    if (!lf) return;
+    lf.setProperties(nodeId, properties);
+  };
+
   const getGraphNodes = () => lf?.getGraphData()?.nodes || [];
 
   const centerGraph = () => {
@@ -382,6 +390,7 @@
     focusNode,
     centerGraph,
     updateNodeTitle,
+    updateNodeProperties,
   });
 </script>
 

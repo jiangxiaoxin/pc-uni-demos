@@ -25,11 +25,27 @@ export interface InputPreviewResult {
 
 export interface DistinctPreviewPayload {
   nodeId: string;
+  nodeType?: string;
+  chainNodes: NodeConfigSnapshot[];
   fields: InputField[];
 }
 
 export interface OutputPreviewPayload {
   nodeId: string;
+  nodeType?: string;
+  chainNodes: NodeConfigSnapshot[];
+}
+
+export interface NodeConfigSnapshot {
+  id: string;
+  type: string;
+  properties?: Record<string, unknown>;
+}
+
+export interface NodeChainContextPayload {
+  nodeId: string;
+  nodeType?: string;
+  chainNodes: NodeConfigSnapshot[];
 }
 
 // ============================================================
@@ -657,14 +673,6 @@ export const getInputSourceById = (sourceId?: string | null) => {
   return inputNodeMockSources.find((source) => source.id === sourceId);
 };
 
-const getMockSourceByNodeId = (nodeId?: string | null) => {
-  if (inputNodeMockSources.length === 0) return undefined;
-  const seed = (nodeId || "distinct-node")
-    .split("")
-    .reduce((sum, char) => sum + char.charCodeAt(0), 0);
-  return inputNodeMockSources[seed % inputNodeMockSources.length];
-};
-
 // MOCK_API: fetch input source fields (simulate backend request)
 export const fetchInputSourceFields = async (sourceId?: string | null) => {
   const source = getInputSourceById(sourceId);
@@ -689,6 +697,76 @@ export const getPreviewRowsByBinding = (binding?: BoundInputSource | null) => {
   });
 };
 
+const isRecord = (value: unknown): value is Record<string, unknown> => {
+  return typeof value === "object" && value !== null;
+};
+
+const parseInputFields = (value: unknown): InputField[] => {
+  if (!Array.isArray(value)) return [];
+  return value.filter((field): field is InputField => {
+    return (
+      isRecord(field) &&
+      typeof field.key === "string" &&
+      typeof field.name === "string" &&
+      typeof field.type === "string"
+    );
+  });
+};
+
+const parseInputBinding = (value: unknown): BoundInputSource | null => {
+  if (!isRecord(value)) return null;
+  if (typeof value.sourceId !== "string" || typeof value.sourceName !== "string") {
+    return null;
+  }
+  return {
+    sourceId: value.sourceId,
+    sourceName: value.sourceName,
+    fields: parseInputFields(value.fields),
+  };
+};
+
+const resolveInputBindingFromChain = (
+  chainNodes: NodeConfigSnapshot[] = [],
+): BoundInputSource | null => {
+  for (let index = chainNodes.length - 1; index >= 0; index -= 1) {
+    const node = chainNodes[index];
+    if (node.type !== "in-node") continue;
+    const binding = parseInputBinding(node.properties?.inputBinding);
+    if (binding) return binding;
+  }
+  return null;
+};
+
+const resolveDistinctFieldsFromChain = (
+  chainNodes: NodeConfigSnapshot[] = [],
+): InputField[] => {
+  for (let index = chainNodes.length - 1; index >= 0; index -= 1) {
+    const node = chainNodes[index];
+    if (node.type !== "distinct-node") continue;
+    return parseInputFields(node.properties?.distinctFields);
+  }
+  return [];
+};
+
+const getRowsByChain = (chainNodes: NodeConfigSnapshot[] = []) => {
+  const binding = resolveInputBindingFromChain(chainNodes);
+  const columns = binding?.fields || [];
+  const rows = getPreviewRowsByBinding(binding);
+  return { columns, rows };
+};
+
+const applyDistinctRows = (rows: Record<string, unknown>[], fields: InputField[]) => {
+  if (fields.length === 0) return rows;
+  const keys = fields.map((field) => field.key);
+  const seen = new Set<string>();
+  return rows.filter((row) => {
+    const fingerprint = keys.map((key) => String(row[key] ?? "__NULL__")).join("|");
+    if (seen.has(fingerprint)) return false;
+    seen.add(fingerprint);
+    return true;
+  });
+};
+
 // MOCK_API: fetch preview table columns + rows (simulate backend request)
 export const fetchInputPreviewByBinding = async (
   binding?: BoundInputSource | null,
@@ -708,14 +786,14 @@ export const fetchInputPreviewByBinding = async (
 
 // MOCK_API: fetch upstream fields for distinct node (simulate backend request)
 export const fetchDistinctNodeUpstreamFields = async (
-  nodeId?: string | null,
+  payload: NodeChainContextPayload,
 ): Promise<InputField[]> => {
   await new Promise((resolve) => {
     window.setTimeout(resolve, 250);
   });
 
-  const source = getMockSourceByNodeId(nodeId);
-  return [...source.fields];
+  const binding = resolveInputBindingFromChain(payload.chainNodes);
+  return [...(binding?.fields || [])];
 };
 
 // MOCK_API: fetch distinct node preview data (simulate backend request)
@@ -726,19 +804,9 @@ export const fetchDistinctPreviewByPayload = async (
     window.setTimeout(resolve, 250);
   });
 
-  const source = getMockSourceByNodeId(payload.nodeId);
-  if (!source) {
-    return { columns: [], rows: [] };
-  }
-
-  // Distinct fields are SQL-build config only.
-  // Preview data should come directly from backend response (mocked here).
-  // Keep payload.fields in signature for future backend request params.
-  void payload.fields;
-
-  const columns = source.fields;
-  const rows = source.rows.map((row) => ({ ...row }));
-  return { columns, rows };
+  const { columns, rows } = getRowsByChain(payload.chainNodes);
+  const distinctRows = applyDistinctRows(rows, payload.fields || []);
+  return { columns, rows: distinctRows };
 };
 
 // MOCK_API: fetch output node preview data (simulate backend request)
@@ -749,14 +817,13 @@ export const fetchOutputPreviewByPayload = async (
     window.setTimeout(resolve, 250);
   });
 
-  const source = getMockSourceByNodeId(payload.nodeId || "out-node");
-  if (!source) {
-    return { columns: [], rows: [] };
-  }
+  const { columns, rows } = getRowsByChain(payload.chainNodes);
+  const distinctFields = resolveDistinctFieldsFromChain(payload.chainNodes);
+  const finalRows = applyDistinctRows(rows, distinctFields);
 
-  // Output node preview = final result snapshot returned by backend.
+  // Output node preview = final result snapshot returned by backend (mocked from chain context).
   return {
-    columns: source.fields,
-    rows: source.rows.map((row) => ({ ...row })),
+    columns,
+    rows: finalRows,
   };
 };

@@ -32,6 +32,7 @@
         :visible="propertyVisible"
         :node-data="selectedNode"
         :incoming-count="selectedIncomingCount"
+        :node-context="selectedNodeContext"
         @submit-name="handleSubmitName"
         @submit-property="handleSubmitProperty"
         @change-input-source="handleChangeInputSource"
@@ -56,6 +57,8 @@
   import {
     inputNodeMockSources,
     type BoundInputSource,
+    type NodeChainContextPayload,
+    type NodeConfigSnapshot,
   } from "./inputNodeMock";
 
   interface EditorExpose {
@@ -66,6 +69,16 @@
       nodeId: string,
       properties: Record<string, unknown>,
     ) => void;
+    getGraphData: () =>
+      | {
+          nodes?: Array<{
+            id: string;
+            type: string;
+            properties?: Record<string, unknown>;
+          }>;
+          edges?: Array<{ sourceNodeId: string; targetNodeId: string }>;
+        }
+      | undefined;
   }
 
   interface SqlNodeData {
@@ -88,6 +101,7 @@
   const propertyVisible = ref(false);
   const selectedNode = ref<SqlNodeData | null>(null);
   const selectedIncomingCount = ref(0);
+  const selectedNodeContext = ref<NodeChainContextPayload | null>(null);
   const bindModalVisible = ref(false);
   const pendingBindNode = ref<SqlNodeData | null>(null);
   const pendingInputBinding = ref<BoundInputSource | null>(null);
@@ -122,6 +136,7 @@
       propertyVisible.value = false;
       selectedNode.value = null;
       selectedIncomingCount.value = 0;
+      selectedNodeContext.value = null;
       bindModalVisible.value = true;
       await nextTick();
       editorRef.value?.resize();
@@ -129,6 +144,7 @@
     }
 
     selectedNode.value = node;
+    selectedNodeContext.value = buildNodeContext(node.id);
     propertyVisible.value = true;
     bindModalVisible.value = false;
     await nextTick();
@@ -138,6 +154,7 @@
   const handleBlankClick = async () => {
     selectedNode.value = null;
     selectedIncomingCount.value = 0;
+    selectedNodeContext.value = null;
     propertyVisible.value = false;
     bindModalVisible.value = false;
     pendingBindNode.value = null;
@@ -151,6 +168,7 @@
 
     selectedNode.value = null;
     selectedIncomingCount.value = 0;
+    selectedNodeContext.value = null;
     propertyVisible.value = false;
     await nextTick();
     editorRef.value?.resize();
@@ -159,6 +177,55 @@
   const handleConnectionChange = (payload: ConnectionChangePayload) => {
     if (selectedNode.value?.id !== payload.nodeId) return;
     selectedIncomingCount.value = payload.incomingCount;
+    selectedNodeContext.value = buildNodeContext(payload.nodeId);
+  };
+
+  const buildNodeContext = (nodeId: string): NodeChainContextPayload | null => {
+    const graph = editorRef.value?.getGraphData();
+    if (!graph) return null;
+
+    const nodes = graph.nodes || [];
+    const edges = graph.edges || [];
+    if (nodes.length === 0) return null;
+
+    const nodeMap = new Map(nodes.map((node) => [node.id, node]));
+    if (!nodeMap.has(nodeId)) return null;
+
+    const visited = new Set<string>();
+    const predecessorOrder: string[] = [];
+
+    const visit = (currentId: string) => {
+      if (visited.has(currentId)) return;
+      visited.add(currentId);
+      edges
+        .filter((edge) => edge.targetNodeId === currentId)
+        .forEach((edge) => {
+          visit(edge.sourceNodeId);
+          if (edge.sourceNodeId !== nodeId) {
+            predecessorOrder.push(edge.sourceNodeId);
+          }
+        });
+    };
+
+    visit(nodeId);
+
+    const uniquePredecessorIds = [...new Set(predecessorOrder)];
+    const chainIds = [...uniquePredecessorIds, nodeId];
+    const chainNodes = chainIds
+      .map((id) => nodeMap.get(id))
+      .filter((node): node is NonNullable<typeof node> => Boolean(node))
+      .map<NodeConfigSnapshot>((node) => ({
+        id: node.id,
+        type: node.type,
+        properties: (node.properties || {}) as Record<string, unknown>,
+      }));
+
+    const currentNode = nodeMap.get(nodeId);
+    return {
+      nodeId,
+      nodeType: currentNode?.type || "",
+      chainNodes,
+    };
   };
 
   const ensureNodeProperties = (node: SqlNodeData) => {
@@ -175,6 +242,7 @@
     editorRef.value?.updateNodeTitle(currentNode.id, name);
 
     ensureNodeProperties(currentNode).title = name;
+    selectedNodeContext.value = buildNodeContext(currentNode.id);
   };
 
   const handleSubmitProperty = (payload: { key: string; value: unknown }) => {
@@ -186,6 +254,7 @@
     });
 
     ensureNodeProperties(currentNode)[payload.key] = payload.value;
+    selectedNodeContext.value = buildNodeContext(currentNode.id);
   };
 
   const handleChangeInputSource = () => {
@@ -211,6 +280,7 @@
     ensureNodeProperties(currentNode).inputBinding = binding;
     ensureNodeProperties(currentNode).title = binding.sourceName;
     selectedNode.value = currentNode;
+    selectedNodeContext.value = buildNodeContext(currentNode.id);
     pendingBindNode.value = null;
     pendingInputBinding.value = binding;
     bindModalVisible.value = false;

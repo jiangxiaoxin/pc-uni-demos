@@ -93,6 +93,7 @@
   import {
     fetchDistinctNodeUpstreamFields,
     type InputField,
+    type NodeChainContextPayload,
   } from "./inputNodeMock";
 
   const emit = defineEmits<{
@@ -101,7 +102,7 @@
 
   const props = withDefaults(
     defineProps<{
-      nodeId: string;
+      nodeContext: NodeChainContextPayload;
       selectedFields?: InputField[];
     }>(),
     {
@@ -121,7 +122,7 @@
 
   const loadUpstreamFields = async () => {
     loading.value = true;
-    const fields = await fetchDistinctNodeUpstreamFields(props.nodeId);
+    const fields = await fetchDistinctNodeUpstreamFields(props.nodeContext);
     upstreamFields.value = fields;
     loading.value = false;
   };
@@ -135,7 +136,7 @@
   );
 
   watch(
-    () => props.nodeId,
+    () => props.nodeContext,
     () => {
       void loadUpstreamFields();
     },

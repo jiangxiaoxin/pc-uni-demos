@@ -123,6 +123,7 @@
   };
 
   const getGraphNodes = () => lf?.getGraphData()?.nodes || [];
+  const getGraphData = () => lf?.getGraphData();
   const getIncomingCountByNodeId = (nodeId: string): number => {
     const edges = lf?.getGraphData()?.edges || [];
     return edges.filter((edge) => edge.targetNodeId === nodeId).length;
@@ -418,6 +419,7 @@
     centerGraph,
     updateNodeTitle,
     updateNodeProperties,
+    getGraphData,
   });
 </script>
 

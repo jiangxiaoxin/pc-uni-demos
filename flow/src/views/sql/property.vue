@@ -49,7 +49,7 @@
             </template>
             <template v-else-if="isDistinctNode">
               <DistinctNodeConfigSection
-                :node-id="nodeData.id"
+                :node-context="nodeContextPayload"
                 :selected-fields="distinctFields"
                 @change-fields="handleDistinctFieldsChange"
               />
@@ -128,6 +128,7 @@
     type BoundInputSource,
     type DistinctPreviewPayload,
     type InputField,
+    type NodeChainContextPayload,
     type OutputPreviewPayload,
   } from "./inputNodeMock";
 
@@ -148,11 +149,13 @@
       visible?: boolean;
       nodeData?: SqlNodeData | null;
       incomingCount?: number;
+      nodeContext?: NodeChainContextPayload | null;
     }>(),
     {
       visible: false,
       nodeData: null,
       incomingCount: 0,
+      nodeContext: null,
     },
   );
 
@@ -241,6 +244,8 @@
   const distinctPreviewPayload = computed<DistinctPreviewPayload>(() => {
     return {
       nodeId: props.nodeData?.id || "",
+      nodeType: props.nodeData?.type || "",
+      chainNodes: props.nodeContext?.chainNodes || [],
       fields: distinctFields.value,
     };
   });
@@ -248,7 +253,19 @@
   const outputPreviewPayload = computed<OutputPreviewPayload>(() => {
     return {
       nodeId: props.nodeData?.id || "",
+      nodeType: props.nodeData?.type || "",
+      chainNodes: props.nodeContext?.chainNodes || [],
     };
+  });
+
+  const nodeContextPayload = computed<NodeChainContextPayload>(() => {
+    return (
+      props.nodeContext || {
+        nodeId: props.nodeData?.id || "",
+        nodeType: props.nodeData?.type || "",
+        chainNodes: [],
+      }
+    );
   });
 
   watch(

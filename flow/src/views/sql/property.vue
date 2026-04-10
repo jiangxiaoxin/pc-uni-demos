@@ -20,7 +20,7 @@
 
         <div class="property-tabs" role="tablist" aria-label="节点属性标签">
           <button
-            v-for="tab in tabs"
+            v-for="tab in availableTabs"
             :key="tab.key"
             type="button"
             class="property-tab"
@@ -77,6 +77,12 @@
               :fetcher="fetchDistinctPreviewByPayload"
             />
           </template>
+          <template v-else-if="isOutputNode && nodeData">
+            <NodePreviewTableSection
+              :payload="outputPreviewPayload"
+              :fetcher="fetchOutputPreviewByPayload"
+            />
+          </template>
 
           <template v-else>
             <div class="property-preview-card property-preview-card--grow">
@@ -110,9 +116,11 @@
   import {
     fetchDistinctPreviewByPayload,
     fetchInputPreviewByBinding,
+    fetchOutputPreviewByPayload,
     type BoundInputSource,
     type DistinctPreviewPayload,
     type InputField,
+    type OutputPreviewPayload,
   } from "./inputNodeMock";
 
   interface SqlNodeData {
@@ -184,6 +192,14 @@
 
   const isInputNode = computed(() => props.nodeData?.type === "in-node");
   const isDistinctNode = computed(() => props.nodeData?.type === "distinct-node");
+  const isOutputNode = computed(() => props.nodeData?.type === "out-node");
+
+  const availableTabs = computed(() => {
+    if (isOutputNode.value) {
+      return tabs.filter((tab) => tab.key !== "config");
+    }
+    return tabs;
+  });
 
   const inputBinding = computed<BoundInputSource | null>(() => {
     const binding = props.nodeData?.properties?.inputBinding;
@@ -204,12 +220,28 @@
     };
   });
 
+  const outputPreviewPayload = computed<OutputPreviewPayload>(() => {
+    return {
+      nodeId: props.nodeData?.id || "",
+    };
+  });
+
   watch(
     () => [props.visible, nodeLabel.value, props.nodeData?.id],
     () => {
       editableName.value = nodeLabel.value;
       editableRemark.value = String(props.nodeData?.properties?.remark || "");
-      activeTab.value = "config";
+      const defaultTab = availableTabs.value[0]?.key || "remark";
+      activeTab.value = defaultTab;
+    },
+    { immediate: true },
+  );
+
+  watch(
+    availableTabs,
+    (nextTabs) => {
+      if (nextTabs.some((tab) => tab.key === activeTab.value)) return;
+      activeTab.value = nextTabs[0]?.key || "remark";
     },
     { immediate: true },
   );

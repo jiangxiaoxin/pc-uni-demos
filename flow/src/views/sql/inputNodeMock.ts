@@ -28,6 +28,10 @@ export interface DistinctPreviewPayload {
   fields: InputField[];
 }
 
+export interface OutputPreviewPayload {
+  nodeId: string;
+}
+
 // ============================================================
 // MOCK_API_NOTE
 // This file contains mock data + mock async APIs for SQL nodes.
@@ -653,7 +657,7 @@ export const getInputSourceById = (sourceId?: string | null) => {
   return inputNodeMockSources.find((source) => source.id === sourceId);
 };
 
-const getDistinctMockSourceByNodeId = (nodeId?: string | null) => {
+const getMockSourceByNodeId = (nodeId?: string | null) => {
   if (inputNodeMockSources.length === 0) return undefined;
   const seed = (nodeId || "distinct-node")
     .split("")
@@ -710,7 +714,7 @@ export const fetchDistinctNodeUpstreamFields = async (
     window.setTimeout(resolve, 250);
   });
 
-  const source = getDistinctMockSourceByNodeId(nodeId);
+  const source = getMockSourceByNodeId(nodeId);
   return [...source.fields];
 };
 
@@ -722,7 +726,7 @@ export const fetchDistinctPreviewByPayload = async (
     window.setTimeout(resolve, 250);
   });
 
-  const source = getDistinctMockSourceByNodeId(payload.nodeId);
+  const source = getMockSourceByNodeId(payload.nodeId);
   if (!source) {
     return { columns: [], rows: [] };
   }
@@ -735,4 +739,24 @@ export const fetchDistinctPreviewByPayload = async (
   const columns = source.fields;
   const rows = source.rows.map((row) => ({ ...row }));
   return { columns, rows };
+};
+
+// MOCK_API: fetch output node preview data (simulate backend request)
+export const fetchOutputPreviewByPayload = async (
+  payload: OutputPreviewPayload,
+): Promise<InputPreviewResult> => {
+  await new Promise((resolve) => {
+    window.setTimeout(resolve, 250);
+  });
+
+  const source = getMockSourceByNodeId(payload.nodeId || "out-node");
+  if (!source) {
+    return { columns: [], rows: [] };
+  }
+
+  // Output node preview = final result snapshot returned by backend.
+  return {
+    columns: source.fields,
+    rows: source.rows.map((row) => ({ ...row })),
+  };
 };

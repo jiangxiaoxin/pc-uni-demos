@@ -24,12 +24,14 @@
         ref="editorRef"
         class="editor-area"
         @node-select="handleNodeSelect"
+        @connection-change="handleConnectionChange"
         @node-delete="handleNodeDelete"
         @blank-click="handleBlankClick"
       />
       <property
         :visible="propertyVisible"
         :node-data="selectedNode"
+        :incoming-count="selectedIncomingCount"
         @submit-name="handleSubmitName"
         @submit-property="handleSubmitProperty"
         @change-input-source="handleChangeInputSource"
@@ -72,9 +74,20 @@
     properties?: Record<string, unknown>;
   }
 
+  interface NodeSelectPayload {
+    node: SqlNodeData;
+    incomingCount: number;
+  }
+
+  interface ConnectionChangePayload {
+    nodeId: string;
+    incomingCount: number;
+  }
+
   const editorRef = ref<EditorExpose | null>(null);
   const propertyVisible = ref(false);
   const selectedNode = ref<SqlNodeData | null>(null);
+  const selectedIncomingCount = ref(0);
   const bindModalVisible = ref(false);
   const pendingBindNode = ref<SqlNodeData | null>(null);
   const pendingInputBinding = ref<BoundInputSource | null>(null);
@@ -99,12 +112,16 @@
     }
   };
 
-  const handleNodeSelect = async (node: SqlNodeData) => {
+  const handleNodeSelect = async (payload: NodeSelectPayload) => {
+    const node = payload.node;
+    selectedIncomingCount.value = payload.incomingCount || 0;
+
     if (node.type === "in-node" && !node.properties?.inputBinding) {
       pendingBindNode.value = node;
       pendingInputBinding.value = null;
       propertyVisible.value = false;
       selectedNode.value = null;
+      selectedIncomingCount.value = 0;
       bindModalVisible.value = true;
       await nextTick();
       editorRef.value?.resize();
@@ -120,6 +137,7 @@
 
   const handleBlankClick = async () => {
     selectedNode.value = null;
+    selectedIncomingCount.value = 0;
     propertyVisible.value = false;
     bindModalVisible.value = false;
     pendingBindNode.value = null;
@@ -132,9 +150,15 @@
     if (selectedNode.value?.id !== nodeId) return;
 
     selectedNode.value = null;
+    selectedIncomingCount.value = 0;
     propertyVisible.value = false;
     await nextTick();
     editorRef.value?.resize();
+  };
+
+  const handleConnectionChange = (payload: ConnectionChangePayload) => {
+    if (selectedNode.value?.id !== payload.nodeId) return;
+    selectedIncomingCount.value = payload.incomingCount;
   };
 
   const ensureNodeProperties = (node: SqlNodeData) => {

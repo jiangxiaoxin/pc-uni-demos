@@ -16,8 +16,14 @@ export interface NodeType {
   defaultConfig: {
     width: number;
     height: number;
+    requiredMinIncoming?: number;
+    emptyLinkTip?: string;
   };
 }
+
+const node_empty_link_tip1 = "请将 1 个节点连接至本节点"
+const node_empty_link_tip2 = "请将 2 个节点连接至本节点"
+const node_empty_link_tip3 = "请将 2 个及以上节点连接至本节点"
 
 export const nodeTypes: NodeType[] = [
   {
@@ -30,6 +36,7 @@ export const nodeTypes: NodeType[] = [
     defaultConfig: {
       width: Number_180,
       height: Number_40,
+      requiredMinIncoming: 0,
     },
   },
   {
@@ -42,6 +49,8 @@ export const nodeTypes: NodeType[] = [
     defaultConfig: {
       width: Number_180,
       height: Number_40,
+      requiredMinIncoming: 1,
+      emptyLinkTip: node_empty_link_tip1,
     },
   },
   {
@@ -54,6 +63,8 @@ export const nodeTypes: NodeType[] = [
     defaultConfig: {
       width: Number_180,
       height: Number_40,
+      requiredMinIncoming: 2,
+      emptyLinkTip: node_empty_link_tip2
     },
   },
   {
@@ -66,6 +77,8 @@ export const nodeTypes: NodeType[] = [
     defaultConfig: {
       width: Number_180,
       height: Number_40,
+      requiredMinIncoming: 2,
+      emptyLinkTip: node_empty_link_tip3
     },
   },
   {
@@ -78,6 +91,8 @@ export const nodeTypes: NodeType[] = [
     defaultConfig: {
       width: Number_180,
       height: Number_40,
+      requiredMinIncoming: 1,
+      emptyLinkTip: node_empty_link_tip1
     },
   },
   {
@@ -90,6 +105,8 @@ export const nodeTypes: NodeType[] = [
     defaultConfig: {
       width: Number_180,
       height: Number_40,
+      requiredMinIncoming: 1,
+      emptyLinkTip: node_empty_link_tip1
     },
   },
   {
@@ -102,6 +119,8 @@ export const nodeTypes: NodeType[] = [
     defaultConfig: {
       width: Number_180,
       height: Number_40,
+      requiredMinIncoming: 1,
+      emptyLinkTip: node_empty_link_tip1
     },
   },
   {
@@ -114,6 +133,8 @@ export const nodeTypes: NodeType[] = [
     defaultConfig: {
       width: Number_180,
       height: Number_40,
+      requiredMinIncoming: 1,
+      emptyLinkTip: node_empty_link_tip1
     },
   },
 ];

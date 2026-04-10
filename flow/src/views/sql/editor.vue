@@ -80,8 +80,9 @@
   }
 
   const emit = defineEmits<{
-    (e: "node-select", node: SqlNodeData): void;
+    (e: "node-select", payload: { node: SqlNodeData; incomingCount: number }): void;
     (e: "node-delete", nodeId: string): void;
+    (e: "connection-change", payload: { nodeId: string; incomingCount: number }): void;
     (e: "blank-click"): void;
   }>();
 
@@ -122,6 +123,10 @@
   };
 
   const getGraphNodes = () => lf?.getGraphData()?.nodes || [];
+  const getIncomingCountByNodeId = (nodeId: string): number => {
+    const edges = lf?.getGraphData()?.edges || [];
+    return edges.filter((edge) => edge.targetNodeId === nodeId).length;
+  };
 
   const centerGraph = () => {
     if (!lf) return false;
@@ -215,7 +220,11 @@
     });
 
     lf.on("node:click", ({ data }) => {
-      emit("node-select", data as SqlNodeData);
+      const node = data as SqlNodeData;
+      emit("node-select", {
+        node,
+        incomingCount: getIncomingCountByNodeId(node.id),
+      });
     });
 
     // lf.on("blank:dragstart", () => {
@@ -253,6 +262,24 @@
     // lf.on("edge:add", ({ data }) => {
     //   console.log("连线添加成功:", data);
     // });
+
+    lf.on("edge:add", ({ data }: { data: { targetNodeId?: string } }) => {
+      const targetNodeId = data?.targetNodeId;
+      if (!targetNodeId) return;
+      emit("connection-change", {
+        nodeId: targetNodeId,
+        incomingCount: getIncomingCountByNodeId(targetNodeId),
+      });
+    });
+
+    lf.on("edge:delete", ({ data }: { data: { targetNodeId?: string } }) => {
+      const targetNodeId = data?.targetNodeId;
+      if (!targetNodeId) return;
+      emit("connection-change", {
+        nodeId: targetNodeId,
+        incomingCount: getIncomingCountByNodeId(targetNodeId),
+      });
+    });
 
     lf.on("connection:not-allowed", ({ msg }) => {
       console.warn("连接被阻止:", msg);

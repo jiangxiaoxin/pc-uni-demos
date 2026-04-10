@@ -33,73 +33,81 @@
       </div>
 
       <div class="property-bottom">
-        <template v-if="activeTab === 'config'">
-          <template v-if="isInputNode && inputBinding">
-            <InputNodeConfigSection
-              :input-binding="inputBinding"
-              @change-source="emit('change-input-source')"
-            />
-          </template>
-          <template v-else-if="isDistinctNode">
-            <DistinctNodeConfigSection
-              :node-id="nodeData.id"
-              :selected-fields="distinctFields"
-              @change-fields="handleDistinctFieldsChange"
-            />
-          </template>
-
-          <template v-else>
-            <div class="property-row">
-              <span class="property-label">节点 ID</span>
-              <span class="property-value">{{ nodeData.id }}</span>
-            </div>
-            <div class="property-row">
-              <span class="property-label">节点类型</span>
-              <span class="property-value">{{ nodeData.type }}</span>
-            </div>
-            <div class="property-row">
-              <span class="property-label">颜色</span>
-              <span class="property-value">{{ nodeColor }}</span>
-            </div>
-          </template>
-        </template>
-
-        <template v-else-if="activeTab === 'preview'">
-          <template v-if="isInputNode && inputBinding">
-            <NodePreviewTableSection
-              :payload="inputBinding"
-              :fetcher="fetchInputPreviewByBinding"
-            />
-          </template>
-          <template v-else-if="isDistinctNode && nodeData">
-            <NodePreviewTableSection
-              :payload="distinctPreviewPayload"
-              :fetcher="fetchDistinctPreviewByPayload"
-            />
-          </template>
-          <template v-else-if="isOutputNode && nodeData">
-            <NodePreviewTableSection
-              :payload="outputPreviewPayload"
-              :fetcher="fetchOutputPreviewByPayload"
-            />
-          </template>
-
-          <template v-else>
-            <div class="property-preview-card property-preview-card--grow">
-              <pre class="property-preview-content">{{ previewContent }}</pre>
-            </div>
-          </template>
-        </template>
-
-        <template v-else>
-          <div class="property-remark">
-            <a-textarea
-              v-model:value="editableRemark"
-              class="property-remark-input"
-              placeholder="请输入节点备注"
-              @blur="handleSubmitRemark"
-            />
+        <template v-if="isConnectionInvalid">
+          <div class="property-block-tip">
+            <div class="property-block-tip__title">连线未满足要求</div>
+            <div class="property-block-tip__content">{{ connectionInvalidTip }}</div>
           </div>
+        </template>
+        <template v-else>
+          <template v-if="activeTab === 'config'">
+            <template v-if="isInputNode && inputBinding">
+              <InputNodeConfigSection
+                :input-binding="inputBinding"
+                @change-source="emit('change-input-source')"
+              />
+            </template>
+            <template v-else-if="isDistinctNode">
+              <DistinctNodeConfigSection
+                :node-id="nodeData.id"
+                :selected-fields="distinctFields"
+                @change-fields="handleDistinctFieldsChange"
+              />
+            </template>
+
+            <template v-else>
+              <div class="property-row">
+                <span class="property-label">节点 ID</span>
+                <span class="property-value">{{ nodeData.id }}</span>
+              </div>
+              <div class="property-row">
+                <span class="property-label">节点类型</span>
+                <span class="property-value">{{ nodeData.type }}</span>
+              </div>
+              <div class="property-row">
+                <span class="property-label">颜色</span>
+                <span class="property-value">{{ nodeColor }}</span>
+              </div>
+            </template>
+          </template>
+
+          <template v-else-if="activeTab === 'preview'">
+            <template v-if="isInputNode && inputBinding">
+              <NodePreviewTableSection
+                :payload="inputBinding"
+                :fetcher="fetchInputPreviewByBinding"
+              />
+            </template>
+            <template v-else-if="isDistinctNode && nodeData">
+              <NodePreviewTableSection
+                :payload="distinctPreviewPayload"
+                :fetcher="fetchDistinctPreviewByPayload"
+              />
+            </template>
+            <template v-else-if="isOutputNode && nodeData">
+              <NodePreviewTableSection
+                :payload="outputPreviewPayload"
+                :fetcher="fetchOutputPreviewByPayload"
+              />
+            </template>
+
+            <template v-else>
+              <div class="property-preview-card property-preview-card--grow">
+                <pre class="property-preview-content">{{ previewContent }}</pre>
+              </div>
+            </template>
+          </template>
+
+          <template v-else>
+            <div class="property-remark">
+              <a-textarea
+                v-model:value="editableRemark"
+                class="property-remark-input"
+                placeholder="请输入节点备注"
+                @blur="handleSubmitRemark"
+              />
+            </div>
+          </template>
         </template>
       </div>
     </template>
@@ -139,10 +147,12 @@
     defineProps<{
       visible?: boolean;
       nodeData?: SqlNodeData | null;
+      incomingCount?: number;
     }>(),
     {
       visible: false,
       nodeData: null,
+      incomingCount: 0,
     },
   );
 
@@ -193,6 +203,21 @@
   const isInputNode = computed(() => props.nodeData?.type === "in-node");
   const isDistinctNode = computed(() => props.nodeData?.type === "distinct-node");
   const isOutputNode = computed(() => props.nodeData?.type === "out-node");
+
+  const requiredMinIncoming = computed(() => {
+    return Number(nodeConfig.value?.defaultConfig?.requiredMinIncoming || 0);
+  });
+
+  const isConnectionInvalid = computed(() => {
+    return requiredMinIncoming.value > 0 && (props.incomingCount || 0) < requiredMinIncoming.value;
+  });
+
+  const connectionInvalidTip = computed(() => {
+    return (
+      nodeConfig.value?.defaultConfig?.emptyLinkTip ||
+      "当前节点前序连线数量不足，请先完成连线。"
+    );
+  });
 
   const availableTabs = computed(() => {
     if (isOutputNode.value) {
@@ -453,5 +478,27 @@
   .property-remark-input :deep(.ant-input) {
     height: 100%;
     resize: none;
+  }
+
+  .property-block-tip {
+    flex: 1;
+    min-height: 0;
+    color: #92400e;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .property-block-tip__title {
+    font-size: 14px;
+    font-weight: 600;
+    line-height: 20px;
+  }
+
+  .property-block-tip__content {
+    font-size: 13px;
+    line-height: 18px;
+    word-break: break-word;
   }
 </style>

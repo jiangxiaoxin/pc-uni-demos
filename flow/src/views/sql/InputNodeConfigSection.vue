@@ -20,7 +20,10 @@
             :key="field.key"
             class="input-config-field"
           >
-            <span class="input-config-field__name">{{ field.name }}</span>
+            <div class="input-config-field__main">
+              <span class="input-config-field__name">{{ field.name }}</span>
+              <span class="input-config-field__code"> ( {{ field.key }} ) </span>
+            </div>
             <span class="input-config-field__type">{{ field.type }}</span>
           </div>
         </div>
@@ -200,8 +203,16 @@
     display: flex;
     align-items: center;
     justify-content: space-between;
+    gap: 8px;
     padding: 4px 6px;
     background: #fff;
+  }
+
+  .input-config-field__main {
+    min-width: 0;
+    display: flex;
+    align-items: center;
+    gap: 6px;
   }
 
   .input-config-field__name {
@@ -210,6 +221,13 @@
     color: #0f172a;
     word-break: break-all;
     line-height: 18px;
+  }
+
+  .input-config-field__code {
+    font-size: 11px;
+    color: #64748b;
+    line-height: 18px;
+    white-space: nowrap;
   }
 
   .input-config-field__type {

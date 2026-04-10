@@ -64,6 +64,7 @@
                 :value="field.key"
               />
               <span class="bind-field-item__name">{{ field.name }}</span>
+              <span class="bind-field-item__code">{{ field.key }}</span>
               <span class="bind-field-item__type">{{ field.type }}</span>
             </label>
           </div>
@@ -310,7 +311,7 @@
 
   .bind-field-item {
     display: grid;
-    grid-template-columns: 20px minmax(0, 1fr) 120px;
+    grid-template-columns: 20px minmax(0, 1fr) minmax(0, 1fr) 120px;
     align-items: center;
     gap: 12px;
     padding: 12px 14px;
@@ -332,6 +333,13 @@
     font-size: 12px;
     color: #64748b;
     text-align: right;
+  }
+
+  .bind-field-item__code {
+    min-width: 0;
+    font-size: 12px;
+    color: #475569;
+    word-break: break-all;
   }
 
   .bind-empty {

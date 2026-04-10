@@ -153,7 +153,7 @@
     ensureNodeProperties(currentNode).title = name;
   };
 
-  const handleSubmitProperty = (payload: { key: string; value: string }) => {
+  const handleSubmitProperty = (payload: { key: string; value: unknown }) => {
     const currentNode = selectedNode.value;
     if (!currentNode) return;
 

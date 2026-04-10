@@ -23,6 +23,17 @@ export interface InputPreviewResult {
   rows: Record<string, unknown>[];
 }
 
+export interface DistinctPreviewPayload {
+  nodeId: string;
+  fields: InputField[];
+}
+
+// ============================================================
+// MOCK_API_NOTE
+// This file contains mock data + mock async APIs for SQL nodes.
+// Quick search keyword: MOCK_API
+// ============================================================
+
 const createRows = <T>(factory: (index: number) => T, count = 10): T[] => {
   return Array.from({ length: count }, (_, index) => factory(index));
 };
@@ -254,6 +265,12 @@ const reportFields = buildFields([
   { key: "summary", type: "varchar" },
   { key: "riskLevel", type: "varchar" },
   { key: "publishStatus", type: "varchar" },
+  { key: "publishTime", type: "datetime" },
+  { key: "doctorId", type: "bigint"},
+  { key: "diagnosis", type: "varchar" },
+  { key: "treatment", type: "varchar" },
+  { key: "followUp", type: "varchar" },
+  { key: "remark", type: "varchar" },
 ]);
 
 const paymentFields = buildFields([
@@ -346,6 +363,7 @@ const supplierFields = buildFields([
   { key: "supplierStatus", type: "varchar" },
 ]);
 
+// =========================== MOCK_DATA_START ===========================
 export const inputNodeMockSources: InputSource[] = [
   {
     id: "customer",
@@ -628,12 +646,22 @@ export const inputNodeMockSources: InputSource[] = [
     })),
   },
 ];
+// ============================ MOCK_DATA_END ============================
 
 export const getInputSourceById = (sourceId?: string | null) => {
   if (!sourceId) return undefined;
   return inputNodeMockSources.find((source) => source.id === sourceId);
 };
 
+const getDistinctMockSourceByNodeId = (nodeId?: string | null) => {
+  if (inputNodeMockSources.length === 0) return undefined;
+  const seed = (nodeId || "distinct-node")
+    .split("")
+    .reduce((sum, char) => sum + char.charCodeAt(0), 0);
+  return inputNodeMockSources[seed % inputNodeMockSources.length];
+};
+
+// MOCK_API: fetch input source fields (simulate backend request)
 export const fetchInputSourceFields = async (sourceId?: string | null) => {
   const source = getInputSourceById(sourceId);
   await new Promise((resolve) => {
@@ -657,6 +685,7 @@ export const getPreviewRowsByBinding = (binding?: BoundInputSource | null) => {
   });
 };
 
+// MOCK_API: fetch preview table columns + rows (simulate backend request)
 export const fetchInputPreviewByBinding = async (
   binding?: BoundInputSource | null,
 ): Promise<InputPreviewResult> => {
@@ -670,5 +699,40 @@ export const fetchInputPreviewByBinding = async (
 
   const columns = binding.fields || [];
   const rows = getPreviewRowsByBinding(binding);
+  return { columns, rows };
+};
+
+// MOCK_API: fetch upstream fields for distinct node (simulate backend request)
+export const fetchDistinctNodeUpstreamFields = async (
+  nodeId?: string | null,
+): Promise<InputField[]> => {
+  await new Promise((resolve) => {
+    window.setTimeout(resolve, 250);
+  });
+
+  const source = getDistinctMockSourceByNodeId(nodeId);
+  return [...source.fields];
+};
+
+// MOCK_API: fetch distinct node preview data (simulate backend request)
+export const fetchDistinctPreviewByPayload = async (
+  payload: DistinctPreviewPayload,
+): Promise<InputPreviewResult> => {
+  await new Promise((resolve) => {
+    window.setTimeout(resolve, 250);
+  });
+
+  const source = getDistinctMockSourceByNodeId(payload.nodeId);
+  if (!source) {
+    return { columns: [], rows: [] };
+  }
+
+  // Distinct fields are SQL-build config only.
+  // Preview data should come directly from backend response (mocked here).
+  // Keep payload.fields in signature for future backend request params.
+  void payload.fields;
+
+  const columns = source.fields;
+  const rows = source.rows.map((row) => ({ ...row }));
   return { columns, rows };
 };

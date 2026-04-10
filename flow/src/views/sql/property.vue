@@ -40,6 +40,13 @@
               @change-source="emit('change-input-source')"
             />
           </template>
+          <template v-else-if="isDistinctNode">
+            <DistinctNodeConfigSection
+              :node-id="nodeData.id"
+              :selected-fields="distinctFields"
+              @change-fields="handleDistinctFieldsChange"
+            />
+          </template>
 
           <template v-else>
             <div class="property-row">
@@ -62,6 +69,12 @@
             <NodePreviewTableSection
               :payload="inputBinding"
               :fetcher="fetchInputPreviewByBinding"
+            />
+          </template>
+          <template v-else-if="isDistinctNode && nodeData">
+            <NodePreviewTableSection
+              :payload="distinctPreviewPayload"
+              :fetcher="fetchDistinctPreviewByPayload"
             />
           </template>
 
@@ -92,10 +105,14 @@
   import { getNodeTypeConfig } from "./menus";
   import { defaultSqlNodeIcon, sqlNodeIconMap } from "./nodes/iconMap";
   import InputNodeConfigSection from "./InputNodeConfigSection.vue";
+  import DistinctNodeConfigSection from "./DistinctNodeConfigSection.vue";
   import NodePreviewTableSection from "./NodePreviewTableSection.vue";
   import {
+    fetchDistinctPreviewByPayload,
     fetchInputPreviewByBinding,
     type BoundInputSource,
+    type DistinctPreviewPayload,
+    type InputField,
   } from "./inputNodeMock";
 
   interface SqlNodeData {
@@ -106,7 +123,7 @@
 
   const emit = defineEmits<{
     (e: "submit-name", name: string): void;
-    (e: "submit-property", payload: { key: string; value: string }): void;
+    (e: "submit-property", payload: { key: string; value: unknown }): void;
     (e: "change-input-source"): void;
   }>();
 
@@ -166,11 +183,25 @@
   });
 
   const isInputNode = computed(() => props.nodeData?.type === "in-node");
+  const isDistinctNode = computed(() => props.nodeData?.type === "distinct-node");
 
   const inputBinding = computed<BoundInputSource | null>(() => {
     const binding = props.nodeData?.properties?.inputBinding;
     if (!binding || typeof binding !== "object") return null;
     return binding as BoundInputSource;
+  });
+
+  const distinctFields = computed<InputField[]>(() => {
+    const fields = props.nodeData?.properties?.distinctFields;
+    if (!Array.isArray(fields)) return [];
+    return fields as InputField[];
+  });
+
+  const distinctPreviewPayload = computed<DistinctPreviewPayload>(() => {
+    return {
+      nodeId: props.nodeData?.id || "",
+      fields: distinctFields.value,
+    };
   });
 
   watch(
@@ -202,6 +233,13 @@
     emit("submit-property", {
       key: "remark",
       value: nextRemark,
+    });
+  };
+
+  const handleDistinctFieldsChange = (fields: InputField[]) => {
+    emit("submit-property", {
+      key: "distinctFields",
+      value: fields,
     });
   };
 </script>

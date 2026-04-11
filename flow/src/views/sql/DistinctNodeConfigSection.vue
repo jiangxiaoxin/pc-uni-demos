@@ -23,28 +23,28 @@
         </div>
         <div class="distinct-field-item__actions">
           <span
-              class="distinct-action-icon"
-              :class="{ 'distinct-action-icon--disabled': index === 0 }"
-              @click="index !== 0 && moveField(index, -1)"
-              title="上移"
-            >
-              <UpOutlined class="distinct-action-icon__svg" />
-            </span>
+            class="distinct-action-icon"
+            :class="{ 'distinct-action-icon--disabled': index === 0 }"
+            @click="index !== 0 && moveField(index, -1)"
+            title="上移"
+          >
+            <UpOutlined class="distinct-action-icon__svg" />
+          </span>
           <span
             title="下移"
-              class="distinct-action-icon"
-              :class="{ 'distinct-action-icon--disabled': index === localSelectedFields.length - 1 }"
-              @click="index !== localSelectedFields.length - 1 && moveField(index, 1)"
-            >
-              <DownOutlined class="distinct-action-icon__svg" />
-            </span>
+            class="distinct-action-icon"
+            :class="{ 'distinct-action-icon--disabled': index === localSelectedFields.length - 1 }"
+            @click="index !== localSelectedFields.length - 1 && moveField(index, 1)"
+          >
+            <DownOutlined class="distinct-action-icon__svg" />
+          </span>
           <span
             title="删除"
-              class="distinct-action-icon distinct-action-icon--danger"
-              @click="removeField(index)"
-            >
-              <DeleteOutlined class="distinct-action-icon__svg" />
-            </span>
+            class="distinct-action-icon distinct-action-icon--danger"
+            @click="removeField(index)"
+          >
+            <DeleteOutlined class="distinct-action-icon__svg" />
+          </span>
         </div>
       </div>
 
@@ -80,7 +80,7 @@
             <span class="distinct-selector__name">{{ field.name }}</span>
             <span class="distinct-selector__code">{{ field.key }}</span>
             <span class="distinct-selector__type">{{ field.type }}</span>
-        </div>
+          </div>
         </div>
       </div>
     </a-modal>
@@ -88,13 +88,10 @@
 </template>
 
 <script setup lang="ts">
-  import { onMounted, ref, watch } from "vue";
+  import { inject, onMounted, ref, watch } from "vue";
   import { DeleteOutlined, DownOutlined, UpOutlined } from "@ant-design/icons-vue";
-  import {
-    fetchDistinctNodeUpstreamFields,
-    type InputField,
-    type NodeRequestPayload,
-  } from "./inputNodeMock";
+  import { sqlNodeContextKey, type GetNodeContext } from "./nodeContext";
+  import { fetchDistinctNodeUpstreamFields, type InputField } from "./inputNodeMock";
 
   const emit = defineEmits<{
     (e: "change-fields", value: string[]): void;
@@ -102,7 +99,7 @@
 
   const props = withDefaults(
     defineProps<{
-      nodeContext: NodeRequestPayload;
+      nodeId: string;
       selectedFields?: string[];
     }>(),
     {
@@ -110,6 +107,7 @@
     },
   );
 
+  const getNodeContext = inject<GetNodeContext>(sqlNodeContextKey);
   const loading = ref(false);
   const selectorOpen = ref(false);
   const upstreamFields = ref<InputField[]>([]);
@@ -121,8 +119,16 @@
   };
 
   const loadUpstreamFields = async () => {
+    const nodeContext = getNodeContext?.(props.nodeId);
+    if (!nodeContext) {
+      upstreamFields.value = [];
+      localSelectedFields.value = [];
+      loading.value = false;
+      return;
+    }
+
     loading.value = true;
-    const fields = await fetchDistinctNodeUpstreamFields(props.nodeContext);
+    const fields = await fetchDistinctNodeUpstreamFields(nodeContext);
     upstreamFields.value = fields;
     loading.value = false;
     syncLocalSelected();
@@ -132,7 +138,6 @@
     () => props.selectedFields,
     () => {
       console.log('props.selectedFields');
-      
       syncLocalSelected();
     },
     { immediate: true, deep: true },
@@ -371,3 +376,6 @@
     text-align: right;
   }
 </style>
+
+
+

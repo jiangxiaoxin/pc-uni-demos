@@ -40,10 +40,11 @@
   }
 
   type PreviewFetcher = (payload: unknown) => Promise<PreviewResult>;
+  type PreviewPayload = unknown | (() => unknown);
 
   const props = withDefaults(
     defineProps<{
-      payload: unknown;
+      payload: PreviewPayload;
       fetcher: PreviewFetcher;
       rowKeyPrefix?: string;
       minColumnWidth?: number;
@@ -82,11 +83,15 @@
 
   const scrollY = "100%";
 
+  const resolvePayload = () => {
+    return typeof props.payload === "function" ? props.payload() : props.payload;
+  };
+
   const loadPreview = async () => {
     const token = ++requestToken;
     loading.value = true;
     try {
-      const result = await props.fetcher(props.payload);
+      const result = await props.fetcher(resolvePayload());
       if (token !== requestToken) return;
       columns.value = result.columns || [];
       rows.value = (result.rows || []).map((row, index) => {

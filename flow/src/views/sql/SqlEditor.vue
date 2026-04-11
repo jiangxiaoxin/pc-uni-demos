@@ -33,7 +33,6 @@
         :visible="propertyVisible"
         :node-data="selectedNode"
         :incoming-count="selectedIncomingCount"
-        :node-context="selectedNodeContext"
         @submit-name="handleSubmitName"
         @submit-properties="handleSubmitProperties"
         @change-input-source="handleChangeInputSource"
@@ -50,19 +49,13 @@
 </template>
 
 <script setup lang="ts">
-  import { nextTick, ref, watch } from "vue";
+  import { nextTick, provide, ref, watch } from "vue";
   import { nodeTypes } from "./menus";
   import editor from "./editor.vue";
   import property from "./property.vue";
   import InputNodeBindModal from "./InputNodeBindModal.vue";
-  import {
-    inputNodeMockSources,
-    type BoundInputSource,
-    type InputBindingPersisted,
-    type NodeRequestPayload,
-    type NodeConfigSnapshot,
-    resolveInputBinding,
-  } from "./inputNodeMock";
+  import { buildNodeContext, sqlNodeContextKey, type SqlGraphData } from "./nodeContext";
+  import { inputNodeMockSources, type InputBindingPersisted, resolveInputBinding } from "./inputNodeMock";
 
   interface EditorExpose {
     resize: () => void;
@@ -72,16 +65,7 @@
       nodeId: string,
       properties: Record<string, unknown>,
     ) => void;
-    getGraphData: () =>
-      | {
-          nodes?: Array<{
-            id: string;
-            type: string;
-            properties?: Record<string, unknown>;
-          }>;
-          edges?: Array<{ sourceNodeId: string; targetNodeId: string }>;
-        }
-      | undefined;
+    getGraphData: () => SqlGraphData | undefined;
   }
 
   interface PropertyExpose {
@@ -109,10 +93,15 @@
   const propertyVisible = ref(false);
   const selectedNode = ref<SqlNodeData | null>(null);
   const selectedIncomingCount = ref(0);
-  const selectedNodeContext = ref<NodeRequestPayload | null>(null);
   const bindModalVisible = ref(false);
   const pendingBindNode = ref<SqlNodeData | null>(null);
   const pendingInputBinding = ref<InputBindingPersisted | null>(null);
+
+  const getNodeContext = (nodeId: string) => {
+    return buildNodeContext(editorRef.value?.getGraphData(), nodeId);
+  };
+
+  provide(sqlNodeContextKey, getNodeContext);
 
   watch(bindModalVisible, (visible) => {
     if (visible) return;
@@ -138,7 +127,7 @@
     const node = payload.node;
     selectedIncomingCount.value = payload.incomingCount || 0;
 
-     if (selectedNode.value?.id && selectedNode.value.id !== node.id) {
+    if (selectedNode.value?.id && selectedNode.value.id !== node.id) {
       propertyRef.value?.flushDraftProperties();
     }
 
@@ -148,7 +137,6 @@
       propertyVisible.value = false;
       selectedNode.value = null;
       selectedIncomingCount.value = 0;
-      selectedNodeContext.value = null;
       bindModalVisible.value = true;
       await nextTick();
       editorRef.value?.resize();
@@ -156,7 +144,6 @@
     }
 
     selectedNode.value = node;
-    selectedNodeContext.value = buildNodeContext(node.id);
     propertyVisible.value = true;
     bindModalVisible.value = false;
     await nextTick();
@@ -167,7 +154,6 @@
     propertyRef.value?.flushDraftProperties();
     selectedNode.value = null;
     selectedIncomingCount.value = 0;
-    selectedNodeContext.value = null;
     propertyVisible.value = false;
     bindModalVisible.value = false;
     pendingBindNode.value = null;
@@ -181,7 +167,6 @@
 
     selectedNode.value = null;
     selectedIncomingCount.value = 0;
-    selectedNodeContext.value = null;
     propertyVisible.value = false;
     await nextTick();
     editorRef.value?.resize();
@@ -190,63 +175,6 @@
   const handleConnectionChange = (payload: ConnectionChangePayload) => {
     if (selectedNode.value?.id !== payload.nodeId) return;
     selectedIncomingCount.value = payload.incomingCount;
-    selectedNodeContext.value = buildNodeContext(payload.nodeId);
-  };
-
-  const buildNodeContext = (nodeId: string): NodeRequestPayload | null => {
-    const graph = editorRef.value?.getGraphData();
-    if (!graph) return null;
-
-    const nodes = graph.nodes || [];
-    const edges = graph.edges || [];
-    if (nodes.length === 0) return null;
-
-    const nodeMap = new Map(nodes.map((node) => [node.id, node]));
-    if (!nodeMap.has(nodeId)) return null;
-
-    const visited = new Set<string>();
-    const predecessorOrder: string[] = [];
-
-    const visit = (currentId: string) => {
-      if (visited.has(currentId)) return;
-      visited.add(currentId);
-      edges
-        .filter((edge) => edge.targetNodeId === currentId)
-        .forEach((edge) => {
-          visit(edge.sourceNodeId);
-          if (edge.sourceNodeId !== nodeId) {
-            predecessorOrder.push(edge.sourceNodeId);
-          }
-        });
-    };
-
-    visit(nodeId);
-
-    const uniquePredecessorIds = [...new Set(predecessorOrder)];
-    const upstreamNodes = uniquePredecessorIds
-      .map((id) => nodeMap.get(id))
-      .filter((node): node is NonNullable<typeof node> => Boolean(node))
-      .map<NodeConfigSnapshot>((node) => ({
-        id: node.id,
-        type: node.type,
-        // 这里构建的是传给下游预览/mock 逻辑的链路快照。
-        // properties 需要拷贝，避免后续操作 chainNodes 时通过引用污染 LogicFlow 的真实节点状态。【但其实仍不彻底，因为如果内部还有更多深层次的属性，那依然会有属性引用】
-        properties: { ...((node.properties || {}) as Record<string, unknown>) },
-      }));
-
-    const currentNode = nodeMap.get(nodeId);
-    return {
-      nodeId,
-      nodeType: currentNode?.type || "",
-      upstreamNodes,
-      currentNode: currentNode
-        ? {
-            id: currentNode.id,
-            type: currentNode.type,
-            properties: { ...((currentNode.properties || {}) as Record<string, unknown>) },
-          }
-        : null,
-    };
   };
 
   const ensureNodeProperties = (node: SqlNodeData) => {
@@ -261,9 +189,7 @@
     if (!currentNode) return;
 
     editorRef.value?.updateNodeTitle(currentNode.id, name);
-
     ensureNodeProperties(currentNode).title = name;
-    selectedNodeContext.value = buildNodeContext(currentNode.id);
   };
 
   const handleSubmitProperties = (properties: Record<string, unknown>) => {
@@ -271,9 +197,7 @@
     if (!currentNode) return;
 
     editorRef.value?.updateNodeProperties(currentNode.id, properties);
-
     Object.assign(ensureNodeProperties(currentNode), properties);
-    selectedNodeContext.value = buildNodeContext(currentNode.id);
   };
 
   const handleChangeInputSource = () => {
@@ -303,7 +227,6 @@
     ensureNodeProperties(currentNode).inputBinding = binding;
     ensureNodeProperties(currentNode).title = resolvedBinding.sourceName;
     selectedNode.value = currentNode;
-    selectedNodeContext.value = buildNodeContext(currentNode.id);
     pendingBindNode.value = null;
     pendingInputBinding.value = binding;
     bindModalVisible.value = false;

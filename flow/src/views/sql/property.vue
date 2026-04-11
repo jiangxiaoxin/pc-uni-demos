@@ -1,4 +1,4 @@
-﻿<template>
+<template>
   <div class="property-panel" :class="{ 'property-panel--visible': visible }">
     <template v-if="visible && nodeData">
       <div class="property-top">
@@ -6,7 +6,6 @@
           <component :is="nodeIconComponent" class="property-node-icon" />
           <div class="property-node-type">{{ nodeTypeLabel }}</div>
           <div class="property-name-field">
-            <!-- <span class="property-name-label">节点名称:</span> -->
             <a-input
               v-model:value="editableName"
               class="property-node-input"
@@ -51,7 +50,7 @@
             <template v-else-if="isFieldNode">
               <FieldNodeConfigSection
                 :key="`${nodeData.id}-config-field`"
-                :node-context="nodeContextPayload"
+                :node-id="nodeData.id"
                 :field-settings="draftFieldSettings"
                 :configured="fieldSettingsConfigured"
                 @change-fields="handleFieldSettingsChange"
@@ -60,7 +59,7 @@
             <template v-else-if="isDistinctNode">
               <DistinctNodeConfigSection
                 :key="`${nodeData.id}-config-distinct`"
-                :node-context="nodeContextPayload"
+                :node-id="nodeData.id"
                 :selected-fields="draftDistinctFields"
                 @change-fields="handleDistinctFieldsChange"
               />
@@ -93,21 +92,21 @@
             <template v-else-if="isFieldNode && nodeData">
               <NodePreviewTableSection
                 :key="`${nodeData.id}-preview-field`"
-                :payload="fieldNodePreviewPayload"
+                :payload="buildFieldNodePreviewPayload"
                 :fetcher="fetchFieldNodePreviewByPayload"
               />
             </template>
             <template v-else-if="isDistinctNode && nodeData">
               <NodePreviewTableSection
                 :key="`${nodeData.id}-preview-distinct`"
-                :payload="distinctPreviewPayload"
+                :payload="buildDistinctPreviewPayload"
                 :fetcher="fetchDistinctPreviewByPayload"
               />
             </template>
             <template v-else-if="isOutputNode && nodeData">
               <NodePreviewTableSection
                 :key="`${nodeData.id}-preview-output`"
-                :payload="outputPreviewPayload"
+                :payload="buildOutputPreviewPayload"
                 :fetcher="fetchOutputPreviewByPayload"
               />
             </template>
@@ -135,13 +134,14 @@
 </template>
 
 <script setup lang="ts">
-  import { computed, ref, watch } from "vue";
+  import { computed, inject, ref, watch } from "vue";
   import { getNodeTypeConfig } from "./menus";
   import { defaultSqlNodeIcon, sqlNodeIconMap } from "./nodes/iconMap";
   import FieldNodeConfigSection from "./FieldNodeConfigSection.vue";
   import InputNodeConfigSection from "./InputNodeConfigSection.vue";
   import DistinctNodeConfigSection from "./DistinctNodeConfigSection.vue";
   import NodePreviewTableSection from "./NodePreviewTableSection.vue";
+  import { sqlNodeContextKey, type GetNodeContext } from "./nodeContext";
   import {
     fetchDistinctPreviewByPayload,
     fetchFieldNodePreviewByPayload,
@@ -152,8 +152,6 @@
     type FieldNodePreviewPayload,
     type FieldSettingPersistedItem,
     type InputBindingPersisted,
-    type InputField,
-    type NodeRequestPayload,
     type OutputPreviewPayload,
     resolveInputBinding,
   } from "./inputNodeMock";
@@ -175,16 +173,15 @@
       visible?: boolean;
       nodeData?: SqlNodeData | null;
       incomingCount?: number;
-      nodeContext?: NodeRequestPayload | null;
     }>(),
     {
       visible: false,
       nodeData: null,
       incomingCount: 0,
-      nodeContext: null,
     },
   );
 
+  const getNodeContext = inject<GetNodeContext>(sqlNodeContextKey);
   const editableName = ref("");
   const editableRemark = ref("");
   const draftDistinctFields = ref<string[]>([]);
@@ -280,52 +277,49 @@
     return Object.prototype.hasOwnProperty.call(props.nodeData?.properties || {}, "fieldSettings");
   });
 
-  const fieldNodePreviewPayload = computed<FieldNodePreviewPayload>(() => {
+  const resolveCurrentNodeContext = () => {
+    if (!props.nodeData || !getNodeContext) return null;
+    return getNodeContext(props.nodeData.id);
+  };
+
+  const buildFieldNodePreviewPayload = (): FieldNodePreviewPayload => {
+    const nodeContext = resolveCurrentNodeContext();
     return {
       nodeId: props.nodeData?.id || "",
       nodeType: props.nodeData?.type || "",
-      upstreamNodes: props.nodeContext?.upstreamNodes || [],
-      currentNode: props.nodeContext?.currentNode
+      upstreamNodes: nodeContext?.upstreamNodes || [],
+      currentNode: nodeContext?.currentNode
         ? {
-            ...props.nodeContext.currentNode,
+            ...nodeContext.currentNode,
             properties: {
-              ...(props.nodeContext.currentNode.properties || {}),
+              ...(nodeContext.currentNode.properties || {}),
               fieldSettings: draftFieldSettings.value.map((field) => ({ ...field })),
             },
           }
         : null,
     };
-  });
+  };
 
-  const distinctPreviewPayload = computed<DistinctPreviewPayload>(() => {
+  const buildDistinctPreviewPayload = (): DistinctPreviewPayload => {
+    const nodeContext = resolveCurrentNodeContext();
     return {
       nodeId: props.nodeData?.id || "",
       nodeType: props.nodeData?.type || "",
-      upstreamNodes: props.nodeContext?.upstreamNodes || [],
-      currentNode: props.nodeContext?.currentNode || null,
+      upstreamNodes: nodeContext?.upstreamNodes || [],
+      currentNode: nodeContext?.currentNode || null,
       fields: [...draftDistinctFields.value],
     };
-  });
+  };
 
-  const outputPreviewPayload = computed<OutputPreviewPayload>(() => {
+  const buildOutputPreviewPayload = (): OutputPreviewPayload => {
+    const nodeContext = resolveCurrentNodeContext();
     return {
       nodeId: props.nodeData?.id || "",
       nodeType: props.nodeData?.type || "",
-      upstreamNodes: props.nodeContext?.upstreamNodes || [],
-      currentNode: props.nodeContext?.currentNode || null,
+      upstreamNodes: nodeContext?.upstreamNodes || [],
+      currentNode: nodeContext?.currentNode || null,
     };
-  });
-
-  const nodeContextPayload = computed<NodeRequestPayload>(() => {
-    return (
-      props.nodeContext || {
-        nodeId: props.nodeData?.id || "",
-        nodeType: props.nodeData?.type || "",
-        upstreamNodes: [],
-        currentNode: null,
-      }
-    );
-  });
+  };
 
   watch(
     () => [props.visible, props.nodeData?.id],
@@ -560,7 +554,7 @@
   .property-remark {
     flex: 1;
     min-height: 0;
-    padding: 6px 12px 40px; // 底下空间大，是为了留下可blur的空间
+    padding: 6px 12px 40px;
     display: flex;
     overflow-y: auto;
   }

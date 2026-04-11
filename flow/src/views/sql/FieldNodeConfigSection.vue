@@ -1,4 +1,4 @@
-﻿<template>
+<template>
   <div class="field-config-layout">
     <div class="field-config-sidebar">
       <div class="field-config-header">
@@ -103,15 +103,15 @@
 </template>
 
 <script setup lang="ts">
-  import { computed, nextTick, onMounted, ref, useTemplateRef, watch } from "vue";
+  import { computed, inject, nextTick, onMounted, ref, useTemplateRef, watch } from "vue";
   import { CheckOutlined, CloseOutlined, EditOutlined, MenuOutlined } from "@ant-design/icons-vue";
   import { VueDraggable } from "vue-draggable-plus";
+  import { sqlNodeContextKey, type GetNodeContext } from "./nodeContext";
   import {
     fetchFieldNodeUpstreamFields,
     type FieldSettingItem,
     type FieldSettingPersistedItem,
     type InputField,
-    type NodeRequestPayload,
   } from "./inputNodeMock";
 
   interface TableColumn {
@@ -128,7 +128,7 @@
 
   const props = withDefaults(
     defineProps<{
-      nodeContext: NodeRequestPayload;
+      nodeId: string;
       fieldSettings?: FieldSettingPersistedItem[];
       configured?: boolean;
     }>(),
@@ -138,6 +138,7 @@
     },
   );
 
+  const getNodeContext = inject<GetNodeContext>(sqlNodeContextKey);
   const loading = ref(false);
   const upstreamFields = ref<InputField[]>([]);
   const localFields = ref<FieldSettingItem[]>([]);
@@ -209,9 +210,17 @@
   };
 
   const loadUpstreamFields = async () => {
+    const nodeContext = getNodeContext?.(props.nodeId);
+    if (!nodeContext) {
+      upstreamFields.value = [];
+      localFields.value = [];
+      loading.value = false;
+      return;
+    }
+
     const currentToken = ++loadToken;
     loading.value = true;
-    const fields = await fetchFieldNodeUpstreamFields(props.nodeContext);
+    const fields = await fetchFieldNodeUpstreamFields(nodeContext);
     if (currentToken !== loadToken) return;
     upstreamFields.value = fields;
     const mergedFields = buildMergedFields(fields);
@@ -270,7 +279,6 @@
 
   onMounted(() => {
     console.log('字段设置 mounted');
-    
     void loadUpstreamFields();
   });
 

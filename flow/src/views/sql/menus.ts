@@ -21,9 +21,9 @@ export interface NodeType {
   };
 }
 
-const node_empty_link_tip1 = "请将 1 个节点连接至本节点"
-const node_empty_link_tip2 = "请将 2 个节点连接至本节点"
-const node_empty_link_tip3 = "请将 2 个及以上节点连接至本节点"
+const nodeEmptyLinkTip1 = "请将 1 个节点连接至本节点";
+const nodeEmptyLinkTip2 = "请将 2 个节点连接至本节点";
+const nodeEmptyLinkTip3 = "请将 2 个及以上节点连接至本节点";
 
 export const nodeTypes: NodeType[] = [
   {
@@ -32,7 +32,7 @@ export const nodeTypes: NodeType[] = [
     title: "数据输入",
     icon: "database",
     color: "#1890ff",
-    anchors: { in: false, out: true }, // 只有输出
+    anchors: { in: false, out: true },
     defaultConfig: {
       width: Number_180,
       height: Number_40,
@@ -45,12 +45,12 @@ export const nodeTypes: NodeType[] = [
     title: "数据输出",
     icon: "export",
     color: "#52c41a",
-    anchors: { in: true, out: false }, // 只有输入
+    anchors: { in: true, out: false },
     defaultConfig: {
       width: Number_180,
       height: Number_40,
       requiredMinIncoming: 1,
-      emptyLinkTip: node_empty_link_tip1,
+      emptyLinkTip: nodeEmptyLinkTip1,
     },
   },
   {
@@ -64,7 +64,7 @@ export const nodeTypes: NodeType[] = [
       width: Number_180,
       height: Number_40,
       requiredMinIncoming: 2,
-      emptyLinkTip: node_empty_link_tip2
+      emptyLinkTip: nodeEmptyLinkTip2,
     },
   },
   {
@@ -78,7 +78,7 @@ export const nodeTypes: NodeType[] = [
       width: Number_180,
       height: Number_40,
       requiredMinIncoming: 2,
-      emptyLinkTip: node_empty_link_tip3
+      emptyLinkTip: nodeEmptyLinkTip3,
     },
   },
   {
@@ -92,7 +92,7 @@ export const nodeTypes: NodeType[] = [
       width: Number_180,
       height: Number_40,
       requiredMinIncoming: 1,
-      emptyLinkTip: node_empty_link_tip1
+      emptyLinkTip: nodeEmptyLinkTip1,
     },
   },
   {
@@ -106,7 +106,7 @@ export const nodeTypes: NodeType[] = [
       width: Number_180,
       height: Number_40,
       requiredMinIncoming: 1,
-      emptyLinkTip: node_empty_link_tip1
+      emptyLinkTip: nodeEmptyLinkTip1,
     },
   },
   {
@@ -120,7 +120,7 @@ export const nodeTypes: NodeType[] = [
       width: Number_180,
       height: Number_40,
       requiredMinIncoming: 1,
-      emptyLinkTip: node_empty_link_tip1
+      emptyLinkTip: nodeEmptyLinkTip1,
     },
   },
   {
@@ -134,7 +134,7 @@ export const nodeTypes: NodeType[] = [
       width: Number_180,
       height: Number_40,
       requiredMinIncoming: 1,
-      emptyLinkTip: node_empty_link_tip1
+      emptyLinkTip: nodeEmptyLinkTip1,
     },
   },
 ];

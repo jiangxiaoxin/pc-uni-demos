@@ -97,27 +97,6 @@
     padding: 4px 6px;
   }
 
-  // .input-preview__header {
-  //   display: flex;
-  //   align-items: center;
-  //   justify-content: space-between;
-  //   min-height: 20px;
-  //   color: #334155;
-  // }
-
-  // .input-preview__title {
-  //   font-size: 13px;
-  //   font-weight: 600;
-  //   line-height: 20px;
-  // }
-
-  // .input-preview__meta {
-  //   font-size: 12px;
-  //   font-weight: 500;
-  //   line-height: 20px;
-  //   color: #64748b;
-  // }
-
   .input-preview__table-wrap {
     flex: 1;
     min-height: 0;

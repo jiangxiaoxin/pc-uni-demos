@@ -29,12 +29,13 @@
         @blank-click="handleBlankClick"
       />
       <property
+        ref="propertyRef"
         :visible="propertyVisible"
         :node-data="selectedNode"
         :incoming-count="selectedIncomingCount"
         :node-context="selectedNodeContext"
         @submit-name="handleSubmitName"
-        @submit-property="handleSubmitProperty"
+        @submit-properties="handleSubmitProperties"
         @change-input-source="handleChangeInputSource"
       />
     </div>
@@ -57,8 +58,10 @@
   import {
     inputNodeMockSources,
     type BoundInputSource,
-    type NodeChainContextPayload,
+    type InputBindingPersisted,
+    type NodeRequestPayload,
     type NodeConfigSnapshot,
+    resolveInputBinding,
   } from "./inputNodeMock";
 
   interface EditorExpose {
@@ -81,6 +84,10 @@
       | undefined;
   }
 
+  interface PropertyExpose {
+    flushDraftProperties: () => void;
+  }
+
   interface SqlNodeData {
     id: string;
     type: string;
@@ -98,13 +105,14 @@
   }
 
   const editorRef = ref<EditorExpose | null>(null);
+  const propertyRef = ref<PropertyExpose | null>(null);
   const propertyVisible = ref(false);
   const selectedNode = ref<SqlNodeData | null>(null);
   const selectedIncomingCount = ref(0);
-  const selectedNodeContext = ref<NodeChainContextPayload | null>(null);
+  const selectedNodeContext = ref<NodeRequestPayload | null>(null);
   const bindModalVisible = ref(false);
   const pendingBindNode = ref<SqlNodeData | null>(null);
-  const pendingInputBinding = ref<BoundInputSource | null>(null);
+  const pendingInputBinding = ref<InputBindingPersisted | null>(null);
 
   watch(bindModalVisible, (visible) => {
     if (visible) return;
@@ -130,6 +138,10 @@
     const node = payload.node;
     selectedIncomingCount.value = payload.incomingCount || 0;
 
+     if (selectedNode.value?.id && selectedNode.value.id !== node.id) {
+      propertyRef.value?.flushDraftProperties();
+    }
+
     if (node.type === "in-node" && !node.properties?.inputBinding) {
       pendingBindNode.value = node;
       pendingInputBinding.value = null;
@@ -152,6 +164,7 @@
   };
 
   const handleBlankClick = async () => {
+    propertyRef.value?.flushDraftProperties();
     selectedNode.value = null;
     selectedIncomingCount.value = 0;
     selectedNodeContext.value = null;
@@ -180,7 +193,7 @@
     selectedNodeContext.value = buildNodeContext(payload.nodeId);
   };
 
-  const buildNodeContext = (nodeId: string): NodeChainContextPayload | null => {
+  const buildNodeContext = (nodeId: string): NodeRequestPayload | null => {
     const graph = editorRef.value?.getGraphData();
     if (!graph) return null;
 
@@ -210,21 +223,29 @@
     visit(nodeId);
 
     const uniquePredecessorIds = [...new Set(predecessorOrder)];
-    const chainIds = [...uniquePredecessorIds, nodeId];
-    const chainNodes = chainIds
+    const upstreamNodes = uniquePredecessorIds
       .map((id) => nodeMap.get(id))
       .filter((node): node is NonNullable<typeof node> => Boolean(node))
       .map<NodeConfigSnapshot>((node) => ({
         id: node.id,
         type: node.type,
-        properties: (node.properties || {}) as Record<string, unknown>,
+        // 这里构建的是传给下游预览/mock 逻辑的链路快照。
+        // properties 需要拷贝，避免后续操作 chainNodes 时通过引用污染 LogicFlow 的真实节点状态。【但其实仍不彻底，因为如果内部还有更多深层次的属性，那依然会有属性引用】
+        properties: { ...((node.properties || {}) as Record<string, unknown>) },
       }));
 
     const currentNode = nodeMap.get(nodeId);
     return {
       nodeId,
       nodeType: currentNode?.type || "",
-      chainNodes,
+      upstreamNodes,
+      currentNode: currentNode
+        ? {
+            id: currentNode.id,
+            type: currentNode.type,
+            properties: { ...((currentNode.properties || {}) as Record<string, unknown>) },
+          }
+        : null,
     };
   };
 
@@ -245,15 +266,13 @@
     selectedNodeContext.value = buildNodeContext(currentNode.id);
   };
 
-  const handleSubmitProperty = (payload: { key: string; value: unknown }) => {
+  const handleSubmitProperties = (properties: Record<string, unknown>) => {
     const currentNode = selectedNode.value;
     if (!currentNode) return;
 
-    editorRef.value?.updateNodeProperties(currentNode.id, {
-      [payload.key]: payload.value,
-    });
+    editorRef.value?.updateNodeProperties(currentNode.id, properties);
 
-    ensureNodeProperties(currentNode)[payload.key] = payload.value;
+    Object.assign(ensureNodeProperties(currentNode), properties);
     selectedNodeContext.value = buildNodeContext(currentNode.id);
   };
 
@@ -261,24 +280,28 @@
     const currentNode = selectedNode.value;
     if (!currentNode || currentNode.type !== "in-node") return;
 
+    propertyRef.value?.flushDraftProperties();
+
     pendingBindNode.value = currentNode;
     pendingInputBinding.value = (currentNode.properties?.inputBinding ||
-      null) as BoundInputSource | null;
+      null) as InputBindingPersisted | null;
     bindModalVisible.value = true;
     propertyVisible.value = false;
   };
 
-  const handleConfirmInputBinding = async (binding: BoundInputSource) => {
+  const handleConfirmInputBinding = async (binding: InputBindingPersisted) => {
     const currentNode = pendingBindNode.value;
     if (!currentNode) return;
+    const resolvedBinding = resolveInputBinding(binding);
+    if (!resolvedBinding) return;
 
     editorRef.value?.updateNodeProperties(currentNode.id, {
       inputBinding: binding,
-      title: binding.sourceName,
+      title: resolvedBinding.sourceName,
     });
 
     ensureNodeProperties(currentNode).inputBinding = binding;
-    ensureNodeProperties(currentNode).title = binding.sourceName;
+    ensureNodeProperties(currentNode).title = resolvedBinding.sourceName;
     selectedNode.value = currentNode;
     selectedNodeContext.value = buildNodeContext(currentNode.id);
     pendingBindNode.value = null;

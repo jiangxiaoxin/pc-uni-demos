@@ -43,14 +43,25 @@
           <template v-if="activeTab === 'config'">
             <template v-if="isInputNode && inputBinding">
               <InputNodeConfigSection
+                :key="`${nodeData.id}-config-input`"
                 :input-binding="inputBinding"
                 @change-source="emit('change-input-source')"
               />
             </template>
+            <template v-else-if="isFieldNode">
+              <FieldNodeConfigSection
+                :key="`${nodeData.id}-config-field`"
+                :node-context="nodeContextPayload"
+                :field-settings="draftFieldSettings"
+                :configured="fieldSettingsConfigured"
+                @change-fields="handleFieldSettingsChange"
+              />
+            </template>
             <template v-else-if="isDistinctNode">
               <DistinctNodeConfigSection
+                :key="`${nodeData.id}-config-distinct`"
                 :node-context="nodeContextPayload"
-                :selected-fields="distinctFields"
+                :selected-fields="draftDistinctFields"
                 @change-fields="handleDistinctFieldsChange"
               />
             </template>
@@ -74,18 +85,28 @@
           <template v-else-if="activeTab === 'preview'">
             <template v-if="isInputNode && inputBinding">
               <NodePreviewTableSection
+                :key="`${nodeData.id}-preview-input`"
                 :payload="inputBinding"
                 :fetcher="fetchInputPreviewByBinding"
               />
             </template>
+            <template v-else-if="isFieldNode && nodeData">
+              <NodePreviewTableSection
+                :key="`${nodeData.id}-preview-field`"
+                :payload="fieldNodePreviewPayload"
+                :fetcher="fetchFieldNodePreviewByPayload"
+              />
+            </template>
             <template v-else-if="isDistinctNode && nodeData">
               <NodePreviewTableSection
+                :key="`${nodeData.id}-preview-distinct`"
                 :payload="distinctPreviewPayload"
                 :fetcher="fetchDistinctPreviewByPayload"
               />
             </template>
             <template v-else-if="isOutputNode && nodeData">
               <NodePreviewTableSection
+                :key="`${nodeData.id}-preview-output`"
                 :payload="outputPreviewPayload"
                 :fetcher="fetchOutputPreviewByPayload"
               />
@@ -104,7 +125,6 @@
                 v-model:value="editableRemark"
                 class="property-remark-input"
                 placeholder="请输入节点备注"
-                @blur="handleSubmitRemark"
               />
             </div>
           </template>
@@ -118,18 +138,24 @@
   import { computed, ref, watch } from "vue";
   import { getNodeTypeConfig } from "./menus";
   import { defaultSqlNodeIcon, sqlNodeIconMap } from "./nodes/iconMap";
+  import FieldNodeConfigSection from "./FieldNodeConfigSection.vue";
   import InputNodeConfigSection from "./InputNodeConfigSection.vue";
   import DistinctNodeConfigSection from "./DistinctNodeConfigSection.vue";
   import NodePreviewTableSection from "./NodePreviewTableSection.vue";
   import {
     fetchDistinctPreviewByPayload,
+    fetchFieldNodePreviewByPayload,
     fetchInputPreviewByBinding,
     fetchOutputPreviewByPayload,
     type BoundInputSource,
     type DistinctPreviewPayload,
+    type FieldNodePreviewPayload,
+    type FieldSettingPersistedItem,
+    type InputBindingPersisted,
     type InputField,
-    type NodeChainContextPayload,
+    type NodeRequestPayload,
     type OutputPreviewPayload,
+    resolveInputBinding,
   } from "./inputNodeMock";
 
   interface SqlNodeData {
@@ -140,7 +166,7 @@
 
   const emit = defineEmits<{
     (e: "submit-name", name: string): void;
-    (e: "submit-property", payload: { key: string; value: unknown }): void;
+    (e: "submit-properties", payload: Record<string, unknown>): void;
     (e: "change-input-source"): void;
   }>();
 
@@ -149,7 +175,7 @@
       visible?: boolean;
       nodeData?: SqlNodeData | null;
       incomingCount?: number;
-      nodeContext?: NodeChainContextPayload | null;
+      nodeContext?: NodeRequestPayload | null;
     }>(),
     {
       visible: false,
@@ -161,6 +187,8 @@
 
   const editableName = ref("");
   const editableRemark = ref("");
+  const draftDistinctFields = ref<string[]>([]);
+  const draftFieldSettings = ref<FieldSettingPersistedItem[]>([]);
   const activeTab = ref<"config" | "preview" | "remark">("config");
   const tabs = [
     { key: "config" as const, label: "节点配置" },
@@ -204,6 +232,7 @@
   });
 
   const isInputNode = computed(() => props.nodeData?.type === "in-node");
+  const isFieldNode = computed(() => props.nodeData?.type === "field-node");
   const isDistinctNode = computed(() => props.nodeData?.type === "distinct-node");
   const isOutputNode = computed(() => props.nodeData?.type === "out-node");
 
@@ -232,21 +261,49 @@
   const inputBinding = computed<BoundInputSource | null>(() => {
     const binding = props.nodeData?.properties?.inputBinding;
     if (!binding || typeof binding !== "object") return null;
-    return binding as BoundInputSource;
+    return resolveInputBinding(binding as InputBindingPersisted);
   });
 
-  const distinctFields = computed<InputField[]>(() => {
+  const distinctFields = computed<string[]>(() => {
     const fields = props.nodeData?.properties?.distinctFields;
     if (!Array.isArray(fields)) return [];
-    return fields as InputField[];
+    return fields.filter((field): field is string => typeof field === "string");
+  });
+
+  const fieldSettings = computed<FieldSettingPersistedItem[]>(() => {
+    const fields = props.nodeData?.properties?.fieldSettings;
+    if (!Array.isArray(fields)) return [];
+    return fields as FieldSettingPersistedItem[];
+  });
+
+  const fieldSettingsConfigured = computed(() => {
+    return Object.prototype.hasOwnProperty.call(props.nodeData?.properties || {}, "fieldSettings");
+  });
+
+  const fieldNodePreviewPayload = computed<FieldNodePreviewPayload>(() => {
+    return {
+      nodeId: props.nodeData?.id || "",
+      nodeType: props.nodeData?.type || "",
+      upstreamNodes: props.nodeContext?.upstreamNodes || [],
+      currentNode: props.nodeContext?.currentNode
+        ? {
+            ...props.nodeContext.currentNode,
+            properties: {
+              ...(props.nodeContext.currentNode.properties || {}),
+              fieldSettings: draftFieldSettings.value.map((field) => ({ ...field })),
+            },
+          }
+        : null,
+    };
   });
 
   const distinctPreviewPayload = computed<DistinctPreviewPayload>(() => {
     return {
       nodeId: props.nodeData?.id || "",
       nodeType: props.nodeData?.type || "",
-      chainNodes: props.nodeContext?.chainNodes || [],
-      fields: distinctFields.value,
+      upstreamNodes: props.nodeContext?.upstreamNodes || [],
+      currentNode: props.nodeContext?.currentNode || null,
+      fields: [...draftDistinctFields.value],
     };
   });
 
@@ -254,25 +311,29 @@
     return {
       nodeId: props.nodeData?.id || "",
       nodeType: props.nodeData?.type || "",
-      chainNodes: props.nodeContext?.chainNodes || [],
+      upstreamNodes: props.nodeContext?.upstreamNodes || [],
+      currentNode: props.nodeContext?.currentNode || null,
     };
   });
 
-  const nodeContextPayload = computed<NodeChainContextPayload>(() => {
+  const nodeContextPayload = computed<NodeRequestPayload>(() => {
     return (
       props.nodeContext || {
         nodeId: props.nodeData?.id || "",
         nodeType: props.nodeData?.type || "",
-        chainNodes: [],
+        upstreamNodes: [],
+        currentNode: null,
       }
     );
   });
 
   watch(
-    () => [props.visible, nodeLabel.value, props.nodeData?.id],
+    () => [props.visible, props.nodeData?.id],
     () => {
       editableName.value = nodeLabel.value;
       editableRemark.value = String(props.nodeData?.properties?.remark || "");
+      draftDistinctFields.value = [...distinctFields.value];
+      draftFieldSettings.value = fieldSettings.value.map((field) => ({ ...field }));
       const defaultTab = availableTabs.value[0]?.key || "remark";
       activeTab.value = defaultTab;
     },
@@ -297,25 +358,42 @@
     emit("submit-name", nextName);
   };
 
-  const handleSubmitRemark = () => {
-    const nextRemark = editableRemark.value.trim();
-    const currentRemark = String(props.nodeData?.properties?.remark || "");
-    if (nextRemark === currentRemark) {
-      editableRemark.value = currentRemark;
-      return;
-    }
-    emit("submit-property", {
-      key: "remark",
-      value: nextRemark,
-    });
+  const handleDistinctFieldsChange = (fields: string[]) => {
+    draftDistinctFields.value = [...fields];
   };
 
-  const handleDistinctFieldsChange = (fields: InputField[]) => {
-    emit("submit-property", {
-      key: "distinctFields",
-      value: fields,
-    });
+  const handleFieldSettingsChange = (fields: FieldSettingPersistedItem[]) => {
+    draftFieldSettings.value = fields.map((field) => ({ ...field }));
   };
+
+  const flushDraftProperties = () => {
+    if (!props.nodeData) return;
+
+    const nextProperties: Record<string, unknown> = {};
+    const currentRemark = String(props.nodeData.properties?.remark || "");
+    if (editableRemark.value !== currentRemark) {
+      nextProperties.remark = editableRemark.value;
+    }
+
+    const currentDistinctFields = JSON.stringify(distinctFields.value);
+    const nextDistinctFields = JSON.stringify(draftDistinctFields.value);
+    if (nextDistinctFields !== currentDistinctFields) {
+      nextProperties.distinctFields = [...draftDistinctFields.value];
+    }
+
+    const currentFieldSettings = JSON.stringify(fieldSettings.value);
+    const nextFieldSettings = JSON.stringify(draftFieldSettings.value);
+    if (nextFieldSettings !== currentFieldSettings) {
+      nextProperties.fieldSettings = draftFieldSettings.value.map((field) => ({ ...field }));
+    }
+
+    if (Object.keys(nextProperties).length === 0) return;
+    emit("submit-properties", nextProperties);
+  };
+
+  defineExpose({
+    flushDraftProperties,
+  });
 </script>
 
 <style lang="scss" scoped>

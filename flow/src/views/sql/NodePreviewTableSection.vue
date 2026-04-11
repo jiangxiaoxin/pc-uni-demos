@@ -16,7 +16,7 @@
 </template>
 
 <script setup lang="ts">
-  import { computed, ref, watch } from "vue";
+  import { computed, onMounted, ref } from "vue";
 
   interface PreviewColumn {
     key?: string;
@@ -107,13 +107,9 @@
     }
   };
 
-  watch(
-    () => [props.payload, props.fetcher],
-    () => {
-      void loadPreview();
-    },
-    { immediate: true, deep: true },
-  );
+  onMounted(() => {
+    void loadPreview();
+  });
 </script>
 
 <style scoped lang="scss">

@@ -12,10 +12,24 @@ export interface InputSource {
   rows: Record<string, unknown>[];
 }
 
+export interface InputBindingPersisted {
+  sourceId: string;
+  fieldKeys: string[];
+}
+
 export interface BoundInputSource {
   sourceId: string;
   sourceName: string;
   fields: InputField[];
+}
+
+export interface FieldSettingPersistedItem {
+  key: string;
+  name: string;
+}
+
+export interface FieldSettingItem extends InputField {
+  selected: boolean;
 }
 
 export interface InputPreviewResult {
@@ -26,14 +40,23 @@ export interface InputPreviewResult {
 export interface DistinctPreviewPayload {
   nodeId: string;
   nodeType?: string;
-  chainNodes: NodeConfigSnapshot[];
-  fields: InputField[];
+  upstreamNodes: NodeConfigSnapshot[];
+  currentNode?: NodeConfigSnapshot | null;
+  fields: string[];
+}
+
+export interface FieldNodePreviewPayload {
+  nodeId: string;
+  nodeType?: string;
+  upstreamNodes: NodeConfigSnapshot[];
+  currentNode?: NodeConfigSnapshot | null;
 }
 
 export interface OutputPreviewPayload {
   nodeId: string;
   nodeType?: string;
-  chainNodes: NodeConfigSnapshot[];
+  upstreamNodes: NodeConfigSnapshot[];
+  currentNode?: NodeConfigSnapshot | null;
 }
 
 export interface NodeConfigSnapshot {
@@ -42,10 +65,11 @@ export interface NodeConfigSnapshot {
   properties?: Record<string, unknown>;
 }
 
-export interface NodeChainContextPayload {
+export interface NodeRequestPayload {
   nodeId: string;
   nodeType?: string;
-  chainNodes: NodeConfigSnapshot[];
+  upstreamNodes: NodeConfigSnapshot[];
+  currentNode?: NodeConfigSnapshot | null;
 }
 
 // ============================================================
@@ -675,6 +699,7 @@ export const getInputSourceById = (sourceId?: string | null) => {
 
 // MOCK_API: fetch input source fields (simulate backend request)
 export const fetchInputSourceFields = async (sourceId?: string | null) => {
+  console.log("[MOCK_API] fetchInputSourceFields");
   const source = getInputSourceById(sourceId);
   await new Promise((resolve) => {
     window.setTimeout(resolve, 250);
@@ -682,10 +707,28 @@ export const fetchInputSourceFields = async (sourceId?: string | null) => {
   return source?.fields || [];
 };
 
-export const getPreviewRowsByBinding = (binding?: BoundInputSource | null) => {
+export const resolveInputBinding = (
+  binding?: InputBindingPersisted | null,
+): BoundInputSource | null => {
+  const source = getInputSourceById(binding?.sourceId);
+  if (!source) return null;
+  const fieldKeys = new Set(binding?.fieldKeys || []);
+  return {
+    sourceId: source.id,
+    sourceName: source.name,
+    fields: source.fields.filter((field) => fieldKeys.has(field.key)),
+  };
+};
+
+export const getPreviewRowsByBinding = (
+  binding?: BoundInputSource | InputBindingPersisted | null,
+) => {
   const source = getInputSourceById(binding?.sourceId);
   if (!source) return [];
-  const fieldKeys = new Set((binding?.fields || []).map((field) => field.key));
+  const fieldKeys =
+    binding && "fields" in binding
+      ? new Set(binding.fields.map((field) => field.key))
+      : new Set((binding?.fieldKeys || []).map((key) => key));
   return source.rows.map((row) => {
     const nextRow: Record<string, unknown> = {};
     source.fields.forEach((field) => {
@@ -713,51 +756,36 @@ const parseInputFields = (value: unknown): InputField[] => {
   });
 };
 
-const parseInputBinding = (value: unknown): BoundInputSource | null => {
+const parseInputBinding = (value: unknown): InputBindingPersisted | null => {
   if (!isRecord(value)) return null;
-  if (typeof value.sourceId !== "string" || typeof value.sourceName !== "string") {
+  if (typeof value.sourceId !== "string" || !Array.isArray(value.fieldKeys)) {
     return null;
   }
   return {
     sourceId: value.sourceId,
-    sourceName: value.sourceName,
-    fields: parseInputFields(value.fields),
+    fieldKeys: value.fieldKeys.filter((key): key is string => typeof key === "string"),
   };
 };
 
-const resolveInputBindingFromChain = (
-  chainNodes: NodeConfigSnapshot[] = [],
-): BoundInputSource | null => {
-  for (let index = chainNodes.length - 1; index >= 0; index -= 1) {
-    const node = chainNodes[index];
-    if (node.type !== "in-node") continue;
-    const binding = parseInputBinding(node.properties?.inputBinding);
-    if (binding) return binding;
-  }
-  return null;
+const parseFieldSettingItems = (value: unknown): FieldSettingPersistedItem[] => {
+  if (!Array.isArray(value)) return [];
+  return value.filter((field): field is FieldSettingPersistedItem => {
+    return (
+      isRecord(field) &&
+      typeof field.key === "string" &&
+      typeof field.name === "string"
+    );
+  });
 };
 
-const resolveDistinctFieldsFromChain = (
-  chainNodes: NodeConfigSnapshot[] = [],
-): InputField[] => {
-  for (let index = chainNodes.length - 1; index >= 0; index -= 1) {
-    const node = chainNodes[index];
-    if (node.type !== "distinct-node") continue;
-    return parseInputFields(node.properties?.distinctFields);
-  }
-  return [];
+const parseDistinctFieldKeys = (value: unknown): string[] => {
+  if (!Array.isArray(value)) return [];
+  return value.filter((field): field is string => typeof field === "string");
 };
 
-const getRowsByChain = (chainNodes: NodeConfigSnapshot[] = []) => {
-  const binding = resolveInputBindingFromChain(chainNodes);
-  const columns = binding?.fields || [];
-  const rows = getPreviewRowsByBinding(binding);
-  return { columns, rows };
-};
-
-const applyDistinctRows = (rows: Record<string, unknown>[], fields: InputField[]) => {
-  if (fields.length === 0) return rows;
-  const keys = fields.map((field) => field.key);
+const applyDistinctRows = (rows: Record<string, unknown>[], fieldKeys: string[]) => {
+  if (fieldKeys.length === 0) return rows;
+  const keys = fieldKeys;
   const seen = new Set<string>();
   return rows.filter((row) => {
     const fingerprint = keys.map((key) => String(row[key] ?? "__NULL__")).join("|");
@@ -767,63 +795,163 @@ const applyDistinctRows = (rows: Record<string, unknown>[], fields: InputField[]
   });
 };
 
+const applyFieldSettings = (
+  columns: InputField[],
+  rows: Record<string, unknown>[],
+  settings: FieldSettingPersistedItem[],
+) => {
+  const columnMap = new Map(columns.map((field) => [field.key, field]));
+  const selectedFields = settings
+    .map((field) => {
+      const upstreamField = columnMap.get(field.key);
+      if (!upstreamField) return null;
+      return {
+        key: field.key,
+        name: field.name,
+        type: upstreamField.type,
+      } satisfies InputField;
+    })
+    .filter((field): field is InputField => Boolean(field));
+  const nextColumns = selectedFields.map<InputField>((field) => ({
+    key: field.key,
+    name: field.name,
+    type: field.type,
+  }));
+  const nextRows = rows.map((row) => {
+    const nextRow: Record<string, unknown> = {};
+    selectedFields.forEach((field) => {
+      nextRow[field.key] = row[field.key];
+    });
+    return nextRow;
+  });
+  return {
+    columns: nextColumns,
+    rows: nextRows,
+  };
+};
+
+const buildChainPreviewResult = (chainNodes: NodeConfigSnapshot[] = []) => {
+  let columns: InputField[] = [];
+  let rows: Record<string, unknown>[] = [];
+
+  chainNodes.forEach((node) => {
+    if (node.type === "in-node") {
+      const binding = resolveInputBinding(parseInputBinding(node.properties?.inputBinding));
+      columns = [...(binding?.fields || [])];
+      rows = getPreviewRowsByBinding(binding).map((row) => ({ ...row }));
+      return;
+    }
+
+    if (node.type === "field-node") {
+      const fieldSettings = parseFieldSettingItems(node.properties?.fieldSettings);
+      if (
+        fieldSettings.length > 0 ||
+        Object.prototype.hasOwnProperty.call(node.properties || {}, "fieldSettings")
+      ) {
+        const nextResult = applyFieldSettings(columns, rows, fieldSettings);
+        columns = nextResult.columns;
+        rows = nextResult.rows;
+      }
+      return;
+    }
+
+    if (node.type === "distinct-node") {
+      const distinctFields = parseDistinctFieldKeys(node.properties?.distinctFields);
+      rows = applyDistinctRows(rows, distinctFields);
+    }
+  });
+
+  return {
+    columns,
+    rows,
+  };
+};
+
 // MOCK_API: fetch preview table columns + rows (simulate backend request)
 export const fetchInputPreviewByBinding = async (
-  binding?: BoundInputSource | null,
+  binding?: BoundInputSource | InputBindingPersisted | null,
 ): Promise<InputPreviewResult> => {
+  console.log("[MOCK_API] fetchInputPreviewByBinding");
   await new Promise((resolve) => {
     window.setTimeout(resolve, 250);
   });
 
-  if (!binding) {
+  const resolvedBinding =
+    binding && "fields" in binding ? binding : resolveInputBinding(binding || null);
+
+  if (!resolvedBinding) {
     return { columns: [], rows: [] };
   }
 
-  const columns = binding.fields || [];
-  const rows = getPreviewRowsByBinding(binding);
+  const columns = resolvedBinding.fields || [];
+  const rows = getPreviewRowsByBinding(resolvedBinding);
   return { columns, rows };
 };
 
 // MOCK_API: fetch upstream fields for distinct node (simulate backend request)
 export const fetchDistinctNodeUpstreamFields = async (
-  payload: NodeChainContextPayload,
+  payload: NodeRequestPayload,
 ): Promise<InputField[]> => {
+  console.log("[MOCK_API] fetchDistinctNodeUpstreamFields");
   await new Promise((resolve) => {
     window.setTimeout(resolve, 250);
   });
 
-  const binding = resolveInputBindingFromChain(payload.chainNodes);
-  return [...(binding?.fields || [])];
+  const result = buildChainPreviewResult(payload.upstreamNodes);
+  return [...result.columns];
+};
+
+// MOCK_API: fetch upstream fields for field node (simulate backend request)
+export const fetchFieldNodeUpstreamFields = async (
+  payload: NodeRequestPayload,
+): Promise<InputField[]> => {
+  console.log("[MOCK_API] fetchFieldNodeUpstreamFields");
+  await new Promise((resolve) => {
+    window.setTimeout(resolve, 250);
+  });
+
+  const result = buildChainPreviewResult(payload.upstreamNodes);
+  return [...result.columns];
 };
 
 // MOCK_API: fetch distinct node preview data (simulate backend request)
 export const fetchDistinctPreviewByPayload = async (
   payload: DistinctPreviewPayload,
 ): Promise<InputPreviewResult> => {
+  console.log("[MOCK_API] fetchDistinctPreviewByPayload");
   await new Promise((resolve) => {
     window.setTimeout(resolve, 250);
   });
 
-  const { columns, rows } = getRowsByChain(payload.chainNodes);
+  const { columns, rows } = buildChainPreviewResult(payload.upstreamNodes);
   const distinctRows = applyDistinctRows(rows, payload.fields || []);
   return { columns, rows: distinctRows };
+};
+
+// MOCK_API: fetch field node preview data (simulate backend request)
+export const fetchFieldNodePreviewByPayload = async (
+  payload: FieldNodePreviewPayload,
+): Promise<InputPreviewResult> => {
+  console.log("[MOCK_API] fetchFieldNodePreviewByPayload");
+  await new Promise((resolve) => {
+    window.setTimeout(resolve, 250);
+  });
+
+  return buildChainPreviewResult([
+    ...payload.upstreamNodes,
+    ...(payload.currentNode ? [payload.currentNode] : []),
+  ]);
 };
 
 // MOCK_API: fetch output node preview data (simulate backend request)
 export const fetchOutputPreviewByPayload = async (
   payload: OutputPreviewPayload,
 ): Promise<InputPreviewResult> => {
+  console.log("[MOCK_API] fetchOutputPreviewByPayload");
   await new Promise((resolve) => {
     window.setTimeout(resolve, 250);
   });
 
-  const { columns, rows } = getRowsByChain(payload.chainNodes);
-  const distinctFields = resolveDistinctFieldsFromChain(payload.chainNodes);
-  const finalRows = applyDistinctRows(rows, distinctFields);
-
   // Output node preview = final result snapshot returned by backend (mocked from chain context).
-  return {
-    columns,
-    rows: finalRows,
-  };
+  return buildChainPreviewResult(payload.upstreamNodes);
 };

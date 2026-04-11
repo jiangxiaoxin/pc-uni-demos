@@ -79,21 +79,21 @@
   import { computed, ref, watch } from "vue";
   import {
     fetchInputSourceFields,
-    type BoundInputSource,
+    type InputBindingPersisted,
     type InputField,
     type InputSource,
   } from "./inputNodeMock";
 
   const emit = defineEmits<{
     (e: "update:open", value: boolean): void;
-    (e: "confirm", value: BoundInputSource): void;
+    (e: "confirm", value: InputBindingPersisted): void;
   }>();
 
   const props = withDefaults(
     defineProps<{
       open: boolean;
       sources: InputSource[];
-      initialBinding?: BoundInputSource | null;
+      initialBinding?: InputBindingPersisted | null;
     }>(),
     {
       initialBinding: null,
@@ -135,10 +135,9 @@
     if (
       shouldRestoreInitialSelection.value &&
       props.initialBinding?.sourceId === sourceId &&
-      (props.initialBinding?.fields?.length || 0) > 0
+      (props.initialBinding?.fieldKeys?.length || 0) > 0
     ) {
-      selectedFieldKeys.value = (props.initialBinding?.fields || [])
-        .map((field) => field.key)
+      selectedFieldKeys.value = (props.initialBinding?.fieldKeys || [])
         .filter((key) => fields.some((field) => field.key === key));
     } else {
       selectedFieldKeys.value = fields.map((field) => field.key);
@@ -182,14 +181,11 @@
   const handleConfirm = () => {
     if (!selectedSource.value) return;
 
-    const fields = currentFields.value.filter((field) =>
-      selectedFieldKeys.value.includes(field.key),
-    );
-
     emit("confirm", {
       sourceId: selectedSource.value.id,
-      sourceName: selectedSource.value.name,
-      fields,
+      fieldKeys: currentFields.value
+        .filter((field) => selectedFieldKeys.value.includes(field.key))
+        .map((field) => field.key),
     });
     emit("update:open", false);
   };

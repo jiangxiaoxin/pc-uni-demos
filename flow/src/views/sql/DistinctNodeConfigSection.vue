@@ -88,22 +88,22 @@
 </template>
 
 <script setup lang="ts">
-  import { ref, watch } from "vue";
+  import { onMounted, ref, watch } from "vue";
   import { DeleteOutlined, DownOutlined, UpOutlined } from "@ant-design/icons-vue";
   import {
     fetchDistinctNodeUpstreamFields,
     type InputField,
-    type NodeChainContextPayload,
+    type NodeRequestPayload,
   } from "./inputNodeMock";
 
   const emit = defineEmits<{
-    (e: "change-fields", value: InputField[]): void;
+    (e: "change-fields", value: string[]): void;
   }>();
 
   const props = withDefaults(
     defineProps<{
-      nodeContext: NodeChainContextPayload;
-      selectedFields?: InputField[];
+      nodeContext: NodeRequestPayload;
+      selectedFields?: string[];
     }>(),
     {
       selectedFields: () => [],
@@ -115,9 +115,9 @@
   const upstreamFields = ref<InputField[]>([]);
   const localSelectedFields = ref<InputField[]>([]);
   const draftSelectedKeys = ref<string[]>([]);
-
   const syncLocalSelected = () => {
-    localSelectedFields.value = [...props.selectedFields];
+    const keySet = new Set(props.selectedFields);
+    localSelectedFields.value = upstreamFields.value.filter((field) => keySet.has(field.key));
   };
 
   const loadUpstreamFields = async () => {
@@ -125,23 +125,22 @@
     const fields = await fetchDistinctNodeUpstreamFields(props.nodeContext);
     upstreamFields.value = fields;
     loading.value = false;
+    syncLocalSelected();
   };
 
   watch(
     () => props.selectedFields,
     () => {
+      console.log('props.selectedFields');
+      
       syncLocalSelected();
     },
     { immediate: true, deep: true },
   );
 
-  watch(
-    () => props.nodeContext,
-    () => {
-      void loadUpstreamFields();
-    },
-    { immediate: true },
-  );
+  onMounted(() => {
+    void loadUpstreamFields();
+  });
 
   const handleOpenSelector = () => {
     draftSelectedKeys.value = localSelectedFields.value.map((field) => field.key);
@@ -153,7 +152,10 @@
       draftSelectedKeys.value.includes(field.key),
     );
     localSelectedFields.value = selected;
-    emit("change-fields", selected);
+    emit(
+      "change-fields",
+      selected.map((field) => field.key),
+    );
     selectorOpen.value = false;
   };
 
@@ -161,7 +163,10 @@
     const next = [...localSelectedFields.value];
     next.splice(index, 1);
     localSelectedFields.value = next;
-    emit("change-fields", next);
+    emit(
+      "change-fields",
+      next.map((field) => field.key),
+    );
   };
 
   const moveField = (index: number, offset: -1 | 1) => {
@@ -172,7 +177,10 @@
     next[index] = next[targetIndex];
     next[targetIndex] = current;
     localSelectedFields.value = next;
-    emit("change-fields", next);
+    emit(
+      "change-fields",
+      next.map((field) => field.key),
+    );
   };
 </script>
 

@@ -11,6 +11,18 @@
           @dragstart="handleDragStart($event, node)"
         >
           <div
+            v-if="getPanelNodeIcon(node.type)"
+            class="node-icon-wrap"
+            :style="{ backgroundColor: getPanelNodeIconBg(node.color) }"
+          >
+            <component
+              :is="getPanelNodeIcon(node.type)"
+              class="node-icon"
+              :style="{ color: node.color }"
+            />
+          </div>
+          <div
+            v-else
             class="node-circle"
             :style="{ backgroundColor: node.color }"
           ></div>
@@ -51,6 +63,7 @@
 <script setup lang="ts">
   import { nextTick, provide, ref, watch } from "vue";
   import { nodeTypes } from "./menus";
+  import { sqlNodeIconMap } from "./nodes/iconMap";
   import editor from "./editor.vue";
   import property from "./property.vue";
   import InputNodeBindModal from "./InputNodeBindModal.vue";
@@ -121,6 +134,17 @@
     if (event.dataTransfer) {
       event.dataTransfer.setData("application/json", JSON.stringify(node));
     }
+  };
+
+  const getPanelNodeIcon = (nodeType: string) => {
+    return sqlNodeIconMap[nodeType] || null;
+  };
+
+  const getPanelNodeIconBg = (color: string) => {
+    if (color.startsWith("#") && color.length === 7) {
+      return `${color}1A`;
+    }
+    return "rgba(15, 23, 42, 0.08)";
   };
 
   const handleNodeSelect = async (payload: NodeSelectPayload) => {
@@ -290,6 +314,22 @@
     width: 16px;
     height: 16px;
     border-radius: 50%;
+    flex-shrink: 0;
+  }
+
+  .node-icon-wrap {
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    flex-shrink: 0;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .node-icon {
+    width: 16px;
+    height: 16px;
     flex-shrink: 0;
   }
 

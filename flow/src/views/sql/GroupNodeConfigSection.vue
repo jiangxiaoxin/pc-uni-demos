@@ -1,13 +1,13 @@
 <template>
   <div class="group-config">
-    <div class="group-config__panel">
-      <div class="group-config__header">
-        <span class="group-config__title">分组字段</span>
-        <div class="group-config__header-actions">
-          <span class="group-config__count">{{ localGroupFields.length }}/{{ upstreamFields.length }}</span>
+    <div class="config-panel">
+      <div class="config-section__header config-section__header--panel">
+        <span>分组字段</span>
+        <div class="config-section__header-actions">
+          <span class="config-section__count">{{ localGroupFields.length }}/{{ upstreamFields.length }}</span>
           <span
-            class="group-config__link"
-            :class="{ 'group-config__link--disabled': loading || upstreamFields.length === 0 }"
+            class="config-section__link"
+            :class="{ 'config-section__link--disabled': loading || upstreamFields.length === 0 }"
             @click="!loading && upstreamFields.length > 0 && openGroupSelector()"
           >
             添加字段
@@ -15,43 +15,43 @@
         </div>
       </div>
 
-      <div class="group-config__body">
-        <div v-if="loading" class="group-config__empty">字段加载中...</div>
-        <div v-else-if="localGroupFields.length === 0" class="group-config__empty">
+      <div class="config-section__body config-section__body--panel">
+        <div v-if="loading" class="config-section__empty">字段加载中...</div>
+        <div v-else-if="localGroupFields.length === 0" class="config-section__empty">
           暂未添加分组字段
         </div>
         <VueDraggable
           v-else
           v-model="draggableGroupFields"
-          class="group-config__draggable"
+          class="config-section__draggable"
           item-key="key"
-          handle=".group-config-item__drag"
-          ghost-class="group-config-item--ghost"
-          chosen-class="group-config-item--chosen"
-          drag-class="group-config-item--dragging"
+          handle=".config-item__drag"
+          ghost-class="config-item--ghost"
+          chosen-class="config-item--chosen"
+          drag-class="config-item--dragging"
           :animation="160"
           @end="handleGroupSortEnd"
         >
           <div
             v-for="field in localGroupFields"
             :key="field.key"
-            class="group-config-item"
+            class="config-item"
           >
-            <div class="group-config-item__meta">
-              <span class="group-config-item__name">{{ field.name }}</span>
-              <span class="group-config-item__code">{{ field.key }}</span>
-              <span class="group-config-item__type">{{ field.type }}</span>
+            <div class="config-item__meta config-item__meta--wide">
+              <span class="config-item__name">{{ field.name }}</span>
+              <span class="config-item__code config-item__code--wide config-item__word-break">{{ field.key }}</span>
+              <span class="config-item__type config-item__type--compact config-item__word-break">{{ field.type }}</span>
             </div>
-            <div class="group-config-item__actions">
+            <div class="config-item__actions">
               <span
-                class="group-config-item__action group-config-item__action--danger"
+                class="config-item__action config-item__action--danger"
                 title="删除"
                 @click="removeGroupField(field.key)"
               >
-                <DeleteOutlined class="group-config-item__action-icon" />
+                <DeleteOutlined class="config-item__action-icon" />
               </span>
-              <span class="group-config-item__drag" title="拖动排序">
-                <DragOutlined class="group-config-item__action-icon" />
+              <span class="config-item__drag" title="拖动排序">
+                <DragOutlined class="config-item__action-icon" />
               </span>
             </div>
           </div>
@@ -59,14 +59,14 @@
       </div>
     </div>
 
-    <div class="group-config__panel group-config__panel--wide">
-      <div class="group-config__header">
-        <span class="group-config__title">汇总字段</span>
-        <div class="group-config__header-actions">
-          <span class="group-config__count">{{ localAggregateFields.length }}/{{ upstreamFields.length }}</span>
+    <div class="config-panel config-panel--wide">
+      <div class="config-section__header config-section__header--panel">
+        <span>汇总字段</span>
+        <div class="config-section__header-actions">
+          <span class="config-section__count">{{ localAggregateFields.length }}/{{ upstreamFields.length }}</span>
           <span
-            class="group-config__link"
-            :class="{ 'group-config__link--disabled': loading || upstreamFields.length === 0 }"
+            class="config-section__link"
+            :class="{ 'config-section__link--disabled': loading || upstreamFields.length === 0 }"
             @click="!loading && upstreamFields.length > 0 && openAggregateSelector()"
           >
             添加字段
@@ -74,50 +74,50 @@
         </div>
       </div>
 
-      <div class="group-config__body">
-        <div v-if="loading" class="group-config__empty">字段加载中...</div>
-        <div v-else-if="localAggregateFields.length === 0" class="group-config__empty">
+      <div class="config-section__body config-section__body--panel">
+        <div v-if="loading" class="config-section__empty">字段加载中...</div>
+        <div v-else-if="localAggregateFields.length === 0" class="config-section__empty">
           暂未添加汇总字段
         </div>
         <VueDraggable
           v-else
           v-model="draggableAggregateFields"
-          class="group-config__draggable"
+          class="config-section__draggable"
           item-key="key"
-          handle=".group-config-item__drag"
-          ghost-class="group-config-item--ghost"
-          chosen-class="group-config-item--chosen"
-          drag-class="group-config-item--dragging"
+          handle=".config-item__drag"
+          ghost-class="config-item--ghost"
+          chosen-class="config-item--chosen"
+          drag-class="config-item--dragging"
           :animation="160"
           @end="handleAggregateSortEnd"
         >
           <div
             v-for="field in localAggregateFields"
             :key="field.key"
-            class="group-config-item group-config-item--aggregate"
+            class="config-item config-item--aggregate"
           >
-            <div class="group-config-item__meta">
-              <span class="group-config-item__name">{{ field.name }}</span>
-              <span class="group-config-item__code">{{ field.key }}</span>
-              <span class="group-config-item__type">{{ field.type }}</span>
+            <div class="config-item__meta config-item__meta--wide">
+              <span class="config-item__name">{{ field.name }}</span>
+              <span class="config-item__code config-item__code--wide config-item__word-break">{{ field.key }}</span>
+              <span class="config-item__type config-item__type--compact config-item__word-break">{{ field.type }}</span>
             </div>
-            <div class="group-config-item__controls">
+            <div class="config-item__controls">
               <a-select
                 size="small"
-                class="group-config-item__method"
+                class="config-item__method"
                 :value="field.method"
                 :options="getMethodOptions(field.type)"
                 @change="(value) => updateAggregateMethod(field.key, value)"
               />
               <span
-                class="group-config-item__action group-config-item__action--danger"
+                class="config-item__action config-item__action--danger"
                 title="删除"
                 @click="removeAggregateField(field.key)"
               >
-                <DeleteOutlined class="group-config-item__action-icon" />
+                <DeleteOutlined class="config-item__action-icon" />
               </span>
-              <span class="group-config-item__drag" title="拖动排序">
-                <DragOutlined class="group-config-item__action-icon" />
+              <span class="config-item__drag" title="拖动排序">
+                <DragOutlined class="config-item__action-icon" />
               </span>
             </div>
           </div>
@@ -133,21 +133,21 @@
       @ok="confirmGroupFields"
       @cancel="groupSelectorOpen = false"
     >
-      <div class="group-selector">
-        <div v-if="loading" class="group-selector__empty">字段加载中...</div>
-        <div v-else-if="upstreamFields.length === 0" class="group-selector__empty">
+      <div class="config-selector">
+        <div v-if="loading" class="config-selector__empty">字段加载中...</div>
+        <div v-else-if="upstreamFields.length === 0" class="config-selector__empty">
           当前前序节点无可选字段
         </div>
-        <div v-else class="group-selector__list">
+        <div v-else class="config-selector__list">
           <label
             v-for="field in upstreamFields"
             :key="field.key"
-            class="group-selector__item"
+            class="config-selector__item"
           >
             <input v-model="draftGroupKeys" type="checkbox" :value="field.key" />
-            <span class="group-selector__name">{{ field.name }}</span>
-            <span class="group-selector__code">{{ field.key }}</span>
-            <span class="group-selector__type">{{ field.type }}</span>
+            <span class="config-selector__name config-selector__name--compact">{{ field.name }}</span>
+            <span class="config-selector__code config-selector__code--compact">{{ field.key }}</span>
+            <span class="config-selector__type config-selector__type--compact">{{ field.type }}</span>
           </label>
         </div>
       </div>
@@ -161,21 +161,21 @@
       @ok="confirmAggregateFields"
       @cancel="aggregateSelectorOpen = false"
     >
-      <div class="group-selector">
-        <div v-if="loading" class="group-selector__empty">字段加载中...</div>
-        <div v-else-if="upstreamFields.length === 0" class="group-selector__empty">
+      <div class="config-selector">
+        <div v-if="loading" class="config-selector__empty">字段加载中...</div>
+        <div v-else-if="upstreamFields.length === 0" class="config-selector__empty">
           当前前序节点无可选字段
         </div>
-        <div v-else class="group-selector__list">
+        <div v-else class="config-selector__list">
           <label
             v-for="field in upstreamFields"
             :key="field.key"
-            class="group-selector__item"
+            class="config-selector__item"
           >
             <input v-model="draftAggregateKeys" type="checkbox" :value="field.key" />
-            <span class="group-selector__name">{{ field.name }}</span>
-            <span class="group-selector__code">{{ field.key }}</span>
-            <span class="group-selector__type">{{ field.type }}</span>
+            <span class="config-selector__name config-selector__name--compact">{{ field.name }}</span>
+            <span class="config-selector__code config-selector__code--compact">{{ field.key }}</span>
+            <span class="config-selector__type config-selector__type--compact">{{ field.type }}</span>
           </label>
         </div>
       </div>
@@ -401,7 +401,7 @@
 </script>
 
 <style scoped lang="scss">
-  @use "./config-section-shared" as config;
+  @use "./config-section-shared.scss";
 
   .group-config {
     display: flex;
@@ -410,146 +410,5 @@
     min-height: 0;
     padding: 4px 6px;
     overflow: hidden;
-  }
-
-  .group-config__panel {
-    @include config.panel-frame;
-  }
-
-  .group-config__panel--wide {
-    flex: 1.2 1 0;
-  }
-
-  .group-config__header {
-    @include config.section-header(30px, 0 8px, true);
-  }
-
-  .group-config__header-actions {
-    @include config.section-header-actions;
-  }
-
-  .group-config__count {
-    @include config.section-count;
-  }
-
-  .group-config__link {
-    @include config.section-link;
-  }
-
-  .group-config__link--disabled {
-    @include config.section-link-disabled;
-  }
-
-  .group-config__body {
-    @include config.scroll-body(6px);
-  }
-
-  .group-config__draggable {
-    @include config.draggable-list;
-  }
-
-  .group-config__empty {
-    @include config.empty-state;
-  }
-
-  .group-config-item {
-    @include config.card-row(8px);
-  }
-
-  .group-config-item--aggregate {
-    align-items: stretch;
-  }
-
-  .group-config-item--ghost {
-    @include config.sortable-ghost;
-  }
-
-  .group-config-item--chosen,
-  .group-config-item--dragging {
-    @include config.sortable-active;
-  }
-
-  .group-config-item__meta {
-    @include config.field-meta(14px);
-    font-size: 12px;
-  }
-
-  .group-config-item__name {
-    @include config.field-name;
-  }
-
-  .group-config-item__code,
-  .group-config-item__type {
-    @include config.field-secondary;
-    word-break: break-all;
-  }
-
-  .group-config-item__code {
-    flex-basis: 120px;
-  }
-
-  .group-config-item__type {
-    flex-basis: 92px;
-  }
-
-  .group-config-item__actions,
-  .group-config-item__controls {
-    @include config.action-group;
-  }
-
-  .group-config-item__method {
-    width: 132px;
-  }
-
-  .group-config-item__action,
-  .group-config-item__drag {
-    @include config.icon-button-base;
-  }
-
-  .group-config-item__action-icon {
-    @include config.icon-svg;
-  }
-
-  .group-config-item__drag {
-    @include config.drag-handle;
-  }
-
-  .group-config-item__action--danger {
-    @include config.icon-button-danger;
-  }
-
-  .group-selector {
-    @include config.selector-panel;
-  }
-
-  .group-selector__list {
-    @include config.selector-list;
-  }
-
-  .group-selector__item {
-    @include config.selector-item;
-  }
-
-  .group-selector__item input[type="checkbox"] {
-    @include config.selector-checkbox;
-  }
-
-  .group-selector__empty {
-    @include config.selector-empty;
-  }
-
-  .group-selector__name {
-    @include config.selector-name(120px);
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-  }
-
-  .group-selector__code {
-    @include config.selector-secondary(120px);
-  }
-
-  .group-selector__type {
-    @include config.selector-secondary(92px);
   }
 </style>

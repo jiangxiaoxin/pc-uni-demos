@@ -1,13 +1,13 @@
 <template>
   <div class="field-config-layout">
     <div class="field-config-sidebar">
-      <div class="field-config-header">
-        <span class="field-config-header__title">字段列表</span>
-        <div class="field-config-header__actions">
-          <span class="field-config-header__count">{{ selectedCount }}/{{ upstreamFields.length }}</span>
+      <div class="config-section__header">
+        <span>字段列表</span>
+        <div class="config-section__header-actions">
+          <span class="config-section__count">{{ selectedCount }}/{{ upstreamFields.length }}</span>
           <span
-            class="field-config-header__link"
-            :class="{ 'field-config-header__link--disabled': loading || upstreamFields.length === 0 }"
+            class="config-section__link"
+            :class="{ 'config-section__link--disabled': loading || upstreamFields.length === 0 }"
             @click="toggleSelectAll"
           >
             {{ allSelected ? "取消全选" : "全选" }}
@@ -15,27 +15,27 @@
         </div>
       </div>
 
-      <div class="field-config-list">
-        <div v-if="loading" class="field-config-empty">字段加载中...</div>
-        <div v-else-if="localFields.length === 0" class="field-config-empty">
+      <div class="config-section__body">
+        <div v-if="loading" class="config-section__empty">字段加载中...</div>
+        <div v-else-if="localFields.length === 0" class="config-section__empty">
           当前前序节点无可设置字段
         </div>
         <VueDraggable
           v-else
           v-model="draggableFields"
-          class="field-config-draggable"
+          class="config-section__draggable"
           item-key="key"
-          handle=".field-config-item__drag"
-          ghost-class="field-config-item--ghost"
-          chosen-class="field-config-item--chosen"
-          drag-class="field-config-item--dragging"
+          handle=".config-item__drag"
+          ghost-class="config-item--ghost"
+          chosen-class="config-item--chosen"
+          drag-class="config-item--dragging"
           :animation="160"
           @end="handleSortEnd"
         >
           <div
             v-for="field in localFields"
             :key="field.key"
-            class="field-config-item"
+            class="config-item field-config-item"
           >
             <div class="field-config-item__row">
               <label class="field-config-item__checkbox">
@@ -49,36 +49,36 @@
                 v-if="editingFieldKey === field.key"
                 ref="editingInputRef"
                 v-model:value="editingName"
-                class="field-config-item__name field-config-item__name--editing"
+                class="config-item__name field-config-item__name--editing"
                 @blur="confirmRename"
                 @keydown="handleEditingKeydown"
               />
-              <span v-else class="field-config-item__name" :title="field.name">{{ field.name }}</span>
-              <span class="field-config-item__code">{{ field.key }}</span>
-              <span class="field-config-item__type">{{ field.type }}</span>
+              <span v-else class="config-item__name" :title="field.name">{{ field.name }}</span>
+              <span class="config-item__code">{{ field.key }}</span>
+              <span class="config-item__type">{{ field.type }}</span>
               <span
-                class="field-config-item__action"
+                class="config-item__action"
                 :title="editingFieldKey === field.key ? '确认修改名称' : '修改名称'"
                 @mousedown.prevent
                 @click="editingFieldKey === field.key ? confirmRename() : startRename(field)"
               >
                 <CheckOutlined
                   v-if="editingFieldKey === field.key"
-                  class="field-config-item__action-icon"
+                  class="config-item__action-icon"
                 />
-                <EditOutlined v-else class="field-config-item__action-icon" />
+                <EditOutlined v-else class="config-item__action-icon" />
               </span>
               <span
                 v-if="editingFieldKey === field.key"
-                class="field-config-item__action"
+                class="config-item__action"
                 title="取消修改名称"
                 @mousedown.prevent
                 @click="cancelRename"
               >
-                <CloseOutlined class="field-config-item__action-icon" />
+                <CloseOutlined class="config-item__action-icon" />
               </span>
-              <span class="field-config-item__drag" title="拖动排序">
-                <DragOutlined class="field-config-item__drag-icon" />
+              <span class="config-item__drag" title="拖动排序">
+                <DragOutlined class="config-item__action-icon" />
               </span>
             </div>
           </div>
@@ -392,7 +392,7 @@
 </script>
 
 <style scoped lang="scss">
-  @use "./config-section-shared" as config;
+  @use "./config-section-shared.scss";
 
   .field-config-layout {
     display: flex;
@@ -418,50 +418,8 @@
     border-right: 1px solid #e2e8f0;
   }
 
-  .field-config-header {
-    @include config.section-header;
-  }
-
-  .field-config-header__actions {
-    @include config.section-header-actions;
-  }
-
-  .field-config-header__count {
-    @include config.section-count;
-  }
-
-  .field-config-header__link {
-    @include config.section-link;
-  }
-
-  .field-config-header__link--disabled {
-    @include config.section-link-disabled;
-  }
-
-  .field-config-list {
-    @include config.scroll-body;
-  }
-
-  .field-config-draggable {
-    @include config.draggable-list;
-  }
-
-  .field-config-empty {
-    @include config.empty-state;
-  }
-
   .field-config-item {
-    @include config.card-row(8px, center, flex-start);
     cursor: default;
-  }
-
-  .field-config-item--ghost {
-    @include config.sortable-ghost;
-  }
-
-  .field-config-item--chosen,
-  .field-config-item--dragging {
-    @include config.sortable-active;
   }
 
   .field-config-item__row {
@@ -477,10 +435,6 @@
     flex-shrink: 0;
     display: inline-flex;
     align-items: center;
-  }
-
-  .field-config-item__name {
-    @include config.field-name;
   }
 
   .field-config-item__name--editing {
@@ -501,25 +455,6 @@
     font-size: 13px;
     font-weight: 500;
     line-height: 20px;
-  }
-
-  .field-config-item__code,
-  .field-config-item__type {
-    @include config.field-secondary;
-  }
-
-  .field-config-item__action,
-  .field-config-item__drag {
-    @include config.icon-button-base;
-  }
-
-  .field-config-item__action-icon,
-  .field-config-item__drag-icon {
-    @include config.icon-svg;
-  }
-
-  .field-config-item__drag {
-    @include config.drag-handle;
   }
 
   .field-config-main {

@@ -1,12 +1,12 @@
 <template>
-  <div class="distinct-config">
-    <div class="distinct-config__header">
-      <span class="distinct-config__title">字段列表</span>
-      <div class="distinct-config__header-actions">
-        <span class="distinct-config__count">{{ localSelectedFields.length }}/{{ upstreamFields.length }}</span>
+  <div class="config-section config-section--narrow">
+    <div class="config-section__header">
+      <span>字段列表</span>
+      <div class="config-section__header-actions">
+        <span class="config-section__count">{{ localSelectedFields.length }}/{{ upstreamFields.length }}</span>
         <span
-          class="distinct-config__link"
-          :class="{ 'distinct-config__link--disabled': loading }"
+          class="config-section__link"
+          :class="{ 'config-section__link--disabled': loading }"
           @click="!loading && handleOpenSelector()"
         >
           添加去重字段
@@ -14,48 +14,48 @@
       </div>
     </div>
 
-    <div class="distinct-config__list">
+    <div class="config-section__body">
       <VueDraggable
         v-if="localSelectedFields.length > 0"
         v-model="draggableSelectedFields"
-        class="distinct-config__draggable"
+        class="config-section__draggable"
         item-key="key"
-        handle=".distinct-action-icon--drag"
-        ghost-class="distinct-field-item--ghost"
-        chosen-class="distinct-field-item--chosen"
-        drag-class="distinct-field-item--dragging"
+        handle=".config-item__drag"
+        ghost-class="config-item--ghost"
+        chosen-class="config-item--chosen"
+        drag-class="config-item--dragging"
         :animation="160"
         @end="handleSortEnd"
       >
         <div
           v-for="(field, index) in localSelectedFields"
           :key="field.key"
-          class="distinct-field-item"
+          class="config-item"
         >
-          <div class="distinct-field-item__meta">
-            <span class="distinct-field-item__name">{{ field.name }}</span>
-            <span class="distinct-field-item__code">{{ field.key }}</span>
-            <span class="distinct-field-item__type">{{ field.type }}</span>
+          <div class="config-item__meta">
+            <span class="config-item__name">{{ field.name }}</span>
+            <span class="config-item__code">{{ field.key }}</span>
+            <span class="config-item__type">{{ field.type }}</span>
           </div>
-          <div class="distinct-field-item__actions">
+          <div class="config-item__actions">
             <span
               title="删除"
-              class="distinct-action-icon distinct-action-icon--danger"
+              class="config-item__action config-item__action--danger"
               @click="removeField(index)"
             >
-              <DeleteOutlined class="distinct-action-icon__svg" />
+              <DeleteOutlined class="config-item__action-icon" />
             </span>
             <span
               title="拖动排序"
-              class="distinct-action-icon distinct-action-icon--drag"
+              class="config-item__drag"
             >
-              <DragOutlined class="distinct-action-icon__svg" />
+              <DragOutlined class="config-item__action-icon" />
             </span>
           </div>
         </div>
       </VueDraggable>
 
-      <div v-if="localSelectedFields.length === 0" class="distinct-config__empty">
+      <div v-if="localSelectedFields.length === 0" class="config-section__empty">
         暂未添加去重字段
       </div>
     </div>
@@ -68,25 +68,25 @@
       @ok="confirmSelectFields"
       @cancel="selectorOpen = false"
     >
-      <div class="distinct-selector">
-        <div v-if="loading" class="distinct-selector__empty">字段加载中...</div>
-        <div v-else-if="upstreamFields.length === 0" class="distinct-selector__empty">
+      <div class="config-selector">
+        <div v-if="loading" class="config-selector__empty">字段加载中...</div>
+        <div v-else-if="upstreamFields.length === 0" class="config-selector__empty">
           当前前序节点无可选字段
         </div>
-        <div v-else class="distinct-selector__list">
+        <div v-else class="config-selector__list">
           <div
             v-for="field in upstreamFields"
             :key="field.key"
-            class="distinct-selector__item"
+            class="config-selector__item"
           >
             <input
               v-model="draftSelectedKeys"
               type="checkbox"
               :value="field.key"
             />
-            <span class="distinct-selector__name">{{ field.name }}</span>
-            <span class="distinct-selector__code">{{ field.key }}</span>
-            <span class="distinct-selector__type">{{ field.type }}</span>
+            <span class="config-selector__name">{{ field.name }}</span>
+            <span class="config-selector__code">{{ field.key }}</span>
+            <span class="config-selector__type">{{ field.type }}</span>
           </div>
         </div>
       </div>
@@ -212,126 +212,5 @@
 </script>
 
 <style scoped lang="scss">
-  @use "./config-section-shared" as config;
-
-  .distinct-config {
-    @include config.section-column;
-    max-width: 380px;
-  }
-
-  .distinct-config__header {
-    @include config.section-header;
-  }
-
-  .distinct-config__header-actions {
-    @include config.section-header-actions;
-  }
-
-  .distinct-config__count {
-    @include config.section-count;
-  }
-
-  .distinct-config__link {
-    @include config.section-link;
-  }
-
-  .distinct-config__link--disabled {
-    @include config.section-link-disabled;
-  }
-
-  .distinct-config__list {
-    @include config.scroll-body;
-  }
-
-  .distinct-config__draggable {
-    @include config.draggable-list;
-  }
-
-  .distinct-field-item {
-    @include config.card-row(8px);
-    cursor: default;
-  }
-
-  .distinct-field-item--ghost {
-    @include config.sortable-ghost;
-  }
-
-  .distinct-field-item--chosen,
-  .distinct-field-item--dragging {
-    @include config.sortable-active;
-  }
-
-  .distinct-field-item__meta {
-    @include config.field-meta;
-  }
-
-  .distinct-field-item__name {
-    @include config.field-name;
-  }
-
-  .distinct-field-item__code,
-  .distinct-field-item__type {
-    @include config.field-secondary;
-  }
-
-  .distinct-field-item__actions {
-    @include config.action-group;
-  }
-
-  .distinct-action-icon {
-    @include config.icon-button-base;
-  }
-
-  .distinct-action-icon__svg {
-    @include config.icon-svg;
-  }
-
-  .distinct-action-icon--drag {
-    @include config.drag-handle;
-  }
-
-  .distinct-action-icon--disabled {
-    @include config.icon-button-disabled;
-  }
-
-  .distinct-action-icon--danger {
-    @include config.icon-button-danger;
-  }
-
-  .distinct-config__empty {
-    @include config.empty-state;
-  }
-
-  .distinct-selector {
-    @include config.selector-panel;
-  }
-
-  .distinct-selector__list {
-    @include config.selector-list;
-  }
-
-  .distinct-selector__item {
-    @include config.selector-item;
-  }
-
-  .distinct-selector__item input[type="checkbox"] {
-    @include config.selector-checkbox;
-  }
-
-  .distinct-selector__empty {
-    @include config.selector-empty;
-  }
-
-  .distinct-selector__name {
-    @include config.selector-name;
-  }
-
-  .distinct-selector__code {
-    @include config.selector-secondary;
-  }
-
-  .distinct-selector__type {
-    @include config.selector-secondary(120px, right);
-  }
+  @use "./config-section-shared.scss";
 </style>
-

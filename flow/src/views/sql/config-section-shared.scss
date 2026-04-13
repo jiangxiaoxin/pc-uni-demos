@@ -1,14 +1,17 @@
-@mixin section-column($gap: 0, $padding: 4px 6px, $overflow: hidden) {
+.config-section {
   display: flex;
   flex: 1;
   flex-direction: column;
-  gap: $gap;
   min-height: 0;
-  padding: $padding;
-  overflow: $overflow;
+  padding: 4px 6px;
+  overflow: hidden;
 }
 
-@mixin panel-frame($padding: null, $border-bottom: false) {
+.config-section--narrow {
+  max-width: 380px;
+}
+
+.config-panel {
   display: flex;
   flex: 1 1 0;
   flex-direction: column;
@@ -19,45 +22,43 @@
   border-radius: 12px;
   background: #fff;
   box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.65);
-
-  @if $padding != null {
-    padding: $padding;
-  }
-
-  @if $border-bottom {
-    border-bottom: 1px solid #e2e8f0;
-  }
 }
 
-@mixin section-header($min-height: 24px, $padding: 0 6px 4px, $border-bottom: false) {
+.config-panel--wide {
+  flex: 1.2 1 0;
+}
+
+.config-section__header {
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 8px;
-  min-height: $min-height;
-  padding: $padding;
+  min-height: 24px;
+  padding: 0 6px 4px;
   color: #334155;
   font-size: 12px;
   font-weight: 600;
-
-  @if $border-bottom {
-    border-bottom: 1px solid #e2e8f0;
-  }
 }
 
-@mixin section-header-actions {
+.config-section__header--panel {
+  min-height: 30px;
+  padding: 0 8px;
+  border-bottom: 1px solid #e2e8f0;
+}
+
+.config-section__header-actions {
   display: inline-flex;
   align-items: center;
   gap: 8px;
   flex-shrink: 0;
 }
 
-@mixin section-count {
+.config-section__count {
   color: #64748b;
   font-weight: 500;
 }
 
-@mixin section-link {
+.config-section__link {
   flex-shrink: 0;
   color: #1677ff;
   cursor: pointer;
@@ -68,30 +69,34 @@
   transition: color 0.2s ease;
 }
 
-@mixin section-link-disabled {
+.config-section__link--disabled {
   color: #94a3b8;
   cursor: not-allowed;
   pointer-events: none;
 }
 
-@mixin scroll-body($padding: 0 6px 4px) {
+.config-section__body {
   flex: 1;
   min-height: 0;
   overflow: auto;
-  padding: $padding;
+  padding: 0 6px 4px;
 }
 
-@mixin draggable-list {
+.config-section__body--panel {
+  padding: 6px;
+}
+
+.config-section__draggable {
   display: flex;
   flex-direction: column;
   gap: 6px;
 }
 
-@mixin empty-state($min-height: 80px) {
+.config-section__empty {
   display: flex;
   align-items: center;
   justify-content: center;
-  min-height: $min-height;
+  min-height: 80px;
   height: 100%;
   padding: 12px;
   color: #94a3b8;
@@ -99,43 +104,135 @@
   text-align: center;
 }
 
-@mixin card-row($padding: 8px, $align: center, $justify: space-between) {
+.config-selector {
+  min-height: 0;
+  height: 420px;
+  overflow: hidden;
+  border: 1px solid #e2e8f0;
+  border-radius: 10px;
+  background: #fff;
+}
+
+.config-selector__list {
+  height: 100%;
+  overflow: auto;
+}
+
+.config-selector__item {
   display: flex;
-  align-items: $align;
-  justify-content: $justify;
+  align-items: flex-start;
+  gap: 8px;
+  padding: 8px 10px;
+  border-bottom: 1px solid #f1f5f9;
+  font-size: 12px;
+
+  &:last-child {
+    border-bottom: 0;
+  }
+}
+
+.config-selector__item input[type="checkbox"] {
+  width: 20px;
+  flex: 0 0 20px;
+  margin: 2px 0 0;
+}
+
+.config-selector__empty {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  padding: 12px;
+  color: #94a3b8;
+  font-size: 12px;
+  text-align: center;
+}
+
+.config-selector__name {
+  width: 140px;
+  min-width: 0;
+  color: #0f172a;
+  word-break: break-all;
+}
+
+.config-selector__name--compact {
+  width: 120px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.config-selector__code,
+.config-selector__type {
+  min-width: 0;
+  color: #64748b;
+  word-break: break-all;
+}
+
+.config-selector__code {
+  width: 140px;
+}
+
+.config-selector__type {
+  width: 120px;
+  text-align: right;
+}
+
+.config-selector__code--compact {
+  width: 120px;
+}
+
+.config-selector__type--compact {
+  width: 92px;
+  text-align: left;
+}
+
+.config-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
   gap: 10px;
   min-width: 0;
-  padding: $padding;
+  padding: 8px;
   border: 1px solid #e2e8f0;
   border-radius: 10px;
   background: linear-gradient(180deg, #fff 0%, #f8fafc 100%);
   box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04);
 }
 
-@mixin sortable-ghost {
+.config-item--aggregate {
+  align-items: stretch;
+}
+
+.config-item--ghost {
   opacity: 0.55;
   background: #f8fbff;
   border-color: #91caff;
   box-shadow: none;
 }
 
-@mixin sortable-active {
+.config-item--chosen,
+.config-item--dragging {
   border-color: #1677ff;
   box-shadow: 0 0 0 1px rgba(22, 119, 255, 0.12);
 }
 
-@mixin field-meta($gap: 8px) {
+.config-item__meta {
   display: flex;
   flex: 1;
   align-items: center;
-  gap: $gap;
+  gap: 8px;
   min-width: 0;
   overflow: hidden;
 }
 
-@mixin field-name($basis: 120px) {
-  min-width: $basis;
-  flex: 1 1 $basis;
+.config-item__meta--wide {
+  gap: 14px;
+}
+
+.config-item__name {
+  min-width: 120px;
+  flex: 1 1 120px;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -145,9 +242,10 @@
   line-height: 20px;
 }
 
-@mixin field-secondary($basis: 96px) {
+.config-item__code,
+.config-item__type {
   min-width: 0;
-  flex: 0 1 $basis;
+  flex: 0 1 96px;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -156,14 +254,32 @@
   line-height: 18px;
 }
 
-@mixin action-group {
+.config-item__code--wide {
+  flex-basis: 120px;
+}
+
+.config-item__type--compact {
+  flex-basis: 92px;
+}
+
+.config-item__word-break {
+  word-break: break-all;
+}
+
+.config-item__actions,
+.config-item__controls {
   display: inline-flex;
   align-items: center;
   gap: 8px;
   flex-shrink: 0;
 }
 
-@mixin icon-button-base {
+.config-item__method {
+  width: 132px;
+}
+
+.config-item__action,
+.config-item__drag {
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -181,7 +297,7 @@
   }
 }
 
-@mixin icon-button-danger {
+.config-item__action--danger {
   color: #ef4444;
 
   &:hover {
@@ -190,7 +306,7 @@
   }
 }
 
-@mixin icon-button-disabled {
+.config-item__action--disabled {
   color: #cbd5e1;
   cursor: not-allowed;
   pointer-events: none;
@@ -201,7 +317,7 @@
   }
 }
 
-@mixin drag-handle {
+.config-item__drag {
   cursor: grab;
 
   &:active {
@@ -209,7 +325,7 @@
   }
 }
 
-@mixin icon-svg {
+.config-item__action-icon {
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -217,59 +333,4 @@
   height: 12px;
   font-size: 12px;
   line-height: 1;
-}
-
-@mixin selector-panel($height: 420px) {
-  min-height: 0;
-  height: $height;
-  overflow: hidden;
-  border: 1px solid #e2e8f0;
-  border-radius: 10px;
-  background: #fff;
-}
-
-@mixin selector-list {
-  height: 100%;
-  overflow: auto;
-}
-
-@mixin selector-item {
-  display: flex;
-  align-items: flex-start;
-  gap: 8px;
-  padding: 8px 10px;
-  border-bottom: 1px solid #f1f5f9;
-  font-size: 12px;
-
-  &:last-child {
-    border-bottom: 0;
-  }
-}
-
-@mixin selector-checkbox {
-  width: 20px;
-  flex: 0 0 20px;
-  margin: 2px 0 0;
-}
-
-@mixin selector-empty {
-  @include empty-state(0);
-}
-
-@mixin selector-name($width: 140px) {
-  width: $width;
-  min-width: 0;
-  color: #0f172a;
-  word-break: break-all;
-}
-
-@mixin selector-secondary($width: 140px, $text-align: null) {
-  width: $width;
-  min-width: 0;
-  color: #64748b;
-  word-break: break-all;
-
-  @if $text-align != null {
-    text-align: $text-align;
-  }
 }

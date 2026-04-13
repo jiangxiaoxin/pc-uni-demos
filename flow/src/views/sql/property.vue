@@ -8,11 +8,9 @@
           <div class="property-name-field">
             <a-input
               v-model:value="editableName"
-              class="property-node-input"
-              :bordered="false"
               placeholder="请输入节点名称"
-              @pressEnter="handleSubmitName"
-              @blur="handleSubmitName"
+              @pressEnter.stop="handleSubmitName"
+              @blur.stop="handleSubmitName"
             />
           </div>
         </div>
@@ -237,6 +235,7 @@
     return Number(nodeConfig.value?.defaultConfig?.requiredMinIncoming || 0);
   });
 
+  // 如果节点的输入线有数量要求，那么就要先判断是否满足要求，不满足的显示提示，不显示内部tab功能
   const isConnectionInvalid = computed(() => {
     return requiredMinIncoming.value > 0 && (props.incomingCount || 0) < requiredMinIncoming.value;
   });
@@ -244,7 +243,7 @@
   const connectionInvalidTip = computed(() => {
     return (
       nodeConfig.value?.defaultConfig?.emptyLinkTip ||
-      "当前节点前序连线数量不足，请先完成连线。"
+      "当前节点前序连线不满足要求，请先完成连线。"
     );
   });
 
@@ -321,6 +320,8 @@
     };
   };
 
+  // Rebuild local drafts whenever the panel opens or the selected node changes.
+  // Child editors work against these drafts first, then flush them back in one shot.
   watch(
     () => [props.visible, props.nodeData?.id],
     () => {
@@ -334,6 +335,8 @@
     { immediate: true },
   );
 
+  // Different node types expose different tabs.
+  // If the current tab becomes unavailable, fall back to the first valid tab.
   watch(
     availableTabs,
     (nextTabs) => {
@@ -360,6 +363,14 @@
     draftFieldSettings.value = fields.map((field) => ({ ...field }));
   };
 
+  /**
+   * Flush local property drafts back to the parent editor state.
+   *
+   * This panel keeps remark, distinct fields, and field settings in local refs
+   * while the user is editing. The parent calls this before node switches or
+   * panel close so unsaved draft changes are committed once as a diff payload.
+   * 
+   */
   const flushDraftProperties = () => {
     if (!props.nodeData) return;
 
@@ -368,7 +379,9 @@
     if (editableRemark.value !== currentRemark) {
       nextProperties.remark = editableRemark.value;
     }
+    // TODO 既然节点类型是确定的，那对应的它的节点属性也就是确定的，它需要关心的数据也就是确定的，那就没必要每次都像下面这样，把每个种类的节点属性都判断一遍
 
+    // Compare serialized structures so only changed fields are emitted upstream.
     const currentDistinctFields = JSON.stringify(distinctFields.value);
     const nextDistinctFields = JSON.stringify(draftDistinctFields.value);
     if (nextDistinctFields !== currentDistinctFields) {
@@ -385,6 +398,7 @@
     emit("submit-properties", nextProperties);
   };
 
+  // Expose the flush hook so the parent can persist drafts before selection changes.
   defineExpose({
     flushDraftProperties,
   });
@@ -449,31 +463,9 @@
   }
 
   .property-name-field {
-    display: flex;
-    align-items: center;
-    gap: 4px;
     min-width: 240px;
     max-width: 100%;
     margin-left: 4px;
-  }
-
-  .property-node-input {
-    flex: 1;
-    min-width: 0;
-    height: 30px;
-    padding: 0 8px;
-    border: 1px solid #dbe2ea;
-    border-radius: 8px;
-    background: #f8fafc;
-
-    :deep(.ant-input) {
-      height: 28px;
-      padding: 0;
-      font-size: 14px;
-      font-weight: 500;
-      color: #0f172a;
-      background: transparent;
-    }
   }
 
   .property-tab {

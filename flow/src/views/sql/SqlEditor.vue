@@ -11,9 +11,8 @@
           @dragstart="handleDragStart($event, node)"
         >
           <div
-            v-if="getPanelNodeIcon(node.type)"
             class="node-icon-wrap"
-            :style="{ backgroundColor: getPanelNodeIconBg(node.color) }"
+            :style="{ backgroundColor: node.iconBgColor }"
           >
             <component
               :is="getPanelNodeIcon(node.type)"
@@ -21,11 +20,6 @@
               :style="{ color: node.color }"
             />
           </div>
-          <div
-            v-else
-            class="node-circle"
-            :style="{ backgroundColor: node.color }"
-          ></div>
           <div class="node-name">{{ node.name }}</div>
         </div>
       </div>
@@ -101,13 +95,21 @@
     incomingCount: number;
   }
 
+  // LogicFlow 编辑器实例，用于操作画布、节点和读取当前图数据。
   const editorRef = ref<EditorExpose | null>(null);
+  // 属性面板暴露的能力，目前只用于在切换节点前冲刷本地草稿配置。
   const propertyRef = ref<PropertyExpose | null>(null);
+  // 当前是否显示底部 property 面板。
   const propertyVisible = ref(false);
+  // 当前选中的节点，property 面板和节点配置都围绕它展开。
   const selectedNode = ref<SqlNodeData | null>(null);
+  // 当前选中节点的入边数量，只用于连线有效性校验提示。
   const selectedIncomingCount = ref(0);
+  // 输入节点选择数据源弹框的显隐状态。
   const bindModalVisible = ref(false);
+  // 当前正在绑定数据源的输入节点。
   const pendingBindNode = ref<SqlNodeData | null>(null);
+  // 输入节点弹框打开时的初始回显绑定值。
   const pendingInputBinding = ref<InputBindingPersisted | null>(null);
 
   const getNodeContext = (nodeId: string) => {
@@ -140,13 +142,6 @@
     return sqlNodeIconMap[nodeType] || null;
   };
 
-  const getPanelNodeIconBg = (color: string) => {
-    if (color.startsWith("#") && color.length === 7) {
-      return `${color}1A`;
-    }
-    return "rgba(15, 23, 42, 0.08)";
-  };
-
   const handleNodeSelect = async (payload: NodeSelectPayload) => {
     const node = payload.node;
     selectedIncomingCount.value = payload.incomingCount || 0;
@@ -156,6 +151,7 @@
     }
 
     if (node.type === "in-node" && !node.properties?.inputBinding) {
+      // 如果当前是输入节点，且没有绑定数据源，则弹出绑定数据源弹框。
       pendingBindNode.value = node;
       pendingInputBinding.value = null;
       propertyVisible.value = false;
@@ -264,25 +260,25 @@
 <style scoped lang="scss">
   .sql-editor {
     display: flex;
-    width: 100%;
-    height: 100%;
+    inline-size: 100%;
+    block-size: 100%;
     background: #f5f5f5;
   }
 
   .node-panel {
+    display: flex;
+    flex-direction: column;
     width: 160px;
     background: #fff;
     border-right: 1px solid #e8e8e8;
-    display: flex;
-    flex-direction: column;
   }
 
   .panel-title {
     padding: 12px 16px;
+    border-bottom: 1px solid #e8e8e8;
     font-size: 14px;
     font-weight: 600;
     color: #262626;
-    border-bottom: 1px solid #e8e8e8;
   }
 
   .node-list {
@@ -301,7 +297,7 @@
     border: 1px solid #e8e8e8;
     border-radius: 6px;
     cursor: move;
-    transition: all 0.2s;
+    transition: background-color 0.2s, border-color 0.2s, transform 0.2s;
   }
 
   .node-item:hover {
@@ -310,21 +306,14 @@
     transform: translateX(2px);
   }
 
-  .node-circle {
-    width: 16px;
-    height: 16px;
-    border-radius: 50%;
-    flex-shrink: 0;
-  }
-
   .node-icon-wrap {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
     width: 24px;
     height: 24px;
     border-radius: 50%;
     flex-shrink: 0;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
   }
 
   .node-icon {
@@ -343,8 +332,8 @@
     flex: 1;
     display: flex;
     flex-direction: column;
-    overflow: hidden;
     min-width: 0;
+    overflow: hidden;
   }
 
   .editor-area {

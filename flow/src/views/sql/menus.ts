@@ -7,6 +7,7 @@ export interface NodeType {
   type: string;
   name: string;
   color: string;
+  iconBgColor: string;
   title: string;
   icon: string;
   anchors: {
@@ -32,6 +33,7 @@ export const nodeTypes: NodeType[] = [
     title: "数据输入",
     icon: "database",
     color: "#1890ff",
+    iconBgColor: "#1890ff1A",
     anchors: { in: false, out: true },
     defaultConfig: {
       width: Number_180,
@@ -45,6 +47,7 @@ export const nodeTypes: NodeType[] = [
     title: "数据输出",
     icon: "export",
     color: "#52c41a",
+    iconBgColor: "#52c41a1A",
     anchors: { in: true, out: false },
     defaultConfig: {
       width: Number_180,
@@ -59,6 +62,7 @@ export const nodeTypes: NodeType[] = [
     title: "横向连接",
     icon: "join",
     color: "#722ed1",
+    iconBgColor: "#722ed11A",
     anchors: { in: true, out: true },
     defaultConfig: {
       width: Number_180,
@@ -73,6 +77,7 @@ export const nodeTypes: NodeType[] = [
     title: "追加合并",
     icon: "merge",
     color: "#2f54eb",
+    iconBgColor: "#2f54eb1A",
     anchors: { in: true, out: true },
     defaultConfig: {
       width: Number_180,
@@ -87,6 +92,7 @@ export const nodeTypes: NodeType[] = [
     title: "分组汇总",
     icon: "functions",
     color: "#eb2f96",
+    iconBgColor: "#eb2f961A",
     anchors: { in: true, out: true },
     defaultConfig: {
       width: Number_180,
@@ -101,6 +107,7 @@ export const nodeTypes: NodeType[] = [
     title: "数据筛选",
     icon: "filter",
     color: "#fa8c16",
+    iconBgColor: "#fa8c161A",
     anchors: { in: true, out: true },
     defaultConfig: {
       width: Number_180,
@@ -115,6 +122,7 @@ export const nodeTypes: NodeType[] = [
     title: "字段设置",
     icon: "text",
     color: "#13c2c2",
+    iconBgColor: "#13c2c21A",
     anchors: { in: true, out: true },
     defaultConfig: {
       width: Number_180,
@@ -129,6 +137,7 @@ export const nodeTypes: NodeType[] = [
     title: "去重",
     icon: "cut",
     color: "#fa541c",
+    iconBgColor: "#fa541c1A",
     anchors: { in: true, out: true },
     defaultConfig: {
       width: Number_180,

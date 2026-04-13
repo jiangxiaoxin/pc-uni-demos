@@ -79,10 +79,22 @@
     properties?: Record<string, unknown>;
   }
 
+  interface EdgeEventPayload {
+    data?: {
+      targetNodeId?: string;
+    };
+  }
+
   const emit = defineEmits<{
-    (e: "node-select", payload: { node: SqlNodeData; incomingCount: number }): void;
+    (
+      e: "node-select",
+      payload: { node: SqlNodeData; incomingCount: number },
+    ): void;
     (e: "node-delete", nodeId: string): void;
-    (e: "connection-change", payload: { nodeId: string; incomingCount: number }): void;
+    (
+      e: "connection-change",
+      payload: { nodeId: string; incomingCount: number },
+    ): void;
     (e: "blank-click"): void;
   }>();
 
@@ -224,7 +236,7 @@
       const node = data as SqlNodeData;
       emit("node-select", {
         node,
-        incomingCount: getIncomingCountByNodeId(node.id),
+        incomingCount: getIncomingCountByNodeId(node.id), // 连接了几条线进来
       });
     });
 
@@ -237,12 +249,12 @@
     // });
 
     lf.on("blank:click", () => {
-      console.log('blank:clickkkkkkkkkkkkkkk');
+      console.log("blank:clickkkkkkkkkkkkkkk");
       emit("blank-click");
     });
 
     // lf.on("blank:mousedown", ({e}) => {
-    //   console.log('blank mousedown', e);      
+    //   console.log('blank mousedown', e);
     // })
 
     // lf.on("blank:mousemove", () => {
@@ -251,7 +263,7 @@
 
     // lf.on("blank:mouseup", () => {
     //   console.log('blank mouseup');
-    
+
     // })
 
     lf.on("node:delete", ({ data }) => {
@@ -260,27 +272,17 @@
       }
     });
 
-    // lf.on("edge:add", ({ data }) => {
-    //   console.log("连线添加成功:", data);
-    // });
-
-    lf.on("edge:add", ({ data }: { data: { targetNodeId?: string } }) => {
+    const emitConnectionChangeByTarget = ({ data }: EdgeEventPayload) => {
       const targetNodeId = data?.targetNodeId;
       if (!targetNodeId) return;
       emit("connection-change", {
         nodeId: targetNodeId,
         incomingCount: getIncomingCountByNodeId(targetNodeId),
       });
-    });
+    };
 
-    lf.on("edge:delete", ({ data }: { data: { targetNodeId?: string } }) => {
-      const targetNodeId = data?.targetNodeId;
-      if (!targetNodeId) return;
-      emit("connection-change", {
-        nodeId: targetNodeId,
-        incomingCount: getIncomingCountByNodeId(targetNodeId),
-      });
-    });
+    lf.on("edge:add", emitConnectionChangeByTarget);
+    lf.on("edge:delete", emitConnectionChangeByTarget);
 
     lf.on("connection:not-allowed", ({ msg }) => {
       console.warn("连接被阻止:", msg);

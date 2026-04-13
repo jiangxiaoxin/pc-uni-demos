@@ -2,7 +2,7 @@
   <div class="editor-wrapper" @drop="handleDrop" @dragover.prevent>
     <div class="toolbar-panel">
       <a-space>
-        <a-button type="primary" @click="handleSave">
+        <a-button type="primary" @click="emit('save-request')">
           <template #icon><SaveOutlined /></template>
           保存
         </a-button>
@@ -10,7 +10,7 @@
           <template #icon><UploadOutlined /></template>
           加载
         </a-button>
-        <a-button @click="handlePreview">
+        <a-button @click="emit('preview-request')">
           <template #icon><EyeOutlined /></template>
           预览
         </a-button>
@@ -96,6 +96,8 @@
       payload: { nodeId: string; incomingCount: number },
     ): void;
     (e: "blank-click"): void;
+    (e: "save-request"): void;
+    (e: "preview-request"): void;
   }>();
 
   const TeleportContainer = getTeleport();
@@ -340,7 +342,7 @@
     message.success(`已添加 ${nodeType.name} 节点`);
   };
 
-  const handleSave = () => {
+  const saveToLocal = () => {
     if (!lf) return;
     localStorage.setItem(STORAGE_KEY, JSON.stringify(lf.getGraphData()));
     message.success("流程配置已保存到本地");
@@ -365,7 +367,7 @@
     }
   };
 
-  const handlePreview = () => {
+  const openPreview = () => {
     if (!lf) return;
     previewData.value = JSON.stringify(lf.getGraphData(), null, 2);
     previewVisible.value = true;
@@ -422,6 +424,8 @@
     updateNodeTitle,
     updateNodeProperties,
     getGraphData,
+    saveToLocal,
+    openPreview,
   });
 </script>
 

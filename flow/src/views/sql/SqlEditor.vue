@@ -33,6 +33,8 @@
         @connection-change="handleConnectionChange"
         @node-delete="handleNodeDelete"
         @blank-click="handleBlankClick"
+        @save-request="handleSaveRequest"
+        @preview-request="handlePreviewRequest"
       />
       <property
         ref="propertyRef"
@@ -73,6 +75,8 @@
       properties: Record<string, unknown>,
     ) => void;
     getGraphData: () => SqlGraphData | undefined;
+    saveToLocal: () => void;
+    openPreview: () => void;
   }
 
   interface PropertyExpose {
@@ -254,6 +258,21 @@
 
     await nextTick();
     editorRef.value?.resize();
+  };
+
+  const flushPropertyDrafts = async () => {
+    propertyRef.value?.flushDraftProperties();
+    await nextTick();
+  };
+
+  const handleSaveRequest = async () => {
+    await flushPropertyDrafts();
+    editorRef.value?.saveToLocal();
+  };
+
+  const handlePreviewRequest = async () => {
+    await flushPropertyDrafts();
+    editorRef.value?.openPreview();
   };
 </script>
 

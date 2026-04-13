@@ -88,7 +88,11 @@
 
     <div class="field-config-main">
       <div class="field-config-table-wrap">
+        <div v-if="selectedCount === 0" class="config-section__empty field-config-table-empty">
+          请选择字段
+        </div>
         <a-table
+          v-else
           class="field-config-table"
           :columns="selectedTableColumns"
           :data-source="[]"
@@ -467,6 +471,10 @@
     flex: 1;
     min-height: 0;
     overflow: hidden;
+  }
+
+  .field-config-table-empty {
+    min-height: 100%;
   }
 
   .field-config-table-wrap :deep(.field-config-table.ant-table-wrapper),

@@ -1,0 +1,275 @@
+@mixin section-column($gap: 0, $padding: 4px 6px, $overflow: hidden) {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  gap: $gap;
+  min-height: 0;
+  padding: $padding;
+  overflow: $overflow;
+}
+
+@mixin panel-frame($padding: null, $border-bottom: false) {
+  display: flex;
+  flex: 1 1 0;
+  flex-direction: column;
+  min-width: 0;
+  min-height: 0;
+  overflow: hidden;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  background: #fff;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.65);
+
+  @if $padding != null {
+    padding: $padding;
+  }
+
+  @if $border-bottom {
+    border-bottom: 1px solid #e2e8f0;
+  }
+}
+
+@mixin section-header($min-height: 24px, $padding: 0 6px 4px, $border-bottom: false) {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  min-height: $min-height;
+  padding: $padding;
+  color: #334155;
+  font-size: 12px;
+  font-weight: 600;
+
+  @if $border-bottom {
+    border-bottom: 1px solid #e2e8f0;
+  }
+}
+
+@mixin section-header-actions {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
+@mixin section-count {
+  color: #64748b;
+  font-weight: 500;
+}
+
+@mixin section-link {
+  flex-shrink: 0;
+  color: #1677ff;
+  cursor: pointer;
+  user-select: none;
+  font-size: 12px;
+  font-weight: 500;
+  line-height: 18px;
+  transition: color 0.2s ease;
+}
+
+@mixin section-link-disabled {
+  color: #94a3b8;
+  cursor: not-allowed;
+  pointer-events: none;
+}
+
+@mixin scroll-body($padding: 0 6px 4px) {
+  flex: 1;
+  min-height: 0;
+  overflow: auto;
+  padding: $padding;
+}
+
+@mixin draggable-list {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+@mixin empty-state($min-height: 80px) {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: $min-height;
+  height: 100%;
+  padding: 12px;
+  color: #94a3b8;
+  font-size: 12px;
+  text-align: center;
+}
+
+@mixin card-row($padding: 8px, $align: center, $justify: space-between) {
+  display: flex;
+  align-items: $align;
+  justify-content: $justify;
+  gap: 10px;
+  min-width: 0;
+  padding: $padding;
+  border: 1px solid #e2e8f0;
+  border-radius: 10px;
+  background: linear-gradient(180deg, #fff 0%, #f8fafc 100%);
+  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04);
+}
+
+@mixin sortable-ghost {
+  opacity: 0.55;
+  background: #f8fbff;
+  border-color: #91caff;
+  box-shadow: none;
+}
+
+@mixin sortable-active {
+  border-color: #1677ff;
+  box-shadow: 0 0 0 1px rgba(22, 119, 255, 0.12);
+}
+
+@mixin field-meta($gap: 8px) {
+  display: flex;
+  flex: 1;
+  align-items: center;
+  gap: $gap;
+  min-width: 0;
+  overflow: hidden;
+}
+
+@mixin field-name($basis: 120px) {
+  min-width: $basis;
+  flex: 1 1 $basis;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: #0f172a;
+  font-size: 13px;
+  font-weight: 500;
+  line-height: 20px;
+}
+
+@mixin field-secondary($basis: 96px) {
+  min-width: 0;
+  flex: 0 1 $basis;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: #64748b;
+  font-size: 12px;
+  line-height: 18px;
+}
+
+@mixin action-group {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
+@mixin icon-button-base {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 18px;
+  height: 18px;
+  flex-shrink: 0;
+  border-radius: 4px;
+  color: #64748b;
+  cursor: pointer;
+  transition: color 0.2s ease, background-color 0.2s ease;
+
+  &:hover {
+    color: #334155;
+    background: #f1f5f9;
+  }
+}
+
+@mixin icon-button-danger {
+  color: #ef4444;
+
+  &:hover {
+    color: #dc2626;
+    background: #fee2e2;
+  }
+}
+
+@mixin icon-button-disabled {
+  color: #cbd5e1;
+  cursor: not-allowed;
+  pointer-events: none;
+
+  &:hover {
+    color: #cbd5e1;
+    background: transparent;
+  }
+}
+
+@mixin drag-handle {
+  cursor: grab;
+
+  &:active {
+    cursor: grabbing;
+  }
+}
+
+@mixin icon-svg {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 12px;
+  height: 12px;
+  font-size: 12px;
+  line-height: 1;
+}
+
+@mixin selector-panel($height: 420px) {
+  min-height: 0;
+  height: $height;
+  overflow: hidden;
+  border: 1px solid #e2e8f0;
+  border-radius: 10px;
+  background: #fff;
+}
+
+@mixin selector-list {
+  height: 100%;
+  overflow: auto;
+}
+
+@mixin selector-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  padding: 8px 10px;
+  border-bottom: 1px solid #f1f5f9;
+  font-size: 12px;
+
+  &:last-child {
+    border-bottom: 0;
+  }
+}
+
+@mixin selector-checkbox {
+  width: 20px;
+  flex: 0 0 20px;
+  margin: 2px 0 0;
+}
+
+@mixin selector-empty {
+  @include empty-state(0);
+}
+
+@mixin selector-name($width: 140px) {
+  width: $width;
+  min-width: 0;
+  color: #0f172a;
+  word-break: break-all;
+}
+
+@mixin selector-secondary($width: 140px, $text-align: null) {
+  width: $width;
+  min-width: 0;
+  color: #64748b;
+  word-break: break-all;
+
+  @if $text-align != null {
+    text-align: $text-align;
+  }
+}

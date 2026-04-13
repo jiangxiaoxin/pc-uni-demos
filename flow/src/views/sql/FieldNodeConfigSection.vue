@@ -286,15 +286,12 @@
   });
 
   onMounted(() => {
-    console.log('字段设置 mounted');
     void loadUpstreamFields();
   });
 
   watch(
     () => props.fieldSettings,
     () => {
-      console.log('111111111');
-      
       if (
         pendingLocalChange.value &&
         persistedFieldSettingsEqual(props.fieldSettings, toPersistedFieldSettings(localFields.value))
@@ -336,22 +333,17 @@
   };
 
   const confirmRename = () => {
-    // debugger
     if (!editingFieldKey.value) return;
     const nextName = editingName.value.trim();
-    // console.log("🚀 ~ FieldNodeConfigSection.vue:342 ~ confirmRename ~ nextName:", nextName)
 
     const targetField = localFields.value.find((field) => field.key === editingFieldKey.value);
     const fallbackName = targetField?.name || "";
-    // console.log("🚀 ~ FieldNodeConfigSection.vue:346 ~ confirmRename ~ fallbackName:", fallbackName)
 
     const resolvedName = nextName || fallbackName;
-    // console.log("🚀 ~ FieldNodeConfigSection.vue:349 ~ confirmRename ~ resolvedName:", resolvedName)
 
     const nextFields = localFields.value.map((field) =>
       field.key === editingFieldKey.value ? { ...field, name: resolvedName } : field,
     );
-    // console.log("🚀 ~ FieldNodeConfigSection.vue:348 ~ confirmRename ~ nextFields:", nextFields)
 
     editingFieldKey.value = "";
     editingName.value = "";
@@ -400,9 +392,11 @@
 </script>
 
 <style scoped lang="scss">
+  @use "./config-section-shared" as config;
+
   .field-config-layout {
     display: flex;
-    gap: 4px;
+    gap: 8px;
     flex: 1;
     min-height: 0;
     overflow: hidden;
@@ -425,82 +419,49 @@
   }
 
   .field-config-header {
-    min-height: 24px;
-    padding: 0 6px 4px;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 8px;
-    color: #334155;
-    font-size: 12px;
-    font-weight: 600;
+    @include config.section-header;
   }
 
   .field-config-header__actions {
-    display: inline-flex;
-    align-items: center;
-    gap: 8px;
-    flex-shrink: 0;
+    @include config.section-header-actions;
   }
 
   .field-config-header__count {
-    color: #64748b;
-    font-weight: 500;
+    @include config.section-count;
   }
 
   .field-config-header__link {
-    color: #1677ff;
-    cursor: pointer;
-    user-select: none;
-    font-weight: 500;
+    @include config.section-link;
   }
 
   .field-config-header__link--disabled {
-    color: #94a3b8;
-    cursor: not-allowed;
+    @include config.section-link-disabled;
   }
 
   .field-config-list {
-    flex: 1;
-    min-height: 0;
-    overflow: auto;
-    padding: 0 6px 4px;
+    @include config.scroll-body;
   }
 
   .field-config-draggable {
-    display: flex;
-    flex-direction: column;
-    gap: 4px;
+    @include config.draggable-list;
   }
 
   .field-config-empty {
-    height: 100%;
-    min-height: 80px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    color: #94a3b8;
-    font-size: 12px;
-    text-align: center;
+    @include config.empty-state;
   }
 
   .field-config-item {
-    padding: 6px;
-    background: #fff;
-    border: 1px solid #e2e8f0;
+    @include config.card-row(8px, center, flex-start);
     cursor: default;
   }
 
   .field-config-item--ghost {
-    opacity: 0.55;
-    background: #f8fbff;
-    border-color: #91caff;
+    @include config.sortable-ghost;
   }
 
   .field-config-item--chosen,
   .field-config-item--dragging {
-    border-color: #1677ff;
-    box-shadow: 0 0 0 1px rgba(22, 119, 255, 0.12);
+    @include config.sortable-active;
   }
 
   .field-config-item__row {
@@ -519,15 +480,7 @@
   }
 
   .field-config-item__name {
-    min-width: 120px;
-    flex: 1 1 120px;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-    color: #0f172a;
-    font-size: 13px;
-    font-weight: 500;
-    line-height: 20px;
+    @include config.field-name;
   }
 
   .field-config-item__name--editing {
@@ -552,46 +505,21 @@
 
   .field-config-item__code,
   .field-config-item__type {
-    flex: 0 1 96px;
-    min-width: 0;
-    color: #64748b;
-    font-size: 12px;
-    line-height: 18px;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
+    @include config.field-secondary;
   }
 
   .field-config-item__action,
   .field-config-item__drag {
-    width: 16px;
-    height: 16px;
-    flex-shrink: 0;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    color: #64748b;
-    cursor: pointer;
-  }
-
-  .field-config-item__action:hover,
-  .field-config-item__drag:hover {
-    color: #1677ff;
+    @include config.icon-button-base;
   }
 
   .field-config-item__action-icon,
   .field-config-item__drag-icon {
-    width: 12px;
-    height: 12px;
-    font-size: 12px;
+    @include config.icon-svg;
   }
 
   .field-config-item__drag {
-    cursor: grab;
-  }
-
-  .field-config-item__drag:active {
-    cursor: grabbing;
+    @include config.drag-handle;
   }
 
   .field-config-main {

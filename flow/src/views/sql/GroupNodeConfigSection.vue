@@ -321,8 +321,6 @@
   watch(
     () => [props.groupFields, props.aggregateFields],
     () => {
-      console.log('sync');
-      
       syncLocalState();
     },
     { deep: true },
@@ -397,30 +395,25 @@
   const updateAggregateMethod = (fieldKey: string, value: GroupAggregateMethod) => {
     const targetField = localAggregateFields.value.find((field) => field.key === fieldKey);
     if (!targetField) return;
-    // targetField.method = resolveMethod(targetField.type, value);
     targetField.method = value;
     emitAggregateFields(localAggregateFields.value);
   };
 </script>
 
 <style scoped lang="scss">
+  @use "./config-section-shared" as config;
+
   .group-config {
-    flex: 1;
-    min-height: 0;
     display: flex;
-    gap: 6px;
+    flex: 1;
+    gap: 8px;
+    min-height: 0;
     padding: 4px 6px;
     overflow: hidden;
   }
 
   .group-config__panel {
-    flex: 1 1 0;
-    min-width: 0;
-    display: flex;
-    flex-direction: column;
-    border: 1px solid #e2e8f0;
-    background: #fff;
-    overflow: hidden;
+    @include config.panel-frame;
   }
 
   .group-config__panel--wide {
@@ -428,75 +421,39 @@
   }
 
   .group-config__header {
-    min-height: 30px;
-    padding: 0 6px;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 8px;
-    border-bottom: 1px solid #e2e8f0;
-    color: #334155;
-    font-size: 12px;
-    font-weight: 600;
+    @include config.section-header(30px, 0 8px, true);
   }
 
   .group-config__header-actions {
-    display: inline-flex;
-    align-items: center;
-    gap: 8px;
-    flex-shrink: 0;
+    @include config.section-header-actions;
   }
 
   .group-config__count {
-    color: #64748b;
-    font-weight: 500;
+    @include config.section-count;
   }
 
   .group-config__link {
-    color: #1677ff;
-    cursor: pointer;
-    user-select: none;
-    font-weight: 500;
+    @include config.section-link;
   }
 
   .group-config__link--disabled {
-    color: #94a3b8;
-    cursor: not-allowed;
+    @include config.section-link-disabled;
   }
 
   .group-config__body {
-    flex: 1;
-    min-height: 0;
-    overflow: auto;
-    padding: 4px;
+    @include config.scroll-body(6px);
   }
 
   .group-config__draggable {
-    display: flex;
-    flex-direction: column;
-    gap: 4px;
+    @include config.draggable-list;
   }
 
   .group-config__empty {
-    height: 100%;
-    min-height: 80px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    color: #94a3b8;
-    font-size: 12px;
-    text-align: center;
+    @include config.empty-state;
   }
 
   .group-config-item {
-    min-width: 0;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 8px;
-    padding: 6px;
-    border: 1px solid #e2e8f0;
-    background: #fff;
+    @include config.card-row(8px);
   }
 
   .group-config-item--aggregate {
@@ -504,62 +461,40 @@
   }
 
   .group-config-item--ghost {
-    opacity: 0.55;
-    background: #f8fbff;
-    border-color: #91caff;
+    @include config.sortable-ghost;
   }
 
   .group-config-item--chosen,
   .group-config-item--dragging {
-    border-color: #1677ff;
-    box-shadow: 0 0 0 1px rgba(22, 119, 255, 0.12);
+    @include config.sortable-active;
   }
 
   .group-config-item__meta {
-    min-width: 0;
-    flex: 1;
-    display: inline-flex;
-    align-items: center;
-    gap: 14px;
+    @include config.field-meta(14px);
     font-size: 12px;
-    overflow: hidden;
   }
 
-  .group-config-item__name,
-  .group-selector__name {
-    min-width: 0;
-    width: 120px;
-    color: #0f172a;
-    font-weight: 500;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
+  .group-config-item__name {
+    @include config.field-name;
   }
 
   .group-config-item__code,
-  .group-config-item__type,
-  .group-selector__code,
-  .group-selector__type {
-    color: #64748b;
+  .group-config-item__type {
+    @include config.field-secondary;
     word-break: break-all;
   }
 
-  .group-config-item__code,
-  .group-selector__code {
-    width: 120px;
+  .group-config-item__code {
+    flex-basis: 120px;
   }
 
-  .group-config-item__type,
-  .group-selector__type {
-    width: 92px;
+  .group-config-item__type {
+    flex-basis: 92px;
   }
 
   .group-config-item__actions,
   .group-config-item__controls {
-    flex-shrink: 0;
-    display: inline-flex;
-    align-items: center;
-    gap: 8px;
+    @include config.action-group;
   }
 
   .group-config-item__method {
@@ -568,75 +503,53 @@
 
   .group-config-item__action,
   .group-config-item__drag {
-    width: 16px;
-    height: 16px;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    color: #64748b;
-    cursor: pointer;
-    border-radius: 2px;
-    transition: color 0.2s ease, background-color 0.2s ease;
+    @include config.icon-button-base;
   }
 
   .group-config-item__action-icon {
-    width: 12px;
-    height: 12px;
-    font-size: 12px;
-    line-height: 1;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
+    @include config.icon-svg;
   }
 
-  .group-config-item__action:hover,
-  .group-config-item__drag:hover {
-    color: #334155;
-    background: #f1f5f9;
+  .group-config-item__drag {
+    @include config.drag-handle;
   }
 
   .group-config-item__action--danger {
-    color: #ef4444;
-  }
-
-  .group-config-item__action--danger:hover {
-    color: #dc2626;
-    background: #fee2e2;
+    @include config.icon-button-danger;
   }
 
   .group-selector {
-    height: 420px;
-    min-height: 0;
-    border: 1px solid #e2e8f0;
-    background: #fff;
+    @include config.selector-panel;
   }
 
   .group-selector__list {
-    height: 100%;
-    overflow: auto;
+    @include config.selector-list;
   }
 
   .group-selector__item {
-    display: flex;
-    align-items: flex-start;
-    gap: 8px;
-    padding: 8px 10px;
-    border-bottom: 1px solid #f1f5f9;
-    font-size: 12px;
+    @include config.selector-item;
   }
 
   .group-selector__item input[type="checkbox"] {
-    width: 20px;
-    flex: 0 0 20px;
-    margin: 2px 0 0;
+    @include config.selector-checkbox;
   }
 
   .group-selector__empty {
-    height: 100%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    color: #94a3b8;
-    font-size: 12px;
+    @include config.selector-empty;
+  }
+
+  .group-selector__name {
+    @include config.selector-name(120px);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .group-selector__code {
+    @include config.selector-secondary(120px);
+  }
+
+  .group-selector__type {
+    @include config.selector-secondary(92px);
   }
 </style>

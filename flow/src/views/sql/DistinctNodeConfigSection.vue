@@ -153,7 +153,6 @@
   watch(
     () => props.selectedFields,
     () => {
-      console.log('props.selectedFields');
       syncLocalSelected();
     },
     { immediate: true, deep: true },
@@ -213,246 +212,126 @@
 </script>
 
 <style scoped lang="scss">
+  @use "./config-section-shared" as config;
+
   .distinct-config {
-    flex: 1;
-    min-height: 0;
-    display: flex;
-    flex-direction: column;
-    gap: 0;
-    padding: 4px 6px;
+    @include config.section-column;
     max-width: 380px;
   }
 
   .distinct-config__header {
-    min-height: 24px;
-    padding: 0 6px 4px;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 8px;
-    color: #334155;
-    font-size: 12px;
-    font-weight: 600;
+    @include config.section-header;
   }
 
   .distinct-config__header-actions {
-    display: inline-flex;
-    align-items: center;
-    gap: 8px;
-    flex-shrink: 0;
+    @include config.section-header-actions;
   }
 
   .distinct-config__count {
-    color: #64748b;
-    font-weight: 500;
+    @include config.section-count;
   }
 
   .distinct-config__link {
-    flex-shrink: 0;
-    font-size: 12px;
-    font-weight: 500;
-    line-height: 18px;
-    color: #1677ff;
-    cursor: pointer;
-    user-select: none;
+    @include config.section-link;
   }
 
   .distinct-config__link--disabled {
-    color: #94a3b8;
-    cursor: not-allowed;
+    @include config.section-link-disabled;
   }
 
   .distinct-config__list {
-    flex: 1;
-    min-height: 0;
-    overflow: auto;
-    padding: 0 6px 4px;
+    @include config.scroll-body;
   }
 
   .distinct-config__draggable {
-    display: flex;
-    flex-direction: column;
-    gap: 4px;
+    @include config.draggable-list;
   }
 
   .distinct-field-item {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 8px;
-    padding: 6px;
-    background: #fff;
-    border: 1px solid #e2e8f0;
+    @include config.card-row(8px);
     cursor: default;
   }
 
   .distinct-field-item--ghost {
-    opacity: 0.55;
-    background: #f8fbff;
-    border-color: #91caff;
+    @include config.sortable-ghost;
   }
 
   .distinct-field-item--chosen,
   .distinct-field-item--dragging {
-    border-color: #1677ff;
-    box-shadow: 0 0 0 1px rgba(22, 119, 255, 0.12);
+    @include config.sortable-active;
   }
 
   .distinct-field-item__meta {
-    min-width: 0;
-    flex: 1;
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    overflow: hidden;
+    @include config.field-meta;
   }
 
   .distinct-field-item__name {
-    min-width: 120px;
-    flex: 1 1 120px;
-    color: #0f172a;
-    font-size: 13px;
-    font-weight: 500;
-    line-height: 20px;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
+    @include config.field-name;
   }
 
   .distinct-field-item__code,
   .distinct-field-item__type {
-    flex: 0 1 96px;
-    min-width: 0;
-    color: #64748b;
-    font-size: 12px;
-    line-height: 18px;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
+    @include config.field-secondary;
   }
 
   .distinct-field-item__actions {
-    display: inline-flex;
-    align-items: center;
-    gap: 8px;
-    flex-shrink: 0;
+    @include config.action-group;
   }
 
   .distinct-action-icon {
-    width: 16px;
-    height: 16px;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    color: #64748b;
-    cursor: pointer;
-    border-radius: 2px;
-    transition: color 0.2s ease, background-color 0.2s ease;
+    @include config.icon-button-base;
   }
 
   .distinct-action-icon__svg {
-    width: 12px;
-    height: 12px;
-    font-size: 12px;
-    line-height: 1;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-  }
-
-  .distinct-action-icon:hover {
-    background: #f1f5f9;
-    color: #334155;
+    @include config.icon-svg;
   }
 
   .distinct-action-icon--drag {
-    cursor: grab;
-  }
-
-  .distinct-action-icon--drag:active {
-    cursor: grabbing;
+    @include config.drag-handle;
   }
 
   .distinct-action-icon--disabled {
-    color: #cbd5e1;
-    cursor: not-allowed;
-    pointer-events: none;
+    @include config.icon-button-disabled;
   }
 
   .distinct-action-icon--danger {
-    color: #ef4444;
-  }
-
-  .distinct-action-icon--danger:hover {
-    color: #dc2626;
-    background: #fee2e2;
+    @include config.icon-button-danger;
   }
 
   .distinct-config__empty {
-    height: 100%;
-    min-height: 80px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    color: #94a3b8;
-    font-size: 12px;
+    @include config.empty-state;
   }
 
   .distinct-selector {
-    height: 420px;
-    min-height: 0;
-    border: 1px solid #e2e8f0;
-    background: #fff;
+    @include config.selector-panel;
   }
 
   .distinct-selector__list {
-    height: 100%;
-    overflow: auto;
+    @include config.selector-list;
   }
 
   .distinct-selector__item {
-    display: flex;
-    align-items: flex-start;
-    gap: 8px;
-    padding: 8px 10px;
-    border-bottom: 1px solid #f1f5f9;
-    font-size: 12px;
+    @include config.selector-item;
   }
 
   .distinct-selector__item input[type="checkbox"] {
-    width: 20px;
-    flex: 0 0 20px;
-    margin: 2px 0 0;
+    @include config.selector-checkbox;
   }
 
   .distinct-selector__empty {
-    height: 100%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    color: #94a3b8;
-    font-size: 12px;
+    @include config.selector-empty;
   }
 
   .distinct-selector__name {
-    width: 140px;
-    min-width: 0;
-    color: #0f172a;
-    word-break: break-all;
+    @include config.selector-name;
   }
 
   .distinct-selector__code {
-    width: 140px;
-    min-width: 0;
-    color: #64748b;
-    word-break: break-all;
+    @include config.selector-secondary;
   }
 
   .distinct-selector__type {
-    width: 120px;
-    color: #64748b;
-    text-align: right;
+    @include config.selector-secondary(120px, right);
   }
 </style>
-
 

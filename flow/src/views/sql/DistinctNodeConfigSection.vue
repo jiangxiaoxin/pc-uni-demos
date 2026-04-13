@@ -1,52 +1,59 @@
 <template>
   <div class="distinct-config">
-    <div class="distinct-config__toolbar">
-      <span
-        class="distinct-config__link"
-        :class="{ 'distinct-config__link--disabled': loading }"
-        @click="!loading && handleOpenSelector()"
-      >
-        添加去重字段
-      </span>
+    <div class="distinct-config__header">
+      <span class="distinct-config__title">字段列表</span>
+      <div class="distinct-config__header-actions">
+        <span class="distinct-config__count">{{ localSelectedFields.length }}/{{ upstreamFields.length }}</span>
+        <span
+          class="distinct-config__link"
+          :class="{ 'distinct-config__link--disabled': loading }"
+          @click="!loading && handleOpenSelector()"
+        >
+          添加去重字段
+        </span>
+      </div>
     </div>
 
     <div class="distinct-config__list">
-      <div
-        v-for="(field, index) in localSelectedFields"
-        :key="field.key"
-        class="distinct-field-item"
+      <VueDraggable
+        v-if="localSelectedFields.length > 0"
+        v-model="draggableSelectedFields"
+        class="distinct-config__draggable"
+        item-key="key"
+        handle=".distinct-action-icon--drag"
+        ghost-class="distinct-field-item--ghost"
+        chosen-class="distinct-field-item--chosen"
+        drag-class="distinct-field-item--dragging"
+        :animation="160"
+        @end="handleSortEnd"
       >
-        <div class="distinct-field-item__meta">
-          <span class="distinct-field-item__name">{{ field.name }}</span>
-          <span class="distinct-field-item__code">{{ field.key }}</span>
-          <span class="distinct-field-item__type">{{ field.type }}</span>
+        <div
+          v-for="(field, index) in localSelectedFields"
+          :key="field.key"
+          class="distinct-field-item"
+        >
+          <div class="distinct-field-item__meta">
+            <span class="distinct-field-item__name">{{ field.name }}</span>
+            <span class="distinct-field-item__code">{{ field.key }}</span>
+            <span class="distinct-field-item__type">{{ field.type }}</span>
+          </div>
+          <div class="distinct-field-item__actions">
+            <span
+              title="删除"
+              class="distinct-action-icon distinct-action-icon--danger"
+              @click="removeField(index)"
+            >
+              <DeleteOutlined class="distinct-action-icon__svg" />
+            </span>
+            <span
+              title="拖动排序"
+              class="distinct-action-icon distinct-action-icon--drag"
+            >
+              <DragOutlined class="distinct-action-icon__svg" />
+            </span>
+          </div>
         </div>
-        <div class="distinct-field-item__actions">
-          <span
-            class="distinct-action-icon"
-            :class="{ 'distinct-action-icon--disabled': index === 0 }"
-            @click="index !== 0 && moveField(index, -1)"
-            title="上移"
-          >
-            <UpOutlined class="distinct-action-icon__svg" />
-          </span>
-          <span
-            title="下移"
-            class="distinct-action-icon"
-            :class="{ 'distinct-action-icon--disabled': index === localSelectedFields.length - 1 }"
-            @click="index !== localSelectedFields.length - 1 && moveField(index, 1)"
-          >
-            <DownOutlined class="distinct-action-icon__svg" />
-          </span>
-          <span
-            title="删除"
-            class="distinct-action-icon distinct-action-icon--danger"
-            @click="removeField(index)"
-          >
-            <DeleteOutlined class="distinct-action-icon__svg" />
-          </span>
-        </div>
-      </div>
+      </VueDraggable>
 
       <div v-if="localSelectedFields.length === 0" class="distinct-config__empty">
         暂未添加去重字段
@@ -88,8 +95,9 @@
 </template>
 
 <script setup lang="ts">
-  import { inject, onMounted, ref, watch } from "vue";
-  import { DeleteOutlined, DownOutlined, UpOutlined } from "@ant-design/icons-vue";
+  import { computed, inject, onMounted, ref, watch } from "vue";
+  import { DeleteOutlined, DragOutlined } from "@ant-design/icons-vue";
+  import { VueDraggable } from "vue-draggable-plus";
   import { sqlNodeContextKey, type GetNodeContext } from "./nodeContext";
   import { fetchDistinctNodeUpstreamFields, type InputField } from "./inputNodeMock";
 
@@ -113,9 +121,17 @@
   const upstreamFields = ref<InputField[]>([]);
   const localSelectedFields = ref<InputField[]>([]);
   const draftSelectedKeys = ref<string[]>([]);
+  const draggableSelectedFields = computed({
+    get: () => localSelectedFields.value,
+    set: (value: InputField[]) => {
+      localSelectedFields.value = value;
+    },
+  });
   const syncLocalSelected = () => {
-    const keySet = new Set(props.selectedFields);
-    localSelectedFields.value = upstreamFields.value.filter((field) => keySet.has(field.key));
+    const upstreamFieldMap = new Map(upstreamFields.value.map((field) => [field.key, field]));
+    localSelectedFields.value = props.selectedFields
+      .map((key) => upstreamFieldMap.get(key))
+      .filter((field): field is InputField => Boolean(field));
   };
 
   const loadUpstreamFields = async () => {
@@ -152,10 +168,24 @@
     selectorOpen.value = true;
   };
 
+  const buildOrderedKeys = (draftKeys: string[], currentKeys: string[]) => {
+    const selectedKeySet = new Set(draftKeys);
+    const orderedCurrentKeys = currentKeys.filter((key) => selectedKeySet.has(key));
+    const appendedKeys = upstreamFields.value
+      .map((field) => field.key)
+      .filter((key) => selectedKeySet.has(key) && !orderedCurrentKeys.includes(key));
+    return [...orderedCurrentKeys, ...appendedKeys];
+  };
+
   const confirmSelectFields = () => {
-    const selected = upstreamFields.value.filter((field) =>
-      draftSelectedKeys.value.includes(field.key),
+    const orderedKeys = buildOrderedKeys(
+      draftSelectedKeys.value,
+      localSelectedFields.value.map((field) => field.key),
     );
+    const upstreamFieldMap = new Map(upstreamFields.value.map((field) => [field.key, field]));
+    const selected = orderedKeys
+      .map((key) => upstreamFieldMap.get(key))
+      .filter((field): field is InputField => Boolean(field));
     localSelectedFields.value = selected;
     emit(
       "change-fields",
@@ -174,17 +204,10 @@
     );
   };
 
-  const moveField = (index: number, offset: -1 | 1) => {
-    const targetIndex = index + offset;
-    if (targetIndex < 0 || targetIndex >= localSelectedFields.value.length) return;
-    const next = [...localSelectedFields.value];
-    const current = next[index];
-    next[index] = next[targetIndex];
-    next[targetIndex] = current;
-    localSelectedFields.value = next;
+  const handleSortEnd = () => {
     emit(
       "change-fields",
-      next.map((field) => field.key),
+      localSelectedFields.value.map((field) => field.key),
     );
   };
 </script>
@@ -195,15 +218,33 @@
     min-height: 0;
     display: flex;
     flex-direction: column;
-    gap: 4px;
+    gap: 0;
     padding: 4px 6px;
+    max-width: 380px;
   }
 
-  .distinct-config__toolbar {
-    min-height: 28px;
+  .distinct-config__header {
+    min-height: 24px;
+    padding: 0 6px 4px;
     display: flex;
     align-items: center;
-    justify-content: flex-start;
+    justify-content: space-between;
+    gap: 8px;
+    color: #334155;
+    font-size: 12px;
+    font-weight: 600;
+  }
+
+  .distinct-config__header-actions {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    flex-shrink: 0;
+  }
+
+  .distinct-config__count {
+    color: #64748b;
+    font-weight: 500;
   }
 
   .distinct-config__link {
@@ -225,9 +266,13 @@
     flex: 1;
     min-height: 0;
     overflow: auto;
-    border: 1px solid #e2e8f0;
-    background: #fff;
-    width: 100%;
+    padding: 0 6px 4px;
+  }
+
+  .distinct-config__draggable {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
   }
 
   .distinct-field-item {
@@ -236,29 +281,54 @@
     justify-content: space-between;
     gap: 8px;
     padding: 6px;
-    border-bottom: 1px solid #f1f5f9;
+    background: #fff;
+    border: 1px solid #e2e8f0;
+    cursor: default;
   }
 
-  .distinct-field-item:last-child {
-    border-bottom: 0;
+  .distinct-field-item--ghost {
+    opacity: 0.55;
+    background: #f8fbff;
+    border-color: #91caff;
+  }
+
+  .distinct-field-item--chosen,
+  .distinct-field-item--dragging {
+    border-color: #1677ff;
+    box-shadow: 0 0 0 1px rgba(22, 119, 255, 0.12);
   }
 
   .distinct-field-item__meta {
     min-width: 0;
-    display: inline-flex;
+    flex: 1;
+    display: flex;
     align-items: center;
-    gap: 16px;
-    font-size: 12px;
+    gap: 8px;
+    overflow: hidden;
   }
 
   .distinct-field-item__name {
+    min-width: 120px;
+    flex: 1 1 120px;
     color: #0f172a;
+    font-size: 13px;
     font-weight: 500;
+    line-height: 20px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
   }
 
   .distinct-field-item__code,
   .distinct-field-item__type {
+    flex: 0 1 96px;
+    min-width: 0;
     color: #64748b;
+    font-size: 12px;
+    line-height: 18px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
   }
 
   .distinct-field-item__actions {
@@ -295,6 +365,14 @@
     color: #334155;
   }
 
+  .distinct-action-icon--drag {
+    cursor: grab;
+  }
+
+  .distinct-action-icon--drag:active {
+    cursor: grabbing;
+  }
+
   .distinct-action-icon--disabled {
     color: #cbd5e1;
     cursor: not-allowed;
@@ -312,7 +390,7 @@
 
   .distinct-config__empty {
     height: 100%;
-    min-height: 120px;
+    min-height: 80px;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -376,6 +454,5 @@
     text-align: right;
   }
 </style>
-
 
 

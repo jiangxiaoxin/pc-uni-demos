@@ -32,6 +32,15 @@ export interface FieldSettingItem extends InputField {
   selected: boolean;
 }
 
+export interface GroupAggregateFieldPersistedItem {
+  key: string;
+  method: GroupAggregateMethod;
+}
+
+export interface GroupAggregateFieldItem extends InputField {
+  method: GroupAggregateMethod;
+}
+
 export interface InputPreviewResult {
   columns: InputField[];
   rows: Record<string, unknown>[];
@@ -46,6 +55,13 @@ export interface DistinctPreviewPayload {
 }
 
 export interface FieldNodePreviewPayload {
+  nodeId: string;
+  nodeType?: string;
+  upstreamNodes: NodeConfigSnapshot[];
+  currentNode?: NodeConfigSnapshot | null;
+}
+
+export interface GroupNodePreviewPayload {
   nodeId: string;
   nodeType?: string;
   upstreamNodes: NodeConfigSnapshot[];
@@ -70,6 +86,24 @@ export interface NodeRequestPayload {
   nodeType?: string;
   upstreamNodes: NodeConfigSnapshot[];
   currentNode?: NodeConfigSnapshot | null;
+}
+
+export type GroupAggregateMethod =
+  | "sum"
+  | "avg"
+  | "max"
+  | "min"
+  | "count"
+  | "median"
+  | "variance"
+  | "stddev"
+  | "distinctCount"
+  | "earliest"
+  | "latest";
+
+export interface GroupAggregateMethodOption {
+  label: string;
+  value: GroupAggregateMethod;
 }
 
 // ============================================================
@@ -783,6 +817,82 @@ const parseDistinctFieldKeys = (value: unknown): string[] => {
   return value.filter((field): field is string => typeof field === "string");
 };
 
+const parseGroupAggregateFields = (value: unknown): GroupAggregateFieldPersistedItem[] => {
+  if (!Array.isArray(value)) return [];
+  return value.filter((field): field is GroupAggregateFieldPersistedItem => {
+    return (
+      isRecord(field) &&
+      typeof field.key === "string" &&
+      typeof field.method === "string"
+    );
+  });
+};
+
+const NUMERIC_METHOD_OPTIONS: GroupAggregateMethodOption[] = [
+  { label: "求和", value: "sum" },
+  { label: "平均值", value: "avg" },
+  { label: "最大值", value: "max" },
+  { label: "最小值", value: "min" },
+  { label: "计数", value: "count" },
+  { label: "中位数", value: "median" },
+  { label: "方差", value: "variance" },
+  { label: "标准差", value: "stddev" },
+  { label: "去重计数", value: "distinctCount" },
+];
+
+const STRING_METHOD_OPTIONS: GroupAggregateMethodOption[] = [
+  { label: "计数", value: "count" },
+  { label: "去重计数", value: "distinctCount" },
+];
+
+const DATETIME_METHOD_OPTIONS: GroupAggregateMethodOption[] = [
+  { label: "计数", value: "count" },
+  { label: "去重计数", value: "distinctCount" },
+  { label: "最早", value: "earliest" },
+  { label: "最晚", value: "latest" },
+];
+
+const DEFAULT_METHOD_OPTIONS: GroupAggregateMethodOption[] = [
+  { label: "计数", value: "count" },
+  { label: "去重计数", value: "distinctCount" },
+];
+
+const isNumericFieldType = (type: string) => {
+  return /int|decimal|numeric|float|double|real|number/i.test(type);
+};
+
+const isStringFieldType = (type: string) => {
+  return /char|text|varchar|string|enum|set/i.test(type);
+};
+
+const isDateTimeFieldType = (type: string) => {
+  return /date|time|timestamp|year/i.test(type);
+};
+
+export const getGroupAggregateMethodOptions = (type: string): GroupAggregateMethodOption[] => {
+  if (isNumericFieldType(type)) return NUMERIC_METHOD_OPTIONS;
+  if (isStringFieldType(type)) return STRING_METHOD_OPTIONS;
+  if (isDateTimeFieldType(type)) return DATETIME_METHOD_OPTIONS;
+  return DEFAULT_METHOD_OPTIONS;
+};
+
+const getDefaultGroupAggregateMethod = (type: string): GroupAggregateMethod => {
+  return getGroupAggregateMethodOptions(type)[0]?.value || "count";
+};
+
+const getGroupAggregateMethodLabel = (method: GroupAggregateMethod) => {
+  return (
+    [...NUMERIC_METHOD_OPTIONS, ...STRING_METHOD_OPTIONS, ...DATETIME_METHOD_OPTIONS]
+      .find((item) => item.value === method)?.label || "计数"
+  );
+};
+
+const normalizeGroupAggregateMethod = (type: string, method?: string): GroupAggregateMethod => {
+  const options = getGroupAggregateMethodOptions(type);
+  const matched = options.find((item) => item.value === method);
+  return matched?.value || getDefaultGroupAggregateMethod(type);
+};
+
 const applyDistinctRows = (rows: Record<string, unknown>[], fieldKeys: string[]) => {
   if (fieldKeys.length === 0) return rows;
   const keys = fieldKeys;
@@ -830,6 +940,171 @@ const applyFieldSettings = (
   };
 };
 
+const buildGroupAggregateColumn = (
+  field: InputField,
+  method: GroupAggregateMethod,
+): InputField => {
+  const label = getGroupAggregateMethodLabel(method);
+  const nextType = (() => {
+    if (method === "earliest" || method === "latest") return field.type;
+    if (method === "count" || method === "distinctCount") return "bigint";
+    return isNumericFieldType(field.type) ? field.type : "decimal";
+  })();
+
+  return {
+    key: `${field.key}_${method}`,
+    name: `${field.name}(${label})`,
+    type: nextType,
+  };
+};
+
+const parseNumberList = (rows: Record<string, unknown>[], key: string) => {
+  return rows
+    .map((row) => Number(row[key]))
+    .filter((value) => Number.isFinite(value));
+};
+
+const parseDistinctValueCount = (rows: Record<string, unknown>[], key: string) => {
+  return new Set(rows.map((row) => String(row[key] ?? "__NULL__"))).size;
+};
+
+const parseDateTimeValues = (rows: Record<string, unknown>[], key: string) => {
+  return rows
+    .map((row) => ({
+      raw: row[key],
+      time: new Date(String(row[key] ?? "")).getTime(),
+    }))
+    .filter((item) => Number.isFinite(item.time));
+};
+
+const calcVariance = (values: number[]) => {
+  if (values.length === 0) return null;
+  const avg = values.reduce((sum, value) => sum + value, 0) / values.length;
+  return values.reduce((sum, value) => sum + (value - avg) ** 2, 0) / values.length;
+};
+
+const calcMedian = (values: number[]) => {
+  if (values.length === 0) return null;
+  const sorted = [...values].sort((left, right) => left - right);
+  const middle = Math.floor(sorted.length / 2);
+  if (sorted.length % 2 === 0) {
+    return (sorted[middle - 1] + sorted[middle]) / 2;
+  }
+  return sorted[middle];
+};
+
+const calcAggregateValue = (
+  rows: Record<string, unknown>[],
+  field: InputField,
+  method: GroupAggregateMethod,
+) => {
+  if (method === "count") {
+    return rows.length;
+  }
+
+  if (method === "distinctCount") {
+    return parseDistinctValueCount(rows, field.key);
+  }
+
+  if (method === "earliest" || method === "latest") {
+    const values = parseDateTimeValues(rows, field.key);
+    if (values.length === 0) return null;
+    const sorted = values.sort((left, right) => left.time - right.time);
+    return method === "earliest" ? sorted[0].raw : sorted[sorted.length - 1].raw;
+  }
+
+  const numbers = parseNumberList(rows, field.key);
+  if (numbers.length === 0) return null;
+
+  switch (method) {
+    case "sum":
+      return numbers.reduce((sum, value) => sum + value, 0);
+    case "avg":
+      return numbers.reduce((sum, value) => sum + value, 0) / numbers.length;
+    case "max":
+      return Math.max(...numbers);
+    case "min":
+      return Math.min(...numbers);
+    case "median":
+      return calcMedian(numbers);
+    case "variance":
+      return calcVariance(numbers);
+    case "stddev": {
+      const variance = calcVariance(numbers);
+      return variance === null ? null : Math.sqrt(variance);
+    }
+    default:
+      return null;
+  }
+};
+
+const applyGroupAggregation = (
+  columns: InputField[],
+  rows: Record<string, unknown>[],
+  groupFieldKeys: string[],
+  aggregateFields: GroupAggregateFieldPersistedItem[],
+) => {
+  if (groupFieldKeys.length === 0 && aggregateFields.length === 0) {
+    return { columns, rows };
+  }
+
+  const columnMap = new Map(columns.map((field) => [field.key, field]));
+  const groupFields = groupFieldKeys
+    .map((key) => columnMap.get(key))
+    .filter((field): field is InputField => Boolean(field));
+  const aggregateConfigs = aggregateFields
+    .map((item) => {
+      const field = columnMap.get(item.key);
+      if (!field) return null;
+      const method = normalizeGroupAggregateMethod(field.type, item.method);
+      return {
+        field,
+        method,
+        column: buildGroupAggregateColumn(field, method),
+      };
+    })
+    .filter(
+      (
+        item,
+      ): item is {
+        field: InputField;
+        method: GroupAggregateMethod;
+        column: InputField;
+      } => Boolean(item),
+    );
+
+  const groupBuckets = new Map<string, Record<string, unknown>[]>();
+  rows.forEach((row) => {
+    const bucketKey =
+      groupFields.length === 0
+        ? "__all__"
+        : groupFields.map((field) => String(row[field.key] ?? "__NULL__")).join("|");
+    const bucketRows = groupBuckets.get(bucketKey);
+    if (bucketRows) {
+      bucketRows.push(row);
+      return;
+    }
+    groupBuckets.set(bucketKey, [row]);
+  });
+
+  const nextRows = [...groupBuckets.values()].map((bucketRows) => {
+    const firstRow = bucketRows[0] || {};
+    const nextRow: Record<string, unknown> = {};
+    groupFields.forEach((field) => {
+      nextRow[field.key] = firstRow[field.key];
+    });
+    aggregateConfigs.forEach((config) => {
+      nextRow[config.column.key] = calcAggregateValue(bucketRows, config.field, config.method);
+    });
+    return nextRow;
+  });
+
+  return {
+    columns: [...groupFields, ...aggregateConfigs.map((config) => config.column)],
+    rows: nextRows,
+  };
+};
+
 const buildChainPreviewResult = (chainNodes: NodeConfigSnapshot[] = []) => {
   let columns: InputField[] = [];
   let rows: Record<string, unknown>[] = [];
@@ -858,6 +1133,15 @@ const buildChainPreviewResult = (chainNodes: NodeConfigSnapshot[] = []) => {
     if (node.type === "distinct-node") {
       const distinctFields = parseDistinctFieldKeys(node.properties?.distinctFields);
       rows = applyDistinctRows(rows, distinctFields);
+      return;
+    }
+
+    if (node.type === "group-node") {
+      const groupFields = parseDistinctFieldKeys(node.properties?.groupFields);
+      const aggregateFields = parseGroupAggregateFields(node.properties?.aggregateFields);
+      const nextResult = applyGroupAggregation(columns, rows, groupFields, aggregateFields);
+      columns = nextResult.columns;
+      rows = nextResult.rows;
     }
   });
 
@@ -914,6 +1198,19 @@ export const fetchFieldNodeUpstreamFields = async (
   return [...result.columns];
 };
 
+// MOCK_API: fetch upstream fields for group node (simulate backend request)
+export const fetchGroupNodeUpstreamFields = async (
+  payload: NodeRequestPayload,
+): Promise<InputField[]> => {
+  console.log("[MOCK_API] fetchGroupNodeUpstreamFields");
+  await new Promise((resolve) => {
+    window.setTimeout(resolve, 250);
+  });
+
+  const result = buildChainPreviewResult(payload.upstreamNodes);
+  return [...result.columns];
+};
+
 // MOCK_API: fetch distinct node preview data (simulate backend request)
 export const fetchDistinctPreviewByPayload = async (
   payload: DistinctPreviewPayload,
@@ -933,6 +1230,21 @@ export const fetchFieldNodePreviewByPayload = async (
   payload: FieldNodePreviewPayload,
 ): Promise<InputPreviewResult> => {
   console.log("[MOCK_API] fetchFieldNodePreviewByPayload");
+  await new Promise((resolve) => {
+    window.setTimeout(resolve, 250);
+  });
+
+  return buildChainPreviewResult([
+    ...payload.upstreamNodes,
+    ...(payload.currentNode ? [payload.currentNode] : []),
+  ]);
+};
+
+// MOCK_API: fetch group node preview data (simulate backend request)
+export const fetchGroupNodePreviewByPayload = async (
+  payload: GroupNodePreviewPayload,
+): Promise<InputPreviewResult> => {
+  console.log("[MOCK_API] fetchGroupNodePreviewByPayload");
   await new Promise((resolve) => {
     window.setTimeout(resolve, 250);
   });

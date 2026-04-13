@@ -62,6 +62,16 @@
                 @change-fields="handleDistinctFieldsChange"
               />
             </template>
+            <template v-else-if="isGroupNode">
+              <GroupNodeConfigSection
+                :key="`${nodeData.id}-config-group`"
+                :node-id="nodeData.id"
+                :group-fields="draftGroupFields"
+                :aggregate-fields="draftAggregateFields"
+                @change-group-fields="handleGroupFieldsChange"
+                @change-aggregate-fields="handleGroupAggregateFieldsChange"
+              />
+            </template>
 
             <template v-else>
               <div class="property-row">
@@ -101,6 +111,13 @@
                 :fetcher="fetchDistinctPreviewByPayload"
               />
             </template>
+            <template v-else-if="isGroupNode && nodeData">
+              <NodePreviewTableSection
+                :key="`${nodeData.id}-preview-group`"
+                :payload="buildGroupNodePreviewPayload"
+                :fetcher="fetchGroupNodePreviewByPayload"
+              />
+            </template>
             <template v-else-if="isOutputNode && nodeData">
               <NodePreviewTableSection
                 :key="`${nodeData.id}-preview-output`"
@@ -138,17 +155,21 @@
   import FieldNodeConfigSection from "./FieldNodeConfigSection.vue";
   import InputNodeConfigSection from "./InputNodeConfigSection.vue";
   import DistinctNodeConfigSection from "./DistinctNodeConfigSection.vue";
+  import GroupNodeConfigSection from "./GroupNodeConfigSection.vue";
   import NodePreviewTableSection from "./NodePreviewTableSection.vue";
   import { sqlNodeContextKey, type GetNodeContext } from "./nodeContext";
   import {
     fetchDistinctPreviewByPayload,
     fetchFieldNodePreviewByPayload,
+    fetchGroupNodePreviewByPayload,
     fetchInputPreviewByBinding,
     fetchOutputPreviewByPayload,
     type BoundInputSource,
     type DistinctPreviewPayload,
     type FieldNodePreviewPayload,
     type FieldSettingPersistedItem,
+    type GroupAggregateFieldPersistedItem,
+    type GroupNodePreviewPayload,
     type InputBindingPersisted,
     type OutputPreviewPayload,
     resolveInputBinding,
@@ -184,6 +205,8 @@
   const editableRemark = ref("");
   const draftDistinctFields = ref<string[]>([]);
   const draftFieldSettings = ref<FieldSettingPersistedItem[]>([]);
+  const draftGroupFields = ref<string[]>([]);
+  const draftAggregateFields = ref<GroupAggregateFieldPersistedItem[]>([]);
   const activeTab = ref<"config" | "preview" | "remark">("config");
   const tabs = [
     { key: "config" as const, label: "节点配置" },
@@ -229,6 +252,7 @@
   const isInputNode = computed(() => props.nodeData?.type === "in-node");
   const isFieldNode = computed(() => props.nodeData?.type === "field-node");
   const isDistinctNode = computed(() => props.nodeData?.type === "distinct-node");
+  const isGroupNode = computed(() => props.nodeData?.type === "group-node");
   const isOutputNode = computed(() => props.nodeData?.type === "out-node");
 
   const requiredMinIncoming = computed(() => {
@@ -276,6 +300,25 @@
     return Object.prototype.hasOwnProperty.call(props.nodeData?.properties || {}, "fieldSettings");
   });
 
+  const groupFields = computed<string[]>(() => {
+    const fields = props.nodeData?.properties?.groupFields;
+    if (!Array.isArray(fields)) return [];
+    return fields.filter((field): field is string => typeof field === "string");
+  });
+
+  const aggregateFields = computed<GroupAggregateFieldPersistedItem[]>(() => {
+    const fields = props.nodeData?.properties?.aggregateFields;
+    if (!Array.isArray(fields)) return [];
+    return fields.filter((field): field is GroupAggregateFieldPersistedItem => {
+      return (
+        typeof field === "object" &&
+        field !== null &&
+        typeof (field as GroupAggregateFieldPersistedItem).key === "string" &&
+        typeof (field as GroupAggregateFieldPersistedItem).method === "string"
+      );
+    });
+  });
+
   const resolveCurrentNodeContext = () => {
     if (!props.nodeData || !getNodeContext) return null;
     return getNodeContext(props.nodeData.id);
@@ -320,6 +363,25 @@
     };
   };
 
+  const buildGroupNodePreviewPayload = (): GroupNodePreviewPayload => {
+    const nodeContext = resolveCurrentNodeContext();
+    return {
+      nodeId: props.nodeData?.id || "",
+      nodeType: props.nodeData?.type || "",
+      upstreamNodes: nodeContext?.upstreamNodes || [],
+      currentNode: nodeContext?.currentNode
+        ? {
+            ...nodeContext.currentNode,
+            properties: {
+              ...(nodeContext.currentNode.properties || {}),
+              groupFields: [...draftGroupFields.value],
+              aggregateFields: draftAggregateFields.value.map((field) => ({ ...field })),
+            },
+          }
+        : null,
+    };
+  };
+
   // Rebuild local drafts whenever the panel opens or the selected node changes.
   // Child editors work against these drafts first, then flush them back in one shot.
   watch(
@@ -329,6 +391,8 @@
       editableRemark.value = String(props.nodeData?.properties?.remark || "");
       draftDistinctFields.value = [...distinctFields.value];
       draftFieldSettings.value = fieldSettings.value.map((field) => ({ ...field }));
+      draftGroupFields.value = [...groupFields.value];
+      draftAggregateFields.value = aggregateFields.value.map((field) => ({ ...field }));
       const defaultTab = availableTabs.value[0]?.key || "remark";
       activeTab.value = defaultTab;
     },
@@ -363,6 +427,14 @@
     draftFieldSettings.value = fields.map((field) => ({ ...field }));
   };
 
+  const handleGroupFieldsChange = (fields: string[]) => {
+    draftGroupFields.value = [...fields];
+  };
+
+  const handleGroupAggregateFieldsChange = (fields: GroupAggregateFieldPersistedItem[]) => {
+    draftAggregateFields.value = fields.map((field) => ({ ...field }));
+  };
+
   /**
    * Flush local property drafts back to the parent editor state.
    *
@@ -392,6 +464,18 @@
     const nextFieldSettings = JSON.stringify(draftFieldSettings.value);
     if (nextFieldSettings !== currentFieldSettings) {
       nextProperties.fieldSettings = draftFieldSettings.value.map((field) => ({ ...field }));
+    }
+
+    const currentGroupFields = JSON.stringify(groupFields.value);
+    const nextGroupFields = JSON.stringify(draftGroupFields.value);
+    if (nextGroupFields !== currentGroupFields) {
+      nextProperties.groupFields = [...draftGroupFields.value];
+    }
+
+    const currentAggregateFields = JSON.stringify(aggregateFields.value);
+    const nextAggregateFields = JSON.stringify(draftAggregateFields.value);
+    if (nextAggregateFields !== currentAggregateFields) {
+      nextProperties.aggregateFields = draftAggregateFields.value.map((field) => ({ ...field }));
     }
 
     if (Object.keys(nextProperties).length === 0) return;

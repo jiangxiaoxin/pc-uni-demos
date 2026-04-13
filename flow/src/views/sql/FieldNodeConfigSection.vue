@@ -48,9 +48,8 @@
               <a-input
                 v-if="editingFieldKey === field.key"
                 ref="editingInputRef"
-                :value="editingName"
+                v-model:value="editingName"
                 class="field-config-item__name field-config-item__name--editing"
-                @input="handleEditingInput"
                 @blur="confirmRename"
                 @keydown="handleEditingKeydown"
               />
@@ -60,6 +59,7 @@
               <span
                 class="field-config-item__action"
                 :title="editingFieldKey === field.key ? '确认修改名称' : '修改名称'"
+                @mousedown.prevent
                 @click="editingFieldKey === field.key ? confirmRename() : startRename(field)"
               >
                 <CheckOutlined
@@ -72,6 +72,7 @@
                 v-if="editingFieldKey === field.key"
                 class="field-config-item__action"
                 title="取消修改名称"
+                @mousedown.prevent
                 @click="cancelRename"
               >
                 <CloseOutlined class="field-config-item__action-icon" />
@@ -319,10 +320,6 @@
     inputElement?.focus();
   };
 
-  const handleEditingInput = (event: Event) => {
-    editingName.value = (event.target as HTMLInputElement).value;
-  };
-
   const handleEditingKeydown = (event: KeyboardEvent) => {
     if (event.key === "Enter") {
       event.preventDefault();
@@ -337,14 +334,23 @@
   };
 
   const confirmRename = () => {
+    // debugger
     if (!editingFieldKey.value) return;
     const nextName = editingName.value.trim();
+    console.log("🚀 ~ FieldNodeConfigSection.vue:342 ~ confirmRename ~ nextName:", nextName)
+
     const targetField = localFields.value.find((field) => field.key === editingFieldKey.value);
     const fallbackName = targetField?.name || "";
+    console.log("🚀 ~ FieldNodeConfigSection.vue:346 ~ confirmRename ~ fallbackName:", fallbackName)
+
     const resolvedName = nextName || fallbackName;
+    console.log("🚀 ~ FieldNodeConfigSection.vue:349 ~ confirmRename ~ resolvedName:", resolvedName)
+
     const nextFields = localFields.value.map((field) =>
       field.key === editingFieldKey.value ? { ...field, name: resolvedName } : field,
     );
+    console.log("🚀 ~ FieldNodeConfigSection.vue:348 ~ confirmRename ~ nextFields:", nextFields)
+
     editingFieldKey.value = "";
     editingName.value = "";
     updateLocalFields(nextFields);

@@ -209,8 +209,8 @@
       aggregateFields?: GroupAggregateFieldPersistedItem[];
     }>(),
     {
-      groupFields: () => [],
-      aggregateFields: () => [],
+      groupFields: () => [], // 分组字段
+      aggregateFields: () => [], // 汇总字段
     },
   );
 
@@ -321,6 +321,8 @@
   watch(
     () => [props.groupFields, props.aggregateFields],
     () => {
+      console.log('sync');
+      
       syncLocalState();
     },
     { deep: true },
@@ -392,16 +394,12 @@
     emitAggregateFields(localAggregateFields.value);
   };
 
-  const updateAggregateMethod = (fieldKey: string, value: string) => {
-    const nextFields = localAggregateFields.value.map((field) => {
-      if (field.key !== fieldKey) return field;
-      return {
-        ...field,
-        method: resolveMethod(field.type, value),
-      };
-    });
-    localAggregateFields.value = nextFields;
-    emitAggregateFields(nextFields);
+  const updateAggregateMethod = (fieldKey: string, value: GroupAggregateMethod) => {
+    const targetField = localAggregateFields.value.find((field) => field.key === fieldKey);
+    if (!targetField) return;
+    // targetField.method = resolveMethod(targetField.type, value);
+    targetField.method = value;
+    emitAggregateFields(localAggregateFields.value);
   };
 </script>
 

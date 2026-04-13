@@ -77,7 +77,7 @@
                 <CloseOutlined class="field-config-item__action-icon" />
               </span>
               <span class="field-config-item__drag" title="拖动排序">
-                <MenuOutlined class="field-config-item__drag-icon" />
+                <DragOutlined class="field-config-item__drag-icon" />
               </span>
             </div>
           </div>
@@ -104,7 +104,7 @@
 
 <script setup lang="ts">
   import { computed, inject, nextTick, onMounted, ref, useTemplateRef, watch } from "vue";
-  import { CheckOutlined, CloseOutlined, EditOutlined, MenuOutlined } from "@ant-design/icons-vue";
+  import { CheckOutlined, CloseOutlined, EditOutlined, DragOutlined } from "@ant-design/icons-vue";
   import { VueDraggable } from "vue-draggable-plus";
   import { sqlNodeContextKey, type GetNodeContext } from "./nodeContext";
   import {
@@ -178,6 +178,12 @@
     );
   };
 
+  // 将“上游接口返回的最新字段列表”和“当前节点已保存的字段设置”合并成运行时可编辑的完整列表。
+  // 合并规则：
+  // 1. 未配置过时，以上游字段为准，默认全部选中。
+  // 2. 配置过时，优先保留已保存字段的顺序和改名结果。
+  // 3. 已保存但新上游中已不存在的字段会被丢弃。
+  // 4. 新上游中新增、但历史上未保存过的字段会追加到末尾，并默认未选中。
   const buildMergedFields = (upstream: InputField[]) => {
     const existingMap = new Map(props.fieldSettings.map((field) => [field.key, field]));
     const upstreamMap = new Map(upstream.map((field) => [field.key, field]));
@@ -221,10 +227,11 @@
     const currentToken = ++loadToken;
     loading.value = true;
     const fields = await fetchFieldNodeUpstreamFields(nodeContext);
-    if (currentToken !== loadToken) return;
+    if (currentToken !== loadToken) return; // 防止旧请求结果覆盖新请求结果
     upstreamFields.value = fields;
     const mergedFields = buildMergedFields(fields);
     localFields.value = mergedFields;
+    // localFields.value = [] // debug empty state
     loading.value = false;
 
     if (!persistedFieldSettingsEqual(toPersistedFieldSettings(mergedFields), props.fieldSettings)) {

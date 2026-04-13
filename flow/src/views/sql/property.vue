@@ -110,6 +110,7 @@
             </template>
 
             <template v-else>
+              <!-- TODO 这个在所有节点类型都处理完后，我要删除它 -->
               <div class="property-preview-card property-preview-card--grow">
                 <pre class="property-preview-content">{{ previewContent }}</pre>
               </div>
@@ -120,7 +121,6 @@
             <div class="property-remark">
               <a-textarea
                 v-model:value="editableRemark"
-                class="property-remark-input"
                 placeholder="请输入节点备注"
               />
             </div>
@@ -551,16 +551,6 @@
     overflow-y: auto;
   }
 
-  .property-remark-input {
-    width: 100%;
-    height: 100%;
-  }
-
-  .property-remark-input :deep(.ant-input) {
-    height: 100%;
-    resize: none;
-  }
-
   .property-block-tip {
     flex: 1;
     min-height: 0;
@@ -569,6 +559,7 @@
     flex-direction: column;
     align-items: center;
     justify-content: center;
+    // background-color: red;
   }
 
   .property-block-tip__title {

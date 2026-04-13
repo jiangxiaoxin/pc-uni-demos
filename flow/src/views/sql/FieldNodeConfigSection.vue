@@ -293,6 +293,8 @@
   watch(
     () => props.fieldSettings,
     () => {
+      console.log('111111111');
+      
       if (
         pendingLocalChange.value &&
         persistedFieldSettingsEqual(props.fieldSettings, toPersistedFieldSettings(localFields.value))
@@ -337,19 +339,19 @@
     // debugger
     if (!editingFieldKey.value) return;
     const nextName = editingName.value.trim();
-    console.log("🚀 ~ FieldNodeConfigSection.vue:342 ~ confirmRename ~ nextName:", nextName)
+    // console.log("🚀 ~ FieldNodeConfigSection.vue:342 ~ confirmRename ~ nextName:", nextName)
 
     const targetField = localFields.value.find((field) => field.key === editingFieldKey.value);
     const fallbackName = targetField?.name || "";
-    console.log("🚀 ~ FieldNodeConfigSection.vue:346 ~ confirmRename ~ fallbackName:", fallbackName)
+    // console.log("🚀 ~ FieldNodeConfigSection.vue:346 ~ confirmRename ~ fallbackName:", fallbackName)
 
     const resolvedName = nextName || fallbackName;
-    console.log("🚀 ~ FieldNodeConfigSection.vue:349 ~ confirmRename ~ resolvedName:", resolvedName)
+    // console.log("🚀 ~ FieldNodeConfigSection.vue:349 ~ confirmRename ~ resolvedName:", resolvedName)
 
     const nextFields = localFields.value.map((field) =>
       field.key === editingFieldKey.value ? { ...field, name: resolvedName } : field,
     );
-    console.log("🚀 ~ FieldNodeConfigSection.vue:348 ~ confirmRename ~ nextFields:", nextFields)
+    // console.log("🚀 ~ FieldNodeConfigSection.vue:348 ~ confirmRename ~ nextFields:", nextFields)
 
     editingFieldKey.value = "";
     editingName.value = "";

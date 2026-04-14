@@ -72,6 +72,16 @@
                 @change-aggregate-fields="handleGroupAggregateFieldsChange"
               />
             </template>
+            <template v-else-if="isWhereNode">
+              <WhereNodeConfigSection
+                :key="`${nodeData.id}-config-where`"
+                :node-id="nodeData.id"
+                :where-logic="draftWhereLogic"
+                :where-conditions="draftWhereConditions"
+                @change-logic="handleWhereLogicChange"
+                @change-conditions="handleWhereConditionsChange"
+              />
+            </template>
 
             <template v-else>
               <div class="property-row">
@@ -118,6 +128,13 @@
                 :fetcher="fetchGroupNodePreviewByPayload"
               />
             </template>
+            <template v-else-if="isWhereNode && nodeData">
+              <NodePreviewTableSection
+                :key="`${nodeData.id}-preview-where`"
+                :payload="buildWhereNodePreviewPayload"
+                :fetcher="fetchWherePreviewByPayload"
+              />
+            </template>
             <template v-else-if="isOutputNode && nodeData">
               <NodePreviewTableSection
                 :key="`${nodeData.id}-preview-output`"
@@ -156,6 +173,7 @@
   import InputNodeConfigSection from "./node-config/InputNodeConfigSection.vue";
   import DistinctNodeConfigSection from "./node-config/DistinctNodeConfigSection.vue";
   import GroupNodeConfigSection from "./node-config/GroupNodeConfigSection.vue";
+  import WhereNodeConfigSection from "./node-config/WhereNodeConfigSection.vue";
   import NodePreviewTableSection from "./NodePreviewTableSection.vue";
   import { sqlNodeContextKey, type GetNodeContext } from "./nodeContext";
   import {
@@ -164,6 +182,7 @@
     fetchGroupNodePreviewByPayload,
     fetchInputPreviewByBinding,
     fetchOutputPreviewByPayload,
+    fetchWherePreviewByPayload,
     type BoundInputSource,
     type DistinctPreviewPayload,
     type FieldNodePreviewPayload,
@@ -172,6 +191,9 @@
     type GroupNodePreviewPayload,
     type InputBindingPersisted,
     type OutputPreviewPayload,
+    type WhereConditionPersisted,
+    type WhereLogic,
+    type WhereNodePreviewPayload,
     resolveInputBinding,
   } from "./inputNodeMock";
 
@@ -207,6 +229,8 @@
   const draftFieldSettings = ref<FieldSettingPersistedItem[]>([]);
   const draftGroupFields = ref<string[]>([]);
   const draftAggregateFields = ref<GroupAggregateFieldPersistedItem[]>([]);
+  const draftWhereLogic = ref<WhereLogic>("and");
+  const draftWhereConditions = ref<WhereConditionPersisted[]>([]);
   const activeTab = ref<"config" | "preview" | "remark">("config");
   const tabs = [
     { key: "config" as const, label: "节点配置" },
@@ -253,6 +277,7 @@
   const isFieldNode = computed(() => props.nodeData?.type === "field-node");
   const isDistinctNode = computed(() => props.nodeData?.type === "distinct-node");
   const isGroupNode = computed(() => props.nodeData?.type === "group-node");
+  const isWhereNode = computed(() => props.nodeData?.type === "where-node");
   const isOutputNode = computed(() => props.nodeData?.type === "out-node");
 
   const requiredMinIncoming = computed(() => {
@@ -315,6 +340,24 @@
         field !== null &&
         typeof (field as GroupAggregateFieldPersistedItem).key === "string" &&
         typeof (field as GroupAggregateFieldPersistedItem).method === "string"
+      );
+    });
+  });
+
+  const whereLogic = computed<WhereLogic>(() => {
+    const logic = props.nodeData?.properties?.whereLogic;
+    return logic === "or" ? "or" : "and";
+  });
+
+  const whereConditions = computed<WhereConditionPersisted[]>(() => {
+    const conditions = props.nodeData?.properties?.whereConditions;
+    if (!Array.isArray(conditions)) return [];
+    return conditions.filter((item): item is WhereConditionPersisted => {
+      return (
+        typeof item === "object" &&
+        item !== null &&
+        typeof (item as WhereConditionPersisted).key === "string" &&
+        typeof (item as WhereConditionPersisted).relation === "string"
       );
     });
   });
@@ -386,6 +429,26 @@
     };
   };
 
+  const buildWhereNodePreviewPayload = (): WhereNodePreviewPayload => {
+    const nodeContext = resolveCurrentNodeContext();
+    // TODO: 这里把筛选条件草稿组装成预览请求体，当前由 inputNodeMock 消费，后续应替换为真实预览接口。
+    return {
+      nodeId: props.nodeData?.id || "",
+      nodeType: props.nodeData?.type || "",
+      upstreamNodes: nodeContext?.upstreamNodes || [],
+      currentNode: nodeContext?.currentNode
+        ? {
+            ...nodeContext.currentNode,
+            properties: {
+              ...(nodeContext.currentNode.properties || {}),
+              whereLogic: draftWhereLogic.value,
+              whereConditions: draftWhereConditions.value.map((cond) => ({ ...cond })),
+            },
+          }
+        : null,
+    };
+  };
+
   // Rebuild local drafts whenever the panel opens or the selected node changes.
   // Child editors work against these drafts first, then flush them back in one shot.
   watch(
@@ -397,6 +460,8 @@
       draftFieldSettings.value = fieldSettings.value.map((field) => ({ ...field }));
       draftGroupFields.value = [...groupFields.value];
       draftAggregateFields.value = aggregateFields.value.map((field) => ({ ...field }));
+      draftWhereLogic.value = whereLogic.value;
+      draftWhereConditions.value = whereConditions.value.map((cond) => ({ ...cond }));
       const defaultTab = availableTabs.value[0]?.key || "remark";
       activeTab.value = defaultTab;
     },
@@ -437,6 +502,14 @@
 
   const handleGroupAggregateFieldsChange = (fields: GroupAggregateFieldPersistedItem[]) => {
     draftAggregateFields.value = fields.map((field) => ({ ...field }));
+  };
+
+  const handleWhereLogicChange = (logic: WhereLogic) => {
+    draftWhereLogic.value = logic;
+  };
+
+  const handleWhereConditionsChange = (conditions: WhereConditionPersisted[]) => {
+    draftWhereConditions.value = conditions.map((cond) => ({ ...cond }));
   };
 
   /**
@@ -480,6 +553,18 @@
     const nextAggregateFields = JSON.stringify(draftAggregateFields.value);
     if (nextAggregateFields !== currentAggregateFields) {
       nextProperties.aggregateFields = draftAggregateFields.value.map((field) => ({ ...field }));
+    }
+
+    const currentWhereLogic = whereLogic.value;
+    const nextWhereLogic = draftWhereLogic.value;
+    if (nextWhereLogic !== currentWhereLogic) {
+      nextProperties.whereLogic = nextWhereLogic;
+    }
+
+    const currentWhereConditions = JSON.stringify(whereConditions.value);
+    const nextWhereConditions = JSON.stringify(draftWhereConditions.value);
+    if (nextWhereConditions !== currentWhereConditions) {
+      nextProperties.whereConditions = draftWhereConditions.value.map((cond) => ({ ...cond }));
     }
 
     if (Object.keys(nextProperties).length === 0) return;

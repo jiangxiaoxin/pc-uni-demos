@@ -75,6 +75,38 @@ export interface OutputPreviewPayload {
   currentNode?: NodeConfigSnapshot | null;
 }
 
+export interface WhereNodePreviewPayload {
+  nodeId: string;
+  nodeType?: string;
+  upstreamNodes: NodeConfigSnapshot[];
+  currentNode?: NodeConfigSnapshot | null;
+}
+
+export type WhereLogic = "and" | "or";
+
+export type WhereRelation =
+  | "eq"
+  | "ne"
+  | "contains"
+  | "notContains"
+  | "startsWith"
+  | "endsWith"
+  | "isEmpty"
+  | "notEmpty"
+  | "in"
+  | "notIn"
+  | "gt"
+  | "lt"
+  | "gte"
+  | "lte"
+  | "range";
+
+export interface WhereConditionPersisted {
+  key: string;
+  relation: WhereRelation;
+  value?: string | number | string[] | [string, string] | [number, number] | null;
+}
+
 export interface NodeConfigSnapshot {
   id: string;
   type: string;
@@ -828,6 +860,100 @@ const parseGroupAggregateFields = (value: unknown): GroupAggregateFieldPersisted
   });
 };
 
+const parseWhereConditions = (value: unknown): WhereConditionPersisted[] => {
+  if (!Array.isArray(value)) return [];
+  return value.filter((item): item is WhereConditionPersisted => {
+    return (
+      isRecord(item) &&
+      typeof item.key === "string" &&
+      typeof item.relation === "string"
+    );
+  });
+};
+
+const evaluateWhereCondition = (
+  row: Record<string, unknown>,
+  condition: WhereConditionPersisted,
+): boolean => {
+  const cellValue = row[condition.key];
+  const relation = condition.relation;
+
+  if (relation === "isEmpty") {
+    return cellValue == null || cellValue === "";
+  }
+  if (relation === "notEmpty") {
+    return cellValue != null && cellValue !== "";
+  }
+
+  const conditionValue = condition.value;
+
+  switch (relation) {
+    case "eq":
+      return String(cellValue) === String(conditionValue);
+    case "ne":
+      return String(cellValue) !== String(conditionValue);
+    case "contains":
+      return String(cellValue).includes(String(conditionValue));
+    case "notContains":
+      return !String(cellValue).includes(String(conditionValue));
+    case "startsWith":
+      return String(cellValue).startsWith(String(conditionValue));
+    case "endsWith":
+      return String(cellValue).endsWith(String(conditionValue));
+    case "in": {
+      const values = Array.isArray(conditionValue)
+        ? conditionValue.map(String)
+        : String(conditionValue)
+            .split(",")
+            .filter(Boolean);
+      return values.includes(String(cellValue));
+    }
+    case "notIn": {
+      const values = Array.isArray(conditionValue)
+        ? conditionValue.map(String)
+        : String(conditionValue)
+            .split(",")
+            .filter(Boolean);
+      return !values.includes(String(cellValue));
+    }
+    case "gt":
+      return Number(cellValue) > Number(conditionValue);
+    case "lt":
+      return Number(cellValue) < Number(conditionValue);
+    case "gte":
+      return Number(cellValue) >= Number(conditionValue);
+    case "lte":
+      return Number(cellValue) <= Number(conditionValue);
+    case "range": {
+      const numValue = Number(cellValue);
+      if (Array.isArray(conditionValue) && conditionValue.length === 2) {
+        const min = Number(conditionValue[0]);
+        const max = Number(conditionValue[1]);
+        return numValue >= min && numValue <= max;
+      }
+      return true;
+    }
+    default:
+      return true;
+  }
+};
+
+const applyWhereFilter = (
+  rows: Record<string, unknown>[],
+  conditions: WhereConditionPersisted[],
+  logic: WhereLogic,
+) => {
+  if (conditions.length === 0) return rows;
+
+  return rows.filter((row) => {
+    const results = conditions.map((condition) => evaluateWhereCondition(row, condition));
+    if (logic === "and") {
+      return results.every(Boolean);
+    }
+    return results.some(Boolean);
+  });
+};
+
 const NUMERIC_METHOD_OPTIONS: GroupAggregateMethodOption[] = [
   { label: "求和", value: "sum" },
   { label: "平均值", value: "avg" },
@@ -1143,6 +1269,12 @@ const buildChainPreviewResult = (chainNodes: NodeConfigSnapshot[] = []) => {
       columns = nextResult.columns;
       rows = nextResult.rows;
     }
+
+    if (node.type === "where-node") {
+      const conditions = parseWhereConditions(node.properties?.whereConditions);
+      const logic = (node.properties?.whereLogic as WhereLogic) || "and";
+      rows = applyWhereFilter(rows, conditions, logic);
+    }
   });
 
   return {
@@ -1245,6 +1377,34 @@ export const fetchGroupNodePreviewByPayload = async (
   payload: GroupNodePreviewPayload,
 ): Promise<InputPreviewResult> => {
   console.log("[MOCK_API] fetchGroupNodePreviewByPayload");
+  await new Promise((resolve) => {
+    window.setTimeout(resolve, 250);
+  });
+
+  return buildChainPreviewResult([
+    ...payload.upstreamNodes,
+    ...(payload.currentNode ? [payload.currentNode] : []),
+  ]);
+};
+
+// MOCK_API: fetch upstream fields for where node (simulate backend request)
+export const fetchWhereNodeUpstreamFields = async (
+  payload: NodeRequestPayload,
+): Promise<InputField[]> => {
+  console.log("[MOCK_API] fetchWhereNodeUpstreamFields");
+  await new Promise((resolve) => {
+    window.setTimeout(resolve, 250);
+  });
+
+  const result = buildChainPreviewResult(payload.upstreamNodes);
+  return [...result.columns];
+};
+
+// MOCK_API: fetch where node preview data (simulate backend request)
+export const fetchWherePreviewByPayload = async (
+  payload: WhereNodePreviewPayload,
+): Promise<InputPreviewResult> => {
+  console.log("[MOCK_API] fetchWherePreviewByPayload");
   await new Promise((resolve) => {
     window.setTimeout(resolve, 250);
   });

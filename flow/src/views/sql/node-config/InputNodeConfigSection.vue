@@ -264,10 +264,8 @@
     overflow: auto;
   }
 
-  .input-config-main :deep(.config-table .ant-table-placeholder),
-  .input-config-main
-    :deep(.config-table .ant-table-tbody > .ant-table-placeholder > .ant-table-cell) {
-    height: 100%;
+  .input-config-main :deep(.config-table .ant-table-placeholder) {
+    display: none;
   }
 
   .input-config-main :deep(.config-table .ant-empty) {

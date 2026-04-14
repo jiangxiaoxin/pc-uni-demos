@@ -326,6 +326,7 @@
 
   const buildFieldNodePreviewPayload = (): FieldNodePreviewPayload => {
     const nodeContext = resolveCurrentNodeContext();
+    // TODO: 这里先按当前草稿配置组装字段节点预览请求体，供 inputNodeMock 的预览接口消费；后续接真实接口时保持这个意图不变。
     return {
       nodeId: props.nodeData?.id || "",
       nodeType: props.nodeData?.type || "",
@@ -344,6 +345,7 @@
 
   const buildDistinctPreviewPayload = (): DistinctPreviewPayload => {
     const nodeContext = resolveCurrentNodeContext();
+    // TODO: 这里先把去重字段草稿拼成预览请求体，当前给 inputNodeMock 使用，后续替换真实预览接口时继续沿用这层组装职责。
     return {
       nodeId: props.nodeData?.id || "",
       nodeType: props.nodeData?.type || "",
@@ -355,6 +357,7 @@
 
   const buildOutputPreviewPayload = (): OutputPreviewPayload => {
     const nodeContext = resolveCurrentNodeContext();
+    // TODO: 这里先组装输出节点预览请求体，当前由 mock 预览接口消费，后续真实接口接入后仍由属性面板统一传参。
     return {
       nodeId: props.nodeData?.id || "",
       nodeType: props.nodeData?.type || "",
@@ -365,6 +368,7 @@
 
   const buildGroupNodePreviewPayload = (): GroupNodePreviewPayload => {
     const nodeContext = resolveCurrentNodeContext();
+    // TODO: 这里先把分组/聚合草稿配置组装成预览请求体，当前用于 inputNodeMock 预览，后续应平滑切换到真实接口。
     return {
       nodeId: props.nodeData?.id || "",
       nodeType: props.nodeData?.type || "",

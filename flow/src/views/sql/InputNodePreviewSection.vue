@@ -65,6 +65,7 @@
     const token = ++requestToken;
     loading.value = true;
     try {
+      // TODO: 当前输入节点预览直接调用 inputNodeMock 模拟接口，先验证预览表格交互，后续应切到真实预览查询接口。
       const result = await fetchInputPreviewByBinding(props.inputBinding);
       if (token !== requestToken) return;
       columns.value = result.columns;

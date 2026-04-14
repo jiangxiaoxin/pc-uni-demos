@@ -126,6 +126,7 @@
 
     const requestToken = ++fieldRequestToken;
     fieldsLoading.value = true;
+    // TODO: 当前字段列表通过 inputNodeMock 模拟异步接口返回，用于跑通“选择数据源 -> 拉取字段”流程，后续应替换为真实字段查询接口。
     const fields = await fetchInputSourceFields(sourceId);
     if (requestToken !== fieldRequestToken || currentSourceId.value !== sourceId) {
       return;

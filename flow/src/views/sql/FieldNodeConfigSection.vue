@@ -231,6 +231,7 @@
 
     const currentToken = ++loadToken;
     loading.value = true;
+    // TODO: 当前字段节点的上游字段列表通过 inputNodeMock 模拟接口计算，目的是先验证节点配置联动，后续应替换为真实血缘/元数据接口。
     const fields = await fetchFieldNodeUpstreamFields(nodeContext);
     if (currentToken !== loadToken) return; // 防止旧请求结果覆盖新请求结果
     upstreamFields.value = fields;

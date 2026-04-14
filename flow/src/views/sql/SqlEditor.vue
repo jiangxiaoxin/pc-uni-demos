@@ -115,6 +115,7 @@
   const pendingBindNode = ref<SqlNodeData | null>(null);
   // 输入节点弹框打开时的初始回显绑定值。
   const pendingInputBinding = ref<InputBindingPersisted | null>(null);
+  // TODO: 输入节点弹窗当前直接消费 inputNodeMockSources，目的是先把 SQL 画布的数据源绑定流程跑通，后续应替换为真实数据源列表接口。
 
   const getNodeContext = (nodeId: string) => {
     return buildNodeContext(editorRef.value?.getGraphData(), nodeId);
@@ -240,6 +241,7 @@
   const handleConfirmInputBinding = async (binding: InputBindingPersisted) => {
     const currentNode = pendingBindNode.value;
     if (!currentNode) return;
+    // TODO: 这里用 mock 元数据把 sourceId 解析成 sourceName/fields 做回填，后续接真实接口后应改成以后端返回的绑定结果为准。
     const resolvedBinding = resolveInputBinding(binding);
     if (!resolvedBinding) return;
 

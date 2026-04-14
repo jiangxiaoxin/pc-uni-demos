@@ -269,6 +269,7 @@
 
     const currentToken = ++loadToken;
     loading.value = true;
+    // TODO: 当前分组节点的上游字段列表通过 inputNodeMock 模拟接口返回，先满足配置/预览联调，后续应替换为真实字段血缘接口。
     const fields = await fetchGroupNodeUpstreamFields(nodeContext);
     if (currentToken !== loadToken) return;
     upstreamFields.value = fields;

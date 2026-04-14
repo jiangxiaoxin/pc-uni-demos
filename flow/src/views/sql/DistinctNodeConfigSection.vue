@@ -144,6 +144,7 @@
     }
 
     loading.value = true;
+    // TODO: 当前去重节点的可选字段来自 inputNodeMock 模拟接口，目的是先打通配置交互，后续应替换为真实上游字段接口。
     const fields = await fetchDistinctNodeUpstreamFields(nodeContext);
     upstreamFields.value = fields;
     loading.value = false;

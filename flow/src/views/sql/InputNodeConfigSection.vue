@@ -93,7 +93,9 @@
   });
 
   const configTableRows = computed(() => {
+    // TODO: 这里先只对 customer 做特判，是因为当前配置面板仅接了 customer 的表头/样例数据，避免其他 source 误展示半成品预览。
     if (props.inputBinding?.sourceId !== "customer") return [];
+    // TODO: 这里读取的是 inputNodeMock 里的样例行数据，用来给输入节点配置面板展示前 10 条预览，后续应替换为真实的样例数据接口。
     return getPreviewRowsByBinding(props.inputBinding)
       .slice(0, 10)
       .map((row, index) => ({

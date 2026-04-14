@@ -91,6 +91,7 @@
     const token = ++requestToken;
     loading.value = true;
     try {
+      // TODO: 这里统一触发节点预览接口；当前大多传入的是 inputNodeMock 里的 mock fetcher，用于先跑通预览链路，后续应整体切换到真实后端接口。
       const result = await props.fetcher(resolvePayload());
       if (token !== requestToken) return;
       columns.value = result.columns || [];

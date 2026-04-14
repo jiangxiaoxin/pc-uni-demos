@@ -211,6 +211,7 @@
 
               <!-- Number single -->
               <template v-else-if="isNumericFieldType(condition.fieldType)">
+                <!-- !!! a-input-number 的change 事件是输入数字是才会触发，如果输入字母就不会触发 -->
                 <a-input-number
                   class="where-condition__value"
                   placeholder="输入值"
@@ -261,7 +262,7 @@
 <script setup lang="ts">
   import { computed, inject, onMounted, ref, watch } from "vue";
   import { DeleteOutlined } from "@ant-design/icons-vue";
-  import WhereTagsInput from "./WhereTagsInput.vue";
+  import WhereTagsInput from "./wheretagsinput.vue";
   import { sqlNodeContextKey, type GetNodeContext } from "../nodeContext";
   import {
     fetchWhereNodeUpstreamFields,
@@ -496,6 +497,7 @@
   };
 
   const handleValueChange = (index: number, value: string) => {
+    console.log('handleValueChange', value);
     const next = [...localConditions.value];
     next[index] = { ...next[index], value };
     localConditions.value = next;
@@ -600,12 +602,12 @@
   }
 
   .where-condition__range {
-    width: 120px;
+    width: 160px;
     flex-shrink: 0;
   }
 
   .where-condition__date {
-    width: 120px;
+    width: 160px;
     flex-shrink: 0;
   }
 

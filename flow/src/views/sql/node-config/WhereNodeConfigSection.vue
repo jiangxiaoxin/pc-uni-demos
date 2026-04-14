@@ -202,27 +202,11 @@
                   condition.relation === 'in' || condition.relation === 'notIn'
                 "
               >
-                <div
-                  class="where-tags-input where-condition__value"
-                  @click="focusTagInput(index)"
-                >
-                  <span
-                    v-for="(tag, tagIndex) in parseInValue(condition.value)"
-                    :key="tagIndex"
-                    class="where-tag"
-                    @click.stop="removeTag(index, tagIndex)"
-                  >
-                    {{ tag }}
-                  </span>
-                  <span
-                    :ref="(el) => setTagInputRef(index, el as HTMLElement)"
-                    class="where-tags-input__editor"
-                    contenteditable="true"
-                    data-placeholder="输入后回车"
-                    @keydown="(e) => handleTagInputKeydown(e, index)"
-                    @blur="(e) => handleTagInputBlur(e, index)"
-                  />
-                </div>
+                <WhereTagsInput
+                  class="where-condition__value"
+                  :model-value="condition.value"
+                  @update:model-value="(value) => handleValueChange(index, value)"
+                />
               </template>
 
               <!-- Number single -->
@@ -277,6 +261,7 @@
 <script setup lang="ts">
   import { computed, inject, onMounted, ref, watch } from "vue";
   import { DeleteOutlined } from "@ant-design/icons-vue";
+  import WhereTagsInput from "./WhereTagsInput.vue";
   import { sqlNodeContextKey, type GetNodeContext } from "../nodeContext";
   import {
     fetchWhereNodeUpstreamFields,
@@ -319,14 +304,8 @@
   const upstreamFields = ref<InputField[]>([]);
   const localLogic = ref<WhereLogic>(props.whereLogic);
   const localConditions = ref<LocalWhereCondition[]>([]);
-  let idCounter = 0;
   let loadToken = 0;
 
-  const parseInValue = (value: string): string[] => {
-    return value.split(",").filter(Boolean);
-  };
-
-  const tagInputRefs = ref<Record<number, HTMLElement>>({});
   const pendingLocalChange = ref(false);
 
   const flushDraft = () => {
@@ -334,64 +313,6 @@
     pendingLocalChange.value = false;
     emit("change-logic", localLogic.value);
     emit("change-conditions", toPersistedConditions(localConditions.value));
-  };
-
-  const setTagInputRef = (index: number, el: HTMLElement | null) => {
-    if (el) {
-      tagInputRefs.value[index] = el;
-    }
-  };
-
-  const focusTagInput = (index: number) => {
-    const el = tagInputRefs.value[index];
-    el?.focus();
-  };
-
-  const addTag = (index: number, text: string) => {
-    const trimmed = text.trim();
-    if (!trimmed) return;
-    const tags = parseInValue(localConditions.value[index].value);
-    if (tags.includes(trimmed)) return;
-    const nextValue = [...tags, trimmed].join(",");
-    handleValueChange(index, nextValue);
-  };
-
-  const removeTag = (index: number, tagIndex: number) => {
-    const tags = parseInValue(localConditions.value[index].value);
-    tags.splice(tagIndex, 1);
-    handleValueChange(index, tags.join(","));
-  };
-
-  const handleTagInputBlur = (event: FocusEvent, index: number) => {
-    const target = event.target as HTMLElement;
-    const text = (target.innerText || "").trim();
-    if (text) {
-      addTag(index, text);
-    }
-    target.innerText = "";
-  };
-
-  const handleTagInputKeydown = (event: KeyboardEvent, index: number) => {
-    const target = event.target as HTMLElement;
-    if (event.key === "Enter") {
-      event.preventDefault();
-      const text = (target.innerText || "").trim();
-      if (text) {
-        addTag(index, text);
-      }
-      target.innerText = "";
-      return;
-    }
-    if (event.key === "Backspace") {
-      const text = (target.innerText || "").trim();
-      if (text === "") {
-        event.preventDefault();
-        const tags = parseInValue(localConditions.value[index].value);
-        if (tags.length > 0) {
-          removeTag(index, tags.length - 1);
-        }
-      }
-    }
   };
 
   const handleDebug = () => {
@@ -707,54 +628,5 @@
     gap: 20px !important;
   }
 
-  .where-tags-input {
-    flex: 1;
-    min-width: 120px;
-    display: flex;
-    align-items: center;
-    flex-wrap: wrap;
-    gap: 4px;
-    min-height: 32px;
-    padding: 2px 6px;
-    border: 1px solid #d9d9d9;
-    border-radius: 6px;
-    background: #fff;
-    cursor: text;
-    transition: border-color 0.2s;
-  }
 
-  .where-tags-input:focus-within {
-    border-color: #4096ff;
-  }
-
-  .where-tag {
-    display: inline-flex;
-    align-items: center;
-    padding: 1px 6px;
-    background: #f0f5ff;
-    border: 1px solid #adc6ff;
-    border-radius: 4px;
-    color: #4096ff;
-    font-size: 12px;
-    line-height: 18px;
-    cursor: pointer;
-    user-select: none;
-  }
-
-  .where-tags-input__editor {
-    flex: 1;
-    min-width: 40px;
-    outline: none;
-    font-size: 13px;
-    line-height: 20px;
-    color: #0f172a;
-    white-space: nowrap;
-    overflow: hidden;
-  }
-
-  .where-tags-input__editor:empty:before {
-    content: attr(data-placeholder);
-    color: #bfbfbf;
-    font-size: 12px;
-  }
 </style>

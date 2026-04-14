@@ -62,7 +62,7 @@
   import { sqlNodeIconMap } from "./nodes/iconMap";
   import editor from "./editor.vue";
   import property from "./property.vue";
-  import InputNodeBindModal from "./InputNodeBindModal.vue";
+  import InputNodeBindModal from "./node-config/InputNodeBindModal.vue";
   import { buildNodeContext, sqlNodeContextKey, type SqlGraphData } from "./nodeContext";
   import { inputNodeMockSources, type InputBindingPersisted, resolveInputBinding } from "./inputNodeMock";
 

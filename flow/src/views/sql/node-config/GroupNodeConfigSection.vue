@@ -187,7 +187,7 @@
   import { computed, inject, onMounted, ref, watch } from "vue";
   import { DeleteOutlined, DragOutlined } from "@ant-design/icons-vue";
   import { VueDraggable } from "vue-draggable-plus";
-  import { sqlNodeContextKey, type GetNodeContext } from "./nodeContext";
+  import { sqlNodeContextKey, type GetNodeContext } from "../nodeContext";
   import {
     fetchGroupNodeUpstreamFields,
     getGroupAggregateMethodOptions,
@@ -195,7 +195,7 @@
     type GroupAggregateFieldPersistedItem,
     type GroupAggregateMethod,
     type InputField,
-  } from "./inputNodeMock";
+  } from "../inputNodeMock";
 
   const emit = defineEmits<{
     (e: "change-group-fields", value: string[]): void;

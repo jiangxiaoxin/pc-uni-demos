@@ -111,13 +111,13 @@
   import { computed, inject, nextTick, onMounted, ref, useTemplateRef, watch } from "vue";
   import { CheckOutlined, CloseOutlined, EditOutlined, DragOutlined } from "@ant-design/icons-vue";
   import { VueDraggable } from "vue-draggable-plus";
-  import { sqlNodeContextKey, type GetNodeContext } from "./nodeContext";
+  import { sqlNodeContextKey, type GetNodeContext } from "../nodeContext";
   import {
     fetchFieldNodeUpstreamFields,
     type FieldSettingItem,
     type FieldSettingPersistedItem,
     type InputField,
-  } from "./inputNodeMock";
+  } from "../inputNodeMock";
 
   interface TableColumn {
     title: string;

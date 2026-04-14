@@ -98,8 +98,8 @@
   import { computed, inject, onMounted, ref, watch } from "vue";
   import { DeleteOutlined, DragOutlined } from "@ant-design/icons-vue";
   import { VueDraggable } from "vue-draggable-plus";
-  import { sqlNodeContextKey, type GetNodeContext } from "./nodeContext";
-  import { fetchDistinctNodeUpstreamFields, type InputField } from "./inputNodeMock";
+  import { sqlNodeContextKey, type GetNodeContext } from "../nodeContext";
+  import { fetchDistinctNodeUpstreamFields, type InputField } from "../inputNodeMock";
 
   const emit = defineEmits<{
     (e: "change-fields", value: string[]): void;

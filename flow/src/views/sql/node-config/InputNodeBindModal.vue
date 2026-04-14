@@ -82,7 +82,7 @@
     type InputBindingPersisted,
     type InputField,
     type InputSource,
-  } from "./inputNodeMock";
+  } from "../inputNodeMock";
 
   const emit = defineEmits<{
     (e: "update:open", value: boolean): void;

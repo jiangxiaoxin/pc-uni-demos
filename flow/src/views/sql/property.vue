@@ -152,10 +152,10 @@
   import { computed, inject, ref, watch } from "vue";
   import { getNodeTypeConfig } from "./menus";
   import { defaultSqlNodeIcon, sqlNodeIconMap } from "./nodes/iconMap";
-  import FieldNodeConfigSection from "./FieldNodeConfigSection.vue";
-  import InputNodeConfigSection from "./InputNodeConfigSection.vue";
-  import DistinctNodeConfigSection from "./DistinctNodeConfigSection.vue";
-  import GroupNodeConfigSection from "./GroupNodeConfigSection.vue";
+  import FieldNodeConfigSection from "./node-config/FieldNodeConfigSection.vue";
+  import InputNodeConfigSection from "./node-config/InputNodeConfigSection.vue";
+  import DistinctNodeConfigSection from "./node-config/DistinctNodeConfigSection.vue";
+  import GroupNodeConfigSection from "./node-config/GroupNodeConfigSection.vue";
   import NodePreviewTableSection from "./NodePreviewTableSection.vue";
   import { sqlNodeContextKey, type GetNodeContext } from "./nodeContext";
   import {

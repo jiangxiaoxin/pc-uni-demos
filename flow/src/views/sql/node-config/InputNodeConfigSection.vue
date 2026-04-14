@@ -4,9 +4,7 @@
       <div class="input-config-card input-config-card--fixed">
         <div class="input-config-card__header">
           <span>数据源</span>
-          <span class="input-config-link" @click="$emit('change-source')">
-            更改数据源
-          </span>
+          <span class="input-config-link" @click="$emit('change-source')">更改数据源</span>
         </div>
         <div class="input-config-source-name">{{ inputBinding.sourceName }}</div>
       </div>
@@ -22,7 +20,10 @@
             :key="field.key"
             class="input-config-field"
           >
-            <span class="input-config-field__name">{{ field.name }}</span>
+            <div class="input-config-field__main">
+              <span class="input-config-field__name">{{ field.name }}</span>
+              <span class="input-config-field__code"> ( {{ field.key }} ) </span>
+            </div>
             <span class="input-config-field__type">{{ field.type }}</span>
           </div>
         </div>
@@ -39,8 +40,6 @@
           size="small"
           :scroll="{ x: configHeaderScrollX, y: configTableScrollY }"
           row-key="__configKey"
-          :show-header="true"
-          table-layout="fixed"
         />
       </div>
     </div>
@@ -49,7 +48,11 @@
 
 <script setup lang="ts">
   import { computed } from "vue";
-  import { getPreviewRowsByBinding, type BoundInputSource, type InputField } from "./inputNodeMock";
+  import {
+    getPreviewRowsByBinding,
+    type BoundInputSource,
+    type InputField,
+  } from "../inputNodeMock";
 
   interface TableColumn {
     title: string;
@@ -57,6 +60,8 @@
     key: string;
     width?: number;
     ellipsis?: boolean;
+    customHeaderCell?: () => { style: Record<string, string> };
+    customCell?: () => { style: Record<string, string> };
   }
 
   defineEmits<{
@@ -72,8 +77,18 @@
       title: field.name,
       dataIndex: field.key,
       key: field.key,
-      width: 160,
+      width: 120,
       ellipsis: true,
+      customHeaderCell: () => ({
+        style: {
+          minWidth: "100px",
+        },
+      }),
+      customCell: () => ({
+        style: {
+          minWidth: "100px",
+        },
+      }),
     }));
   });
 
@@ -90,10 +105,10 @@
   });
 
   const configHeaderScrollX = computed(() => {
-    return Math.max(selectedFieldHeaderColumns.value.length * 160, 320);
+    return Math.max(selectedFieldHeaderColumns.value.length * 100, 320);
   });
 
-  const configTableScrollY = "calc(100% - 36px)";
+  const configTableScrollY = "calc(100% - 40px)";
 </script>
 
 <style scoped lang="scss">
@@ -190,8 +205,16 @@
     display: flex;
     align-items: center;
     justify-content: space-between;
+    gap: 8px;
     padding: 4px 6px;
     background: #fff;
+  }
+
+  .input-config-field__main {
+    min-width: 0;
+    display: flex;
+    align-items: center;
+    gap: 6px;
   }
 
   .input-config-field__name {
@@ -200,6 +223,13 @@
     color: #0f172a;
     word-break: break-all;
     line-height: 18px;
+  }
+
+  .input-config-field__code {
+    font-size: 11px;
+    color: #64748b;
+    line-height: 18px;
+    white-space: nowrap;
   }
 
   .input-config-field__type {
@@ -222,7 +252,25 @@
     min-height: 0;
   }
 
+  .input-config-main :deep(.config-table .ant-table-container) {
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
+  }
+
   .input-config-main :deep(.config-table .ant-table-body) {
-    overflow-y: auto;
+    flex: 1;
+    min-height: 0;
+    overflow: auto;
+  }
+
+  .input-config-main :deep(.config-table .ant-table-placeholder),
+  .input-config-main
+    :deep(.config-table .ant-table-tbody > .ant-table-placeholder > .ant-table-cell) {
+    height: 100%;
+  }
+
+  .input-config-main :deep(.config-table .ant-empty) {
+    margin-block: 0;
   }
 </style>

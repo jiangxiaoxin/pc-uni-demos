@@ -148,50 +148,54 @@
                   condition.relation === 'range'
                 "
               >
-                <a-input
+                <a-date-picker
                   class="where-condition__date"
-                  type="date"
-                  placeholder="开始日期"
-                  :value="condition.rangeValue[0]"
+                  placeholder="开始日期时间"
+                  show-time
+                  format="YYYY-MM-DD HH:mm:ss"
+                  :value="
+                    condition.rangeValue[0]
+                      ? dayjs(condition.rangeValue[0], 'YYYY-MM-DD HH:mm:ss')
+                      : null
+                  "
                   @change="
-                    (e: Event) =>
-                      handleRangeChange(
-                        index,
-                        0,
-                        (e.target as HTMLInputElement).value,
-                      )
+                    (_date: Dayjs | null, dateString: string) =>
+                      handleRangeChange(index, 0, dateString)
                   "
                 />
                 <span class="where-condition__range-sep">-</span>
-                <a-input
+                <a-date-picker
                   class="where-condition__date"
-                  type="date"
-                  placeholder="结束日期"
-                  :value="condition.rangeValue[1]"
+                  placeholder="结束日期时间"
+                  show-time
+                  format="YYYY-MM-DD HH:mm:ss"
+                  :value="
+                    condition.rangeValue[1]
+                      ? dayjs(condition.rangeValue[1], 'YYYY-MM-DD HH:mm:ss')
+                      : null
+                  "
                   @change="
-                    (e: Event) =>
-                      handleRangeChange(
-                        index,
-                        1,
-                        (e.target as HTMLInputElement).value,
-                      )
+                    (_date: Dayjs | null, dateString: string) =>
+                      handleRangeChange(index, 1, dateString)
                   "
                 />
               </template>
 
               <!-- Date single -->
               <template v-else-if="isDateTimeFieldType(condition.fieldType)">
-                <a-input
+                <a-date-picker
                   class="where-condition__value"
-                  type="date"
-                  placeholder="选择日期"
-                  :value="String(condition.value || '')"
+                  placeholder="选择日期时间"
+                  show-time
+                  format="YYYY-MM-DD HH:mm:ss"
+                  :value="
+                    condition.value
+                      ? dayjs(condition.value, 'YYYY-MM-DD HH:mm:ss')
+                      : null
+                  "
                   @change="
-                    (e: Event) =>
-                      handleValueChange(
-                        index,
-                        (e.target as HTMLInputElement).value,
-                      )
+                    (_date: Dayjs | null, dateString: string) =>
+                      handleValueChange(index, dateString)
                   "
                 />
               </template>
@@ -261,6 +265,7 @@
 
 <script setup lang="ts">
   import { computed, inject, onMounted, ref, watch } from "vue";
+  import dayjs, { type Dayjs } from "dayjs";
   import { DeleteOutlined } from "@ant-design/icons-vue";
   import WhereTagsInput from "./wheretagsinput.vue";
   import { sqlNodeContextKey, type GetNodeContext } from "../nodeContext";
@@ -598,16 +603,16 @@
 
   .where-condition__value {
     flex: 1;
-    min-width: 120px;
+    min-width: 200px;
   }
 
   .where-condition__range {
-    width: 160px;
+    width: 200px;
     flex-shrink: 0;
   }
 
   .where-condition__date {
-    width: 160px;
+    width: 200px;
     flex-shrink: 0;
   }
 

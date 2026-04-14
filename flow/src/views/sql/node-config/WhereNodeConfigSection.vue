@@ -32,10 +32,15 @@
       <div class="config-section__header">
         <span>筛选条件</span>
         <div class="config-section__header-actions">
-          <span class="config-section__count">{{ localConditions.length }} 个条件</span>
+          <span class="config-section__count"
+            >{{ localConditions.length }} 个条件</span
+          >
           <span
             class="config-section__link"
-            :class="{ 'config-section__link--disabled': loading || upstreamFields.length === 0 }"
+            :class="{
+              'config-section__link--disabled':
+                loading || upstreamFields.length === 0,
+            }"
             @click="addCondition"
           >
             添加筛选条件
@@ -52,10 +57,16 @@
 
       <div class="config-section__body">
         <div v-if="loading" class="config-section__empty">字段加载中...</div>
-        <div v-else-if="upstreamFields.length === 0" class="config-section__empty">
+        <div
+          v-else-if="upstreamFields.length === 0"
+          class="config-section__empty"
+        >
           当前前序节点无可选字段
         </div>
-        <div v-else-if="localConditions.length === 0" class="config-section__empty">
+        <div
+          v-else-if="localConditions.length === 0"
+          class="config-section__empty"
+        >
           暂未添加筛选条件
         </div>
         <div v-else class="where-conditions">
@@ -76,37 +87,80 @@
               placeholder="选择关系"
               :value="condition.relation"
               :options="getRelationOptions(condition.fieldType)"
-              @change="(value) => handleRelationChange(index, value as WhereRelation)"
+              @change="
+                (value) => handleRelationChange(index, value as WhereRelation)
+              "
             />
 
             <template v-if="!isNoValueRelation(condition.relation)">
               <!-- Number range -->
-              <template v-if="isNumericFieldType(condition.fieldType) && condition.relation === 'range'">
+              <template
+                v-if="
+                  isNumericFieldType(condition.fieldType) &&
+                  condition.relation === 'range'
+                "
+              >
                 <a-input-number
                   class="where-condition__range"
-                
                   placeholder="最小值"
-                  :value="condition.rangeValue[0] ? Number(condition.rangeValue[0]) : undefined"
-                  @change="(value) => handleRangeChange(index, 0, value === null || value === undefined ? '' : String(value))"
+                  :value="
+                    condition.rangeValue[0]
+                      ? Number(condition.rangeValue[0])
+                      : undefined
+                  "
+                  @change="
+                    (value) =>
+                      handleRangeChange(
+                        index,
+                        0,
+                        value === null || value === undefined
+                          ? ''
+                          : String(value),
+                      )
+                  "
                 />
                 <span class="where-condition__range-sep">-</span>
                 <a-input-number
                   class="where-condition__range"
-                 
                   placeholder="最大值"
-                  :value="condition.rangeValue[1] ? Number(condition.rangeValue[1]) : undefined"
-                  @change="(value) => handleRangeChange(index, 1, value === null || value === undefined ? '' : String(value))"
+                  :value="
+                    condition.rangeValue[1]
+                      ? Number(condition.rangeValue[1])
+                      : undefined
+                  "
+                  @change="
+                    (value) =>
+                      handleRangeChange(
+                        index,
+                        1,
+                        value === null || value === undefined
+                          ? ''
+                          : String(value),
+                      )
+                  "
                 />
               </template>
 
               <!-- Date range -->
-              <template v-else-if="isDateTimeFieldType(condition.fieldType) && condition.relation === 'range'">
+              <template
+                v-else-if="
+                  isDateTimeFieldType(condition.fieldType) &&
+                  condition.relation === 'range'
+                "
+              >
                 <a-input
                   class="where-condition__date"
                   type="date"
                   placeholder="开始日期"
                   :value="condition.rangeValue[0]"
-                  @change="(e: Event) => handleRangeChange(index, 0, (e.target as HTMLInputElement).value)"
+                  @change="
+                    (e: Event) =>
+                      handleRangeChange(
+                        index,
+                        0,
+                        (e.target as HTMLInputElement).value,
+                      )
+                  "
                 />
                 <span class="where-condition__range-sep">-</span>
                 <a-input
@@ -114,7 +168,14 @@
                   type="date"
                   placeholder="结束日期"
                   :value="condition.rangeValue[1]"
-                  @change="(e: Event) => handleRangeChange(index, 1, (e.target as HTMLInputElement).value)"
+                  @change="
+                    (e: Event) =>
+                      handleRangeChange(
+                        index,
+                        1,
+                        (e.target as HTMLInputElement).value,
+                      )
+                  "
                 />
               </template>
 
@@ -125,12 +186,22 @@
                   type="date"
                   placeholder="选择日期"
                   :value="String(condition.value || '')"
-                  @change="(e: Event) => handleValueChange(index, (e.target as HTMLInputElement).value)"
+                  @change="
+                    (e: Event) =>
+                      handleValueChange(
+                        index,
+                        (e.target as HTMLInputElement).value,
+                      )
+                  "
                 />
               </template>
 
               <!-- in / notIn (any type) -->
-              <template v-else-if="condition.relation === 'in' || condition.relation === 'notIn'">
+              <template
+                v-else-if="
+                  condition.relation === 'in' || condition.relation === 'notIn'
+                "
+              >
                 <div
                   class="where-tags-input where-condition__value"
                   @click="focusTagInput(index)"
@@ -160,7 +231,15 @@
                   class="where-condition__value"
                   placeholder="输入值"
                   :value="condition.value ? Number(condition.value) : undefined"
-                  @change="(value) => handleValueChange(index, value === null || value === undefined ? '' : String(value))"
+                  @change="
+                    (value) =>
+                      handleValueChange(
+                        index,
+                        value === null || value === undefined
+                          ? ''
+                          : String(value),
+                      )
+                  "
                 />
               </template>
 
@@ -170,7 +249,13 @@
                   class="where-condition__value"
                   placeholder="输入值"
                   :value="String(condition.value || '')"
-                  @change="(e: Event) => handleValueChange(index, (e.target as HTMLInputElement).value)"
+                  @change="
+                    (e: Event) =>
+                      handleValueChange(
+                        index,
+                        (e.target as HTMLInputElement).value,
+                      )
+                  "
                 />
               </template>
             </template>
@@ -200,21 +285,17 @@
     type WhereLogic,
     type WhereRelation,
   } from "../inputNodeMock";
-
-  interface SelectOption {
-    label: string;
-    value: string;
-  }
-
-  interface LocalWhereCondition {
-    __id: string;
-    key: string;
-    fieldName: string;
-    fieldType: string;
-    relation: WhereRelation;
-    value: string;
-    rangeValue: [string, string];
-  }
+  import {
+    isNumericFieldType,
+    isDateTimeFieldType,
+    getDefaultRelation,
+    getRelationOptions,
+    isNoValueRelation,
+    type LocalWhereCondition,
+    type SelectOption,
+    buildDefaultCondition,
+    generateId,
+  } from "./where.helper";
 
   const emit = defineEmits<{
     (e: "change-logic", value: WhereLogic): void;
@@ -241,74 +322,19 @@
   let idCounter = 0;
   let loadToken = 0;
 
-  //TODO 简单判断类型，后续再优化
-  const isNumericFieldType = (type: string) => {
-    return type == "number";
-  };
-
-  const isStringFieldType = (type: string) => {
-    return type == "string" || type == "text" || type == "varchar";
-  };
-
-  const isDateTimeFieldType = (type: string) => {
-    return type == "datetime";
-  };
-
-  const getDefaultRelation = (fieldType: string): WhereRelation => {
-    console.log("🚀 ~ fieldType:", fieldType)
-
-    if (isNumericFieldType(fieldType) || isDateTimeFieldType(fieldType)) {
-      return "eq";
-    }
-    if (isStringFieldType(fieldType)) {
-      return "contains";
-    }
-    return "eq";
-  };
-
-  const getRelationOptions = (fieldType: string): SelectOption[] => {
-    const common = [
-      { label: "等于", value: "eq" },
-      { label: "不等于", value: "ne" },
-      { label: "为空", value: "isEmpty" },
-      { label: "不为空", value: "notEmpty" },
-    ];
-
-    if (isStringFieldType(fieldType)) {
-      return [
-        ...common,
-        { label: "包含", value: "contains" },
-        { label: "不包含", value: "notContains" },
-        { label: "以...开始", value: "startsWith" },
-        { label: "以...结束", value: "endsWith" },
-        { label: "等于任一一个", value: "in" },
-        { label: "不等于任一一个", value: "notIn" },
-      ];
-    }
-
-    if (isNumericFieldType(fieldType) || isDateTimeFieldType(fieldType)) {
-      return [
-        ...common,
-        { label: "大于", value: "gt" },
-        { label: "小于", value: "lt" },
-        { label: "大于等于", value: "gte" },
-        { label: "小于等于", value: "lte" },
-        { label: "选择范围", value: "range" },
-      ];
-    }
-
-    return common;
-  };
-
-  const isNoValueRelation = (relation: WhereRelation): boolean => {
-    return relation === "isEmpty" || relation === "notEmpty";
-  };
-
   const parseInValue = (value: string): string[] => {
     return value.split(",").filter(Boolean);
   };
 
   const tagInputRefs = ref<Record<number, HTMLElement>>({});
+  const pendingLocalChange = ref(false);
+
+  const flushDraft = () => {
+    if (!pendingLocalChange.value) return;
+    pendingLocalChange.value = false;
+    emit("change-logic", localLogic.value);
+    emit("change-conditions", toPersistedConditions(localConditions.value));
+  };
 
   const setTagInputRef = (index: number, el: HTMLElement | null) => {
     if (el) {
@@ -376,11 +402,9 @@
     });
   };
 
-  const generateId = () => {
-    return `where-cond-${++idCounter}-${Date.now().toString(36)}`;
-  };
-
-  const toPersistedConditions = (conditions: LocalWhereCondition[]): WhereConditionPersisted[] => {
+  const toPersistedConditions = (
+    conditions: LocalWhereCondition[],
+  ): WhereConditionPersisted[] => {
     return conditions.map((condition) => {
       const persisted: WhereConditionPersisted = {
         key: condition.key,
@@ -405,7 +429,9 @@
     const fieldMap = new Map(fields.map((field) => [field.key, field]));
     const field = fieldMap.get(item.key);
     const rangeValue: [string, string] =
-      item.relation === "range" && Array.isArray(item.value) && item.value.length === 2
+      item.relation === "range" &&
+      Array.isArray(item.value) &&
+      item.value.length === 2
         ? [String(item.value[0] || ""), String(item.value[1] || "")]
         : ["", ""];
     return {
@@ -452,25 +478,6 @@
     );
   };
 
-  /**
-   * 选择字段类型选择默认的关系
-   * @param fields 前序节点传入的字段列表
-   */
-  const buildDefaultCondition = (fields: InputField[]): LocalWhereCondition | null => {
-    if (fields.length === 0) return null;
-    const field = fields[0];
-    const relation = getDefaultRelation(field.type);
-    return {
-      __id: generateId(),
-      key: field.key,
-      fieldName: field.name,
-      fieldType: field.type,
-      relation,
-      value: "",
-      rangeValue: ["", ""],
-    };
-  };
-
   const loadUpstreamFields = async () => {
     const nodeContext = getNodeContext?.(props.nodeId);
     if (!nodeContext) {
@@ -494,22 +501,14 @@
   });
 
   watch(
-    () => props.whereConditions,
+    () => [props.whereConditions, props.whereLogic],
     () => {
-      console.log('whereConditions changed');
-      
+      console.log("--whereConditions--whereLogic");
+
+      localLogic.value = props.whereLogic ?? "and";
       syncLocalConditions();
     },
     { deep: true },
-  );
-
-  watch(
-    () => props.whereLogic,
-    (value) => {
-      console.log('whereLogic changed: ', value);
-      
-      localLogic.value = value;
-    },
   );
 
   const fieldOptions = computed<SelectOption[]>(() => {
@@ -522,26 +521,26 @@
   const setLogic = (logic: WhereLogic) => {
     if (localLogic.value === logic) return;
     localLogic.value = logic;
-    emit("change-logic", logic);
+    pendingLocalChange.value = true;
   };
 
   const addCondition = () => {
     const defaultCondition = buildDefaultCondition(upstreamFields.value);
     if (!defaultCondition) return;
     localConditions.value = [...localConditions.value, defaultCondition];
-    emit("change-conditions", toPersistedConditions(localConditions.value));
+    pendingLocalChange.value = true;
   };
 
   const removeCondition = (index: number) => {
     const next = [...localConditions.value];
     next.splice(index, 1);
     localConditions.value = next;
-    emit("change-conditions", toPersistedConditions(next));
+    pendingLocalChange.value = true;
   };
 
   const removeAll = () => {
     localConditions.value = [];
-    emit("change-conditions", []);
+    pendingLocalChange.value = true;
   };
 
   const handleFieldChange = (index: number, key: string) => {
@@ -560,7 +559,7 @@
       rangeValue: ["", ""],
     };
     localConditions.value = next;
-    emit("change-conditions", toPersistedConditions(next));
+    pendingLocalChange.value = true;
   };
 
   const handleRelationChange = (index: number, relation: WhereRelation) => {
@@ -572,24 +571,33 @@
       rangeValue: ["", ""],
     };
     localConditions.value = next;
-    emit("change-conditions", toPersistedConditions(next));
+    pendingLocalChange.value = true;
   };
 
   const handleValueChange = (index: number, value: string) => {
     const next = [...localConditions.value];
     next[index] = { ...next[index], value };
     localConditions.value = next;
-    emit("change-conditions", toPersistedConditions(next));
+    pendingLocalChange.value = true;
   };
 
-  const handleRangeChange = (index: number, rangeIndex: 0 | 1, value: string) => {
+  const handleRangeChange = (
+    index: number,
+    rangeIndex: 0 | 1,
+    value: string,
+  ) => {
     const next = [...localConditions.value];
-    const nextRange: [string, string] = [...next[index].rangeValue] as [string, string];
+    const nextRange: [string, string] = [...next[index].rangeValue] as [
+      string,
+      string,
+    ];
     nextRange[rangeIndex] = value;
     next[index] = { ...next[index], rangeValue: nextRange };
     localConditions.value = next;
-    emit("change-conditions", toPersistedConditions(next));
+    pendingLocalChange.value = true;
   };
+
+  defineExpose({ flushDraft });
 </script>
 
 <style scoped lang="scss">
@@ -630,7 +638,7 @@
     transition: all 0.2s ease;
   }
 
-.where-logic__btn--active {
+  .where-logic__btn--active {
     border-color: #7dd3fc;
     background: #e0f2fe;
     color: #0369a1;

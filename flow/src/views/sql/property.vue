@@ -74,6 +74,7 @@
             </template>
             <template v-else-if="isWhereNode">
               <WhereNodeConfigSection
+                ref="whereNodeRef"
                 :key="`${nodeData.id}-config-where`"
                 :node-id="nodeData.id"
                 :where-logic="draftWhereLogic"
@@ -229,6 +230,7 @@
   const draftFieldSettings = ref<FieldSettingPersistedItem[]>([]);
   const draftGroupFields = ref<string[]>([]);
   const draftAggregateFields = ref<GroupAggregateFieldPersistedItem[]>([]);
+  const whereNodeRef = ref<{ flushDraft: () => void } | null>(null);
   const draftWhereLogic = ref<WhereLogic>("and");
   const draftWhereConditions = ref<WhereConditionPersisted[]>([]);
   const activeTab = ref<"config" | "preview" | "remark">("config");
@@ -522,6 +524,9 @@
    */
   const flushDraftProperties = () => {
     if (!props.nodeData) return;
+
+    // 先让子组件 flush 草稿
+    whereNodeRef.value?.flushDraft();
 
     const nextProperties: Record<string, unknown> = {};
     const currentRemark = String(props.nodeData.properties?.remark || "");

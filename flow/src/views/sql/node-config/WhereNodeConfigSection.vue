@@ -151,6 +151,7 @@
                 <a-date-picker
                   class="where-condition__date"
                   placeholder="开始日期时间"
+                  :locale="locale"
                   show-time
                   format="YYYY-MM-DD HH:mm:ss"
                   :value="
@@ -287,6 +288,7 @@
     buildDefaultCondition,
     generateId,
   } from "./where.helper";
+  import locale from 'ant-design-vue/es/date-picker/locale/zh_CN';
 
   const emit = defineEmits<{
     (e: "change-logic", value: WhereLogic): void;

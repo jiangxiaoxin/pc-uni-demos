@@ -1,18 +1,16 @@
 <template>
   <div id="app">
-    <!-- <nav class="app-nav">
-      <div class="nav-brand">Flow 流程编辑器</div>
-      <div class="nav-links">
-        <router-link to="/" exact-active-class="active">流程编辑器</router-link>
-        <router-link to="/view" exact-active-class="active">流程查看器</router-link>
-        <router-link to="/xml" exact-active-class="active">XML 解析</router-link>
-      </div>
-    </nav> -->
-    <div class="app-content">
+    <!-- <ConfigProvider :locale="zhCN">
       <router-view />
-    </div>
+    </ConfigProvider> -->
+    <router-view />
   </div>
 </template>
+
+<script setup lang="ts">
+  // import { ConfigProvider } from "ant-design-vue";
+  // import zhCN from "ant-design-vue/locale/zh_CN";
+</script>
 
 <style>
 * {

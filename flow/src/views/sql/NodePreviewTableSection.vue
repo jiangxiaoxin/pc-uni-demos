@@ -1,15 +1,17 @@
 <template>
   <div class="node-preview">
     <div class="node-preview__table-wrap">
+      <div v-if="isEmpty" class="block-tip">
+        <div class="block-tip__title">请先配置好节点</div>
+      </div>
       <a-table
+        v-else
         class="node-preview__table"
         :loading="loading"
         :columns="tableColumns"
         :data-source="rows"
         :pagination="false"
-        size="small"
         :scroll="{ x: scrollX, y: scrollY }"
-        row-key="__previewKey"
       />
     </div>
   </div>
@@ -56,6 +58,7 @@
   );
 
   const loading = ref(false);
+  const hasError = ref(false);
   const columns = ref<PreviewColumn[]>([]);
   const rows = ref<Record<string, unknown>[]>([]);
   let requestToken = 0;
@@ -83,6 +86,8 @@
 
   const scrollY = "100%";
 
+  const isEmpty = computed(() => hasError.value || tableColumns.value.length === 0);
+
   const resolvePayload = () => {
     return typeof props.payload === "function" ? props.payload() : props.payload;
   };
@@ -95,17 +100,14 @@
       const result = await props.fetcher(resolvePayload());
       if (token !== requestToken) return;
       columns.value = result.columns || [];
-      rows.value = (result.rows || []).map((row, index) => {
-        const existedKey = String(
-          (row.id as string | number | undefined) ??
-            (row.key as string | number | undefined) ??
-            `${props.rowKeyPrefix}-${index}`,
-        );
-        return {
-          __previewKey: existedKey,
-          ...row,
-        };
-      });
+      rows.value = result.rows || [];
+      hasError.value = false;
+    } catch {
+      if (token === requestToken) {
+        hasError.value = true;
+        columns.value = [];
+        rows.value = [];
+      }
     } finally {
       if (token === requestToken) {
         loading.value = false;
@@ -119,6 +121,7 @@
 </script>
 
 <style scoped lang="scss">
+@use "./block-tip.scss";
   .node-preview {
     display: flex;
     flex-direction: column;
@@ -127,9 +130,12 @@
     padding: 4px 6px;
   }
 
+  
+
   .node-preview__table-wrap {
     flex: 1;
     min-height: 0;
+    position: relative;
   }
 
   .node-preview :deep(.node-preview__table.ant-table-wrapper),

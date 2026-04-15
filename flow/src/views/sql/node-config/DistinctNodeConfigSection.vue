@@ -69,9 +69,10 @@
       @cancel="selectorOpen = false"
     >
       <div class="config-selector">
+        <div>{{ draftSelectedKeys }}</div>
         <div v-if="loading" class="config-selector__empty">字段加载中...</div>
         <div v-else-if="upstreamFields.length === 0" class="config-selector__empty">
-          当前前序节点无可选字段
+          当前无可选字段
         </div>
         <div v-else class="config-selector__list">
           <div
@@ -95,7 +96,7 @@
 </template>
 
 <script setup lang="ts">
-  import { computed, inject, onMounted, ref, watch } from "vue";
+  import { computed, inject, onMounted, ref } from "vue";
   import { DeleteOutlined, DragOutlined } from "@ant-design/icons-vue";
   import { VueDraggable } from "vue-draggable-plus";
   import { sqlNodeContextKey, type GetNodeContext } from "../nodeContext";
@@ -152,15 +153,9 @@
     syncLocalSelected();
   };
 
-  watch(
-    () => props.selectedFields,
-    () => {
-      syncLocalSelected();
-    },
-    { immediate: true, deep: true },
-  );
-
   onMounted(() => {
+    console.log('mounted');
+    
     void loadUpstreamFields();
   });
 
@@ -170,7 +165,8 @@
   };
 
   const buildOrderedKeys = (draftKeys: string[], currentKeys: string[]) => {
-    const selectedKeySet = new Set(draftKeys);
+    const selectedKeySet = new Set(draftKeys); // 这次弹框里选择的去重字段列表
+    // 如果本地配置里有，那就保持原有的顺序。没有的就加在后面
     const orderedCurrentKeys = currentKeys.filter((key) => selectedKeySet.has(key));
     const appendedKeys = upstreamFields.value
       .map((field) => field.key)
@@ -178,39 +174,41 @@
     return [...orderedCurrentKeys, ...appendedKeys];
   };
 
+  const pendingLocalChange = ref(false); // dirty flag. true = local data changed, need to reCalc
+
+  const flushDraft = () => {
+    if (!pendingLocalChange.value) return;
+    pendingLocalChange.value = false;
+    emit(
+      "change-fields",
+      localSelectedFields.value.map((field) => field.key),
+    );
+  };
+
   const confirmSelectFields = () => {
     const orderedKeys = buildOrderedKeys(
       draftSelectedKeys.value,
       localSelectedFields.value.map((field) => field.key),
     );
-    const upstreamFieldMap = new Map(upstreamFields.value.map((field) => [field.key, field]));
+    const upstreamFieldMap = new Map(upstreamFields.value.map((field) => [field.key, field])); //构建好map以后下面就直接 get，时间O[1]
     const selected = orderedKeys
       .map((key) => upstreamFieldMap.get(key))
       .filter((field): field is InputField => Boolean(field));
     localSelectedFields.value = selected;
-    emit(
-      "change-fields",
-      selected.map((field) => field.key),
-    );
+    pendingLocalChange.value = true;
     selectorOpen.value = false;
   };
 
   const removeField = (index: number) => {
-    const next = [...localSelectedFields.value];
-    next.splice(index, 1);
-    localSelectedFields.value = next;
-    emit(
-      "change-fields",
-      next.map((field) => field.key),
-    );
+    localSelectedFields.value.splice(index, 1);
+    pendingLocalChange.value = true;
   };
 
   const handleSortEnd = () => {
-    emit(
-      "change-fields",
-      localSelectedFields.value.map((field) => field.key),
-    );
+    pendingLocalChange.value = true;
   };
+
+  defineExpose({ flushDraft });
 </script>
 
 <style scoped lang="scss">

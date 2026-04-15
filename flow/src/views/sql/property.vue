@@ -31,9 +31,9 @@
 
       <div class="property-bottom">
         <template v-if="isConnectionInvalid">
-          <div class="property-block-tip">
-            <div class="property-block-tip__title">连线未满足要求</div>
-            <div class="property-block-tip__content">{{ connectionInvalidTip }}</div>
+          <div class="block-tip">
+            <div class="block-tip__title">连线未满足要求</div>
+            <div class="block-tip__content">{{ connectionInvalidTip }}</div>
           </div>
         </template>
         <template v-else>
@@ -48,6 +48,7 @@
             </template>
             <template v-else-if="isFieldNode">
               <FieldNodeConfigSection
+                ref="fieldNodeRef"
                 :key="`${nodeData.id}-config-field`"
                 :node-id="nodeData.id"
                 :field-settings="draftFieldSettings"
@@ -57,6 +58,7 @@
             </template>
             <template v-else-if="isDistinctNode">
               <DistinctNodeConfigSection
+                ref="distinctNodeRef"
                 :key="`${nodeData.id}-config-distinct`"
                 :node-id="nodeData.id"
                 :selected-fields="draftDistinctFields"
@@ -65,6 +67,7 @@
             </template>
             <template v-else-if="isGroupNode">
               <GroupNodeConfigSection
+                ref="groupNodeRef"
                 :key="`${nodeData.id}-config-group`"
                 :node-id="nodeData.id"
                 :group-fields="draftGroupFields"
@@ -254,6 +257,9 @@
   const draftGroupFields = ref<string[]>([]);
   const draftAggregateFields = ref<GroupAggregateFieldPersistedItem[]>([]);
   const inputNodeRef = ref<{ flushDraft: () => void } | null>(null);
+  const fieldNodeRef = ref<{ flushDraft: () => void } | null>(null);
+  const distinctNodeRef = ref<{ flushDraft: () => void } | null>(null);
+  const groupNodeRef = ref<{ flushDraft: () => void } | null>(null);
   const whereNodeRef = ref<{ flushDraft: () => void } | null>(null);
   const joinNodeRef = ref<{ flushDraft: () => void } | null>(null);
   const draftWhereLogic = ref<WhereLogic>("and");
@@ -628,6 +634,9 @@
 
     // 先让子组件 flush 草稿
     inputNodeRef.value?.flushDraft();
+    fieldNodeRef.value?.flushDraft();
+    distinctNodeRef.value?.flushDraft();
+    groupNodeRef.value?.flushDraft();
     whereNodeRef.value?.flushDraft();
     joinNodeRef.value?.flushDraft();
 
@@ -713,6 +722,7 @@
 </script>
 
 <style lang="scss" scoped>
+ @use "./block-tip.scss";
   .property-panel {
     width: 100%;
     height: 0;
@@ -859,26 +869,5 @@
     overflow-y: auto;
   }
 
-  .property-block-tip {
-    flex: 1;
-    min-height: 0;
-    color: #92400e;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    // background-color: red;
-  }
-
-  .property-block-tip__title {
-    font-size: 14px;
-    font-weight: 600;
-    line-height: 20px;
-  }
-
-  .property-block-tip__content {
-    font-size: 13px;
-    line-height: 18px;
-    word-break: break-word;
-  }
+ 
 </style>

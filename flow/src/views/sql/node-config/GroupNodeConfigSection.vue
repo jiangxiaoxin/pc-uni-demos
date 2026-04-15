@@ -339,6 +339,15 @@
     aggregateSelectorOpen.value = true;
   };
 
+  const pendingLocalChange = ref(false);
+
+  const flushDraft = () => {
+    if (!pendingLocalChange.value) return;
+    pendingLocalChange.value = false;
+    emitGroupFields(localGroupFields.value);
+    emitAggregateFields(localAggregateFields.value);
+  };
+
   const confirmGroupFields = () => {
     const orderedKeys = buildOrderedKeys(
       draftGroupKeys.value,
@@ -349,7 +358,7 @@
       .map((key) => upstreamMap.get(key))
       .filter((field): field is InputField => Boolean(field));
     localGroupFields.value = nextFields;
-    emitGroupFields(nextFields);
+    pendingLocalChange.value = true;
     groupSelectorOpen.value = false;
   };
 
@@ -371,36 +380,38 @@
       })
       .filter((field): field is GroupAggregateFieldItem => Boolean(field));
     localAggregateFields.value = nextFields;
-    emitAggregateFields(nextFields);
+    pendingLocalChange.value = true;
     aggregateSelectorOpen.value = false;
   };
 
   const removeGroupField = (fieldKey: string) => {
     const nextFields = localGroupFields.value.filter((field) => field.key !== fieldKey);
     localGroupFields.value = nextFields;
-    emitGroupFields(nextFields);
+    pendingLocalChange.value = true;
   };
 
   const removeAggregateField = (fieldKey: string) => {
     const nextFields = localAggregateFields.value.filter((field) => field.key !== fieldKey);
     localAggregateFields.value = nextFields;
-    emitAggregateFields(nextFields);
+    pendingLocalChange.value = true;
   };
 
   const handleGroupSortEnd = () => {
-    emitGroupFields(localGroupFields.value);
+    pendingLocalChange.value = true;
   };
 
   const handleAggregateSortEnd = () => {
-    emitAggregateFields(localAggregateFields.value);
+    pendingLocalChange.value = true;
   };
 
   const updateAggregateMethod = (fieldKey: string, value: GroupAggregateMethod) => {
     const targetField = localAggregateFields.value.find((field) => field.key === fieldKey);
     if (!targetField) return;
     targetField.method = value;
-    emitAggregateFields(localAggregateFields.value);
+    pendingLocalChange.value = true;
   };
+
+  defineExpose({ flushDraft });
 </script>
 
 <style scoped lang="scss">

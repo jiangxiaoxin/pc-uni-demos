@@ -236,9 +236,7 @@
     // localFields.value = [] // debug empty state
     loading.value = false;
 
-    if (!persistedFieldSettingsEqual(toPersistedFieldSettings(mergedFields), props.fieldSettings)) {
-      emitChange(mergedFields);
-    }
+
   };
 
   const syncLocalFields = () => {
@@ -308,7 +306,6 @@
   const updateLocalFields = (fields: FieldSettingItem[]) => {
     localFields.value = fields;
     pendingLocalChange.value = true;
-    emitChange(fields);
   };
 
   const startRename = async (field: FieldSettingItem) => {
@@ -377,6 +374,14 @@
   const handleSortEnd = () => {
     updateLocalFields([...localFields.value]);
   };
+
+  const flushDraft = () => {
+    if (!pendingLocalChange.value) return;
+    pendingLocalChange.value = false;
+    emitChange(localFields.value);
+  };
+
+  defineExpose({ flushDraft });
 
   const fieldSettingsEqual = (left: FieldSettingItem[], right: FieldSettingItem[]) => {
     if (left.length !== right.length) return false;

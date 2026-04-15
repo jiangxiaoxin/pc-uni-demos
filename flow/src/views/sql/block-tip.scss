@@ -1,0 +1,22 @@
+.block-tip {
+  flex: 1;
+  min-height: 0;
+  height: 100%;
+  color: #92400e;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+
+.block-tip__title {
+  font-size: 14px;
+  font-weight: 600;
+  line-height: 20px;
+}
+
+.block-tip__content {
+  font-size: 13px;
+  line-height: 18px;
+  word-break: break-word;
+}

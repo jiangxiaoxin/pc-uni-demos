@@ -18,7 +18,7 @@
       <div class="config-section__body">
         <div v-if="loading" class="config-section__empty">字段加载中...</div>
         <div v-else-if="localFields.length === 0" class="config-section__empty">
-          当前前序节点无可设置字段
+          当前无可设置字段
         </div>
         <VueDraggable
           v-else

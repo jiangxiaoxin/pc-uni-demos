@@ -37,7 +37,7 @@
           </div>
         </template>
         <template v-else>
-          <template v-if="activeTab === 'config'">
+          <div v-show="activeTab === 'config'" class="property-tab-panel">
             <template v-if="isInputNode && inputBindingPersisted">
               <InputNodeConfigSection
                 ref="inputNodeRef"
@@ -111,12 +111,13 @@
                 <span class="property-value">{{ nodeColor }}</span>
               </div>
             </template>
-          </template>
+          </div>
 
-          <template v-else-if="activeTab === 'preview'">
+          <div v-show="activeTab === 'preview'" class="property-tab-panel">
             <template v-if="isInputNode && inputBindingPersisted">
               <NodePreviewTableSection
                 :key="`${nodeData.id}-preview-input`"
+                :visible="activeTab === 'preview'"
                 :payload="inputBindingPersisted"
                 :fetcher="fetchInputPreviewByBinding"
               />
@@ -124,6 +125,7 @@
             <template v-else-if="isFieldNode && nodeData">
               <NodePreviewTableSection
                 :key="`${nodeData.id}-preview-field`"
+                :visible="activeTab === 'preview'"
                 :payload="buildFieldNodePreviewPayload"
                 :fetcher="fetchFieldNodePreviewByPayload"
               />
@@ -131,6 +133,7 @@
             <template v-else-if="isDistinctNode && nodeData">
               <NodePreviewTableSection
                 :key="`${nodeData.id}-preview-distinct`"
+                :visible="activeTab === 'preview'"
                 :payload="buildDistinctPreviewPayload"
                 :fetcher="fetchDistinctPreviewByPayload"
               />
@@ -138,6 +141,7 @@
             <template v-else-if="isGroupNode && nodeData">
               <NodePreviewTableSection
                 :key="`${nodeData.id}-preview-group`"
+                :visible="activeTab === 'preview'"
                 :payload="buildGroupNodePreviewPayload"
                 :fetcher="fetchGroupNodePreviewByPayload"
               />
@@ -145,6 +149,7 @@
             <template v-else-if="isWhereNode && nodeData">
               <NodePreviewTableSection
                 :key="`${nodeData.id}-preview-where`"
+                :visible="activeTab === 'preview'"
                 :payload="buildWhereNodePreviewPayload"
                 :fetcher="fetchWherePreviewByPayload"
               />
@@ -152,6 +157,7 @@
             <template v-else-if="isJoinNode && nodeData">
               <NodePreviewTableSection
                 :key="`${nodeData.id}-preview-join`"
+                :visible="activeTab === 'preview'"
                 :payload="buildJoinNodePreviewPayload"
                 :fetcher="fetchJoinPreviewByPayload"
               />
@@ -159,6 +165,7 @@
             <template v-else-if="isOutputNode && nodeData">
               <NodePreviewTableSection
                 :key="`${nodeData.id}-preview-output`"
+                :visible="activeTab === 'preview'"
                 :payload="buildOutputPreviewPayload"
                 :fetcher="fetchOutputPreviewByPayload"
               />
@@ -170,16 +177,14 @@
                 <pre class="property-preview-content">{{ previewContent }}</pre>
               </div>
             </template>
-          </template>
+          </div>
 
-          <template v-else>
-            <div class="property-remark">
-              <a-textarea
-                v-model:value="editableRemark"
-                placeholder="请输入节点备注"
-              />
-            </div>
-          </template>
+          <div v-show="activeTab === 'remark'" class="property-remark">
+            <a-textarea
+              v-model:value="editableRemark"
+              placeholder="请输入节点备注"
+            />
+          </div>
         </template>
       </div>
     </template>
@@ -620,12 +625,6 @@
    * panel close so unsaved draft changes are committed once as a diff payload.
    * 
    */
-  const handleTabClick = (key: typeof activeTab.value) => {
-    if (activeTab.value === key) return;
-    flushDraftProperties();
-    activeTab.value = key;
-  };
-
   const flushDraftProperties = () => {
     console.log('flushDraftProperties');
     
@@ -721,6 +720,14 @@
     emit("submit-properties", nextProperties);
   };
 
+  const handleTabClick = (key: typeof activeTab.value) => {
+    if (activeTab.value === key) return;
+    if (key === "preview") {
+      flushDraftProperties();
+    }
+    activeTab.value = key;
+  };
+
   // Expose the flush hook so the parent can persist drafts before selection changes.
   defineExpose({
     flushDraftProperties,
@@ -812,6 +819,15 @@
   }
 
   .property-bottom {
+    flex: 1;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    overflow: auto;
+  }
+
+  .property-tab-panel {
     flex: 1;
     min-height: 0;
     display: flex;

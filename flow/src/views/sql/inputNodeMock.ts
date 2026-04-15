@@ -1258,15 +1258,26 @@ export const fetchDistinctPreviewByPayload = async (
 export const fetchFieldNodePreviewByPayload = async (
   payload: FieldNodePreviewPayload,
 ): Promise<InputPreviewResult> => {
-  console.log("[MOCK_API] fetchFieldNodePreviewByPayload");
+  console.log("[MOCK_API] fetchFieldNodePreviewByPayload", payload);
   await new Promise((resolve) => {
     window.setTimeout(resolve, 250);
   });
 
-  return buildChainPreviewResult([
-    ...payload.upstreamNodes,
-    ...(payload.currentNode ? [payload.currentNode] : []),
-  ]);
+  const result =  {
+    columns: [
+      {
+        name: '随便个表头',
+        key: 'id',
+        type: 'string'
+      }
+    ],
+    rows: [{
+      id: 1
+    },{
+      id: 2
+    }]
+  }
+  return result;
 };
 
 // MOCK_API: fetch group node preview data (simulate backend request)

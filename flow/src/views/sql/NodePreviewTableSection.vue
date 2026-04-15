@@ -18,7 +18,7 @@
 </template>
 
 <script setup lang="ts">
-  import { computed, onMounted, ref } from "vue";
+  import { computed, onMounted, ref, watch } from "vue";
 
   interface PreviewColumn {
     key?: string;
@@ -48,10 +48,12 @@
     defineProps<{
       payload: PreviewPayload;
       fetcher: PreviewFetcher;
+      visible?: boolean;
       rowKeyPrefix?: string;
       minColumnWidth?: number;
     }>(),
     {
+      visible: true,
       rowKeyPrefix: "preview",
       minColumnWidth: 100,
     },
@@ -98,16 +100,18 @@
     try {
       // TODO: 这里统一触发节点预览接口；当前大多传入的是 inputNodeMock 里的 mock fetcher，用于先跑通预览链路，后续应整体切换到真实后端接口。
       const result = await props.fetcher(resolvePayload());
+      console.log("🚀 ~ NodePreviewTableSection.vue:103 ~ loadPreview ~ result:", result)
+
       if (token !== requestToken) return;
       columns.value = result.columns || [];
       rows.value = result.rows || [];
       hasError.value = false;
-    } catch {
-      if (token === requestToken) {
-        hasError.value = true;
+    } catch(error) {
+      console.log('err', error);
+      
+      hasError.value = true;
         columns.value = [];
         rows.value = [];
-      }
     } finally {
       if (token === requestToken) {
         loading.value = false;
@@ -116,8 +120,19 @@
   };
 
   onMounted(() => {
-    void loadPreview();
+    if (props.visible) {
+      void loadPreview();
+    }
   });
+
+  watch(
+    () => props.visible,
+    (visible) => {
+      if (visible) {
+        void loadPreview();
+      }
+    },
+  );
 </script>
 
 <style scoped lang="scss">

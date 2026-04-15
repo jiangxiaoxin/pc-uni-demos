@@ -57,7 +57,7 @@
 </template>
 
 <script setup lang="ts">
-  import { nextTick, provide, ref, watch } from "vue";
+  import { nextTick, onMounted, provide, ref, watch } from "vue";
   import { nodeTypes } from "./menus";
   import { sqlNodeIconMap } from "./nodes/iconMap";
   import editor from "./editor.vue";
@@ -77,6 +77,7 @@
     getGraphData: () => SqlGraphData | undefined;
     saveToLocal: () => void;
     openPreview: () => void;
+    load: () => Promise<void>;
   }
 
   interface PropertyExpose {
@@ -276,6 +277,13 @@
     await flushPropertyDrafts();
     editorRef.value?.openPreview();
   };
+
+  onMounted(() => {
+    // TODO 从后天拿配置
+    setTimeout(() => {
+      void editorRef.value?.load();
+    }, 1000);
+  });
 </script>
 
 <style scoped lang="scss">

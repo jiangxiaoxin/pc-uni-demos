@@ -427,6 +427,7 @@
     getGraphData,
     saveToLocal,
     openPreview,
+    load: handleLoad,
   });
 </script>
 

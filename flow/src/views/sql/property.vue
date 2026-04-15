@@ -216,6 +216,8 @@
     type JoinNodePreviewPayload,
     type JoinConfig,
     resolveInputBinding,
+    type JoinConditionPersisted,
+    type JoinType
   } from "./inputNodeMock";
 
   interface SqlNodeData {

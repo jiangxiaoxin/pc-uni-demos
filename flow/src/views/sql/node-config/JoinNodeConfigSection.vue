@@ -6,14 +6,18 @@
           <div class="config-section__header config-section__header--panel">
             <span>连接方式</span>
           </div>
-          <div class="config-section__body config-section__body--panel join-type-list">
+          <div
+            class="config-section__body config-section__body--panel join-type-list"
+          >
             <div class="join-type-row">
               <button
                 v-for="type in joinTypeOptions.slice(0, 2)"
                 :key="type.value"
                 type="button"
                 class="join-type-btn"
-                :class="{ 'join-type-btn--active': localJoinType === type.value }"
+                :class="{
+                  'join-type-btn--active': localJoinType === type.value,
+                }"
                 @click="setJoinType(type.value)"
               >
                 {{ type.label }}
@@ -25,7 +29,9 @@
                 :key="type.value"
                 type="button"
                 class="join-type-btn"
-                :class="{ 'join-type-btn--active': localJoinType === type.value }"
+                :class="{
+                  'join-type-btn--active': localJoinType === type.value,
+                }"
                 @click="setJoinType(type.value)"
               >
                 {{ type.label }}
@@ -38,7 +44,9 @@
           <div class="config-section__header config-section__header--panel">
             <span>表单设置</span>
           </div>
-          <div class="config-section__body config-section__body--panel join-source-form">
+          <div
+            class="config-section__body config-section__body--panel join-source-form"
+          >
             <div class="join-source-row">
               <span class="join-source-label">左侧表单</span>
               <a-select
@@ -67,21 +75,25 @@
         <div class="config-section__header config-section__header--panel">
           <span>连接字段</span>
           <div class="config-section__header-actions">
-            <span class="config-section__count">{{ localConditions.length }} 个条件</span>
+            <span class="config-section__count"
+              >{{ localConditions.length }} 个条件</span
+            >
             <span
               class="config-section__link"
-              :class="{ 'config-section__link--disabled': loading || !canAddCondition }"
+              :class="{
+                'config-section__link--disabled': loading || !canAddCondition,
+              }"
               @click="addCondition"
             >
               添加连接字段
             </span>
-            <span
+            <!-- <span
               v-if="localConditions.length > 0"
               class="config-section__link config-section__link--danger"
               @click="removeAll"
             >
               删除全部
-            </span>
+            </span> -->
           </div>
         </div>
 
@@ -90,16 +102,22 @@
           <div v-else-if="!hasBothSources" class="config-section__empty">
             请先设置左侧表单和右侧表单
           </div>
-          <div v-else-if="leftFields.length === 0 || rightFields.length === 0" class="config-section__empty">
+          <div
+            v-else-if="leftFields.length === 0 || rightFields.length === 0"
+            class="config-section__empty"
+          >
             当前前序节点无可选字段
           </div>
-          <div v-else-if="localConditions.length === 0" class="config-section__empty">
+          <div
+            v-else-if="localConditions.length === 0"
+            class="config-section__empty"
+          >
             暂未添加连接字段
           </div>
           <div v-else class="join-conditions">
             <div
               v-for="(condition, index) in localConditions"
-              :key="condition.__id"
+              :key="index"
               class="join-condition"
             >
               <a-select
@@ -107,7 +125,9 @@
                 placeholder="选择左侧字段"
                 :value="condition.leftField"
                 :options="leftFieldOptions"
-                @change="(value) => handleLeftFieldChange(index, value as string)"
+                @change="
+                  (value) => handleLeftFieldChange(index, value as string)
+                "
               />
               <span class="join-condition__eq">=</span>
               <a-select
@@ -115,7 +135,9 @@
                 placeholder="选择右侧字段"
                 :value="condition.rightField"
                 :options="rightFieldOptions"
-                @change="(value) => handleRightFieldChange(index, value as string)"
+                @change="
+                  (value) => handleRightFieldChange(index, value as string)
+                "
               />
               <span
                 class="config-item__action config-item__action--danger"
@@ -133,7 +155,7 @@
 </template>
 
 <script setup lang="ts">
-  import { computed, inject, onMounted, ref, watch } from "vue";
+  import { computed, inject, onMounted, onUnmounted, ref } from "vue";
   import { DeleteOutlined } from "@ant-design/icons-vue";
   import { sqlNodeContextKey, type GetNodeContext } from "../nodeContext";
   import {
@@ -142,13 +164,8 @@
     type JoinConditionPersisted,
     type JoinConfig,
     type JoinType,
+    type JoinUpstreamForm,
   } from "../inputNodeMock";
-
-  interface JoinConditionLocal {
-    __id: string;
-    leftField: string;
-    rightField: string;
-  }
 
   const emit = defineEmits<{
     (e: "change-config", value: JoinConfig): void;
@@ -171,12 +188,11 @@
 
   const getNodeContext = inject<GetNodeContext>(sqlNodeContextKey);
   const loading = ref(false);
-  const leftFields = ref<InputField[]>([]);
-  const rightFields = ref<InputField[]>([]);
+  const upstreamForms = ref<JoinUpstreamForm[]>([]); // 后台接口返回的表单配置
   const localJoinType = ref<JoinType>(props.config.joinType);
   const localLeftNodeId = ref<string>(props.config.leftNodeId);
   const localRightNodeId = ref<string>(props.config.rightNodeId);
-  const localConditions = ref<JoinConditionLocal[]>([]);
+  const localConditions = ref<JoinConditionPersisted[]>([]);
   const pendingLocalChange = ref(false); // 本地配置是否有发生变化，用于判断是否需要跟外层同步数据
   let loadToken = 0;
 
@@ -191,18 +207,24 @@
    * 表单设置的选项。显示前置两个节点的节点名。前面这两个节点名用户可以自己修改
    */
   const predecessorOptions = computed(() => {
-    const nodeContext = getNodeContext?.(props.nodeId);
-    const fromIds = nodeContext?.currentNode?.fromIds || [];
-    return fromIds
-      .map((id) => {
-        const node = nodeContext?.upstreamNodes.find((n) => n.id === id);
-        if (!node) return null;
-        return {
-          label: String(node.properties?.title || node.properties?.name || node.id),
-          value: node.id,
-        };
-      })
-      .filter((item): item is NonNullable<typeof item> => Boolean(item));
+    return upstreamForms.value.map((form) => ({
+      label: form.name,
+      value: form.id,
+    }));
+  });
+
+  const leftFields = computed<InputField[]>(() => {
+    return (
+      upstreamForms.value.find((f) => f.id === localLeftNodeId.value)?.fields ||
+      []
+    );
+  });
+
+  const rightFields = computed<InputField[]>(() => {
+    return (
+      upstreamForms.value.find((f) => f.id === localRightNodeId.value)
+        ?.fields || []
+    );
   });
 
   const hasBothSources = computed(() => {
@@ -210,13 +232,17 @@
   });
 
   const canAddCondition = computed(() => {
-    return hasBothSources.value && leftFields.value.length > 0 && rightFields.value.length > 0;
+    return (
+      hasBothSources.value &&
+      leftFields.value.length > 0 &&
+      rightFields.value.length > 0
+    );
   });
 
   const leftFieldOptions = computed(() => {
     return leftFields.value.map((field) => ({
       label: `${field.name} (${field.key})`,
-      value: field.key,
+      value: field.key, // TODO 要看后台返回的结构
     }));
   });
 
@@ -227,50 +253,9 @@
     }));
   });
 
-  const generateId = () => `join_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
-
-  const toPersistedConditions = (conditions: JoinConditionLocal[]): JoinConditionPersisted[] => {
-    return conditions.map((c) => ({
-      leftField: c.leftField,
-      rightField: c.rightField,
-    }));
-  };
-
-  const buildLocalCondition = (
-    item: JoinConditionPersisted,
-    existingId?: string,
-  ): JoinConditionLocal => {
-    return {
-      __id: existingId || generateId(),
-      leftField: item.leftField || "",
-      rightField: item.rightField || "",
-    };
-  };
-
-  const syncLocalConditions = () => {
-    const current = localConditions.value;
-    const persisted = props.config.joinConditions;
-
-    if (
-      current.length === persisted.length &&
-      persisted.every((item, index) => {
-        const next = buildLocalCondition(item);
-        return (
-          current[index].leftField === next.leftField &&
-          current[index].rightField === next.rightField
-        );
-      })
-    ) {
-      return;
-    }
-
-    localConditions.value = persisted.map((item, index) =>
-      buildLocalCondition(item, current[index]?.__id),
-    );
-  };
-
   /**
    *  判断已有的配置是否陈腐的老旧的，需要抛弃了
+   * 比如已经连好了前面的两个表单，也配好了这个节点，但又修改了边，或者修改了表单，这时候就很可能不能用之前的配置了
    */
   const isConfigStale = (): boolean => {
     const hasConfig =
@@ -281,12 +266,14 @@
 
     if (!hasConfig) return false;
 
-    const validNodeIds = new Set(predecessorOptions.value.map((o) => o.value));
+    const validNodeIds = new Set(upstreamForms.value.map((o) => o.id));
     const validLeftFieldKeys = new Set(leftFields.value.map((f) => f.key));
     const validRightFieldKeys = new Set(rightFields.value.map((f) => f.key));
 
-    const leftNodeValid = !localLeftNodeId.value || validNodeIds.has(localLeftNodeId.value);
-    const rightNodeValid = !localRightNodeId.value || validNodeIds.has(localRightNodeId.value);
+    const leftNodeValid =
+      !localLeftNodeId.value || validNodeIds.has(localLeftNodeId.value);
+    const rightNodeValid =
+      !localRightNodeId.value || validNodeIds.has(localRightNodeId.value);
     const leftFieldsValid = localConditions.value.every(
       (c) => !c.leftField || validLeftFieldKeys.has(c.leftField),
     );
@@ -294,28 +281,32 @@
       (c) => !c.rightField || validRightFieldKeys.has(c.rightField),
     );
 
-    return !(leftNodeValid && rightNodeValid && leftFieldsValid && rightFieldsValid);
+    return !(
+      leftNodeValid &&
+      rightNodeValid &&
+      leftFieldsValid &&
+      rightFieldsValid
+    );
   };
 
   const loadUpstreamFields = async () => {
+    localJoinType.value = props.config.joinType;
+    localLeftNodeId.value = props.config.leftNodeId;
+    localRightNodeId.value = props.config.rightNodeId;
+    localConditions.value = props.config.joinConditions;
+
     const nodeContext = getNodeContext?.(props.nodeId);
     if (!nodeContext) {
-      leftFields.value = [];
-      rightFields.value = [];
+      upstreamForms.value = [];
       loading.value = false;
       return;
     }
 
     const currentToken = ++loadToken;
     loading.value = true;
-    const result = await fetchJoinNodeUpstreamFields(
-      nodeContext,
-      localLeftNodeId.value,
-      localRightNodeId.value,
-    );
+    const result = await fetchJoinNodeUpstreamFields(nodeContext);
     if (currentToken !== loadToken) return;
-    leftFields.value = result.left;
-    rightFields.value = result.right;
+    upstreamForms.value = result;
     loading.value = false;
 
     // 如果已有配置与接口返回的表单/字段不一致，清空配置重新走配置流程
@@ -328,6 +319,7 @@
     }
 
     // 如果还没有设置左右节点，尝试用前序节点自动填充
+    // TODO 这里要看后台的实现，如果前序没配好，那返回的是啥？报错吗？
     const fromIds = nodeContext.currentNode?.fromIds || [];
     let autoChanged = false;
     if (!localLeftNodeId.value && fromIds[0]) {
@@ -343,32 +335,15 @@
     }
   };
 
-  // 当左右节点选择发生变化时，重新加载对应的字段列表
-  watch(
-    () => [localLeftNodeId.value, localRightNodeId.value],
-    () => {
-      console.log('localLeftNodeId localRightNodeId 变了');
-      
-      void loadUpstreamFields();
-    },
-  );
-
   onMounted(() => {
+    console.log("onMoutned");
+
     void loadUpstreamFields();
   });
 
-  watch(
-    () => props.config,
-    () => {
-      console.log('==config 变了');
-      
-      localJoinType.value = props.config.joinType;
-      localLeftNodeId.value = props.config.leftNodeId;
-      localRightNodeId.value = props.config.rightNodeId;
-      syncLocalConditions();
-    },
-    { deep: true, immediate: true },
-  );
+  onUnmounted(() => {
+    console.log("11111 unmounted");
+  });
 
   const setJoinType = (type: JoinType) => {
     if (localJoinType.value === type) return;
@@ -392,12 +367,10 @@
 
   const addCondition = () => {
     if (!canAddCondition.value) return;
+    // 这里可以默认选择一项，也可以不选择
     const defaultLeft = leftFields.value[0]?.key || "";
     const defaultRight = rightFields.value[0]?.key || "";
-    localConditions.value = [
-      ...localConditions.value,
-      { __id: generateId(), leftField: defaultLeft, rightField: defaultRight },
-    ];
+    localConditions.value.push({ leftField: "", rightField: "" });
     pendingLocalChange.value = true;
   };
 
@@ -408,22 +381,13 @@
     pendingLocalChange.value = true;
   };
 
-  const removeAll = () => {
-    localConditions.value = [];
-    pendingLocalChange.value = true;
-  };
-
   const handleLeftFieldChange = (index: number, value: string) => {
-    const next = [...localConditions.value];
-    next[index] = { ...next[index], leftField: value };
-    localConditions.value = next;
+    localConditions.value[index].leftField = value;
     pendingLocalChange.value = true;
   };
 
   const handleRightFieldChange = (index: number, value: string) => {
-    const next = [...localConditions.value];
-    next[index] = { ...next[index], rightField: value };
-    localConditions.value = next;
+    localConditions.value[index].rightField = value;
     pendingLocalChange.value = true;
   };
 
@@ -432,9 +396,9 @@
     pendingLocalChange.value = false;
     emit("change-config", {
       joinType: localJoinType.value,
-      leftNodeId: localLeftNodeId.value,
+      leftNodeId: localLeftNodeId.value, //TODO
       rightNodeId: localRightNodeId.value,
-      joinConditions: toPersistedConditions(localConditions.value),
+      joinConditions: localConditions.value,
     });
   };
 

@@ -1549,28 +1549,48 @@ const buildChainForNode = (
     .filter((n): n is NodeConfigSnapshot => Boolean(n));
 };
 
+const mockCustomerFields: InputField[] = [
+  { key: "customer_id", name: "客户ID", type: "number" },
+  { key: "customer_name", name: "客户姓名", type: "string" },
+  { key: "phone", name: "手机号", type: "string" },
+  { key: "email", name: "邮箱", type: "string" },
+  { key: "gender", name: "性别", type: "string" },
+  { key: "age", name: "年龄", type: "number" },
+  { key: "address", name: "地址", type: "string" },
+  { key: "create_time", name: "创建时间", type: "datetime" },
+];
+
+const mockOrderFields: InputField[] = [
+  { key: "order_id", name: "订单ID", type: "number" },
+  { key: "customer_id", name: "客户ID", type: "number" },
+  { key: "order_no", name: "订单编号", type: "string" },
+  { key: "amount", name: "订单金额", type: "number" },
+  { key: "status", name: "订单状态", type: "string" },
+  { key: "pay_time", name: "支付时间", type: "datetime" },
+  { key: "create_time", name: "创建时间", type: "datetime" },
+];
+
+export interface JoinUpstreamForm {
+  id: string;
+  name: string;
+  fields: InputField[];
+}
+
 // MOCK_API: fetch upstream fields for join node (simulate backend request)
 export const fetchJoinNodeUpstreamFields = async (
   payload: NodeRequestPayload,
-  leftNodeId: string,
-  rightNodeId: string,
-): Promise<{ left: InputField[]; right: InputField[] }> => {
+): Promise<JoinUpstreamForm[]> => {
   console.log("[MOCK_API] fetchJoinNodeUpstreamFields");
   await new Promise((resolve) => {
     window.setTimeout(resolve, 250);
   });
 
-  const nodes = [...payload.upstreamNodes, ...(payload.currentNode ? [payload.currentNode] : [])];
-  const leftChain = leftNodeId ? buildChainForNode(nodes, leftNodeId) : [];
-  const rightChain = rightNodeId ? buildChainForNode(nodes, rightNodeId) : [];
-
-  const leftResult = buildChainPreviewResult(leftChain);
-  const rightResult = buildChainPreviewResult(rightChain);
-
-  return {
-    left: leftResult.columns,
-    right: rightResult.columns,
-  };
+  const fromIds = payload.currentNode?.fromIds || [];
+  return fromIds.map((id, index) => ({
+    id,
+    name: index === 0 ? "我是假的客户表" : "我也是假的订单表",
+    fields: index === 0 ? mockCustomerFields : mockOrderFields,
+  }));
 };
 
 // MOCK_API: fetch join node preview data (simulate backend request)

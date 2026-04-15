@@ -64,7 +64,11 @@
   import editor from "./editor.vue";
   import property from "./property.vue";
   import InputNodeBindModal from "./node-config/InputNodeBindModal.vue";
-  import { buildNodeContext, sqlNodeContextKey, type SqlGraphData } from "./nodeContext";
+  import {
+    buildNodeContext,
+    sqlNodeContextKey,
+    type SqlGraphData,
+  } from "./nodeContext";
   import { inputNodeMockSources, resolveInputBinding } from "./inputNodeMock";
   import type { InputBindingPersisted } from "./types";
 
@@ -156,6 +160,7 @@
     selectedIncomingCount.value = payload.incomingCount || 0;
 
     if (selectedNode.value?.id && selectedNode.value.id !== node.id) {
+      // 如果直接在画布上切换到另一个节点，要先flush 一下前面节点的属性配置
       propertyRef.value?.flushDraftProperties();
     }
 
@@ -172,6 +177,7 @@
       return;
     }
 
+    // 如果一切合适，那就正常的弹起property 面板。
     selectedNode.value = node;
     propertyVisible.value = true;
     bindModalVisible.value = false;
@@ -222,6 +228,8 @@
   };
 
   const handleSubmitProperties = (properties: Record<string, unknown>) => {
+    console.log(" main handleSubmitProperties");
+
     const currentNode = selectedNode.value;
     if (!currentNode) return;
 
@@ -272,6 +280,8 @@
   };
 
   const handleSaveRequest = async () => {
+    console.log("handleSaveRequest");
+
     // 保存数据时，先让property flush 一遍本地的配置，写入到 lf 的节点配置里，然后调用editor 里的saveToLocal方法，将当前画布上的数据保存到本地。
     await flushPropertyDrafts();
     editorRef.value?.saveToLocal();
@@ -285,16 +295,14 @@
   const loadGraphData = async () => {
     // TODO: 后续替换为真实接口获取配置
     const STORAGE_KEY = "sql_editor_flow_data";
-    const savedData = localStorage.getItem(STORAGE_KEY);
-    if (savedData) {
-      try {
-        const data = JSON.parse(savedData);
-        await editorRef.value?.renderGraph(data);
-        message.success("流程配置已加载");
-      } catch {
-        await editorRef.value?.renderGraph({});
-        message.error("加载失败：配置数据损坏");
-      }
+    const savedData = localStorage.getItem(STORAGE_KEY)!;
+    try {
+      const data = JSON.parse(savedData);
+      await editorRef.value?.renderGraph(data);
+      message.success("流程配置已加载");
+    } catch {
+      await editorRef.value?.renderGraph({});
+      message.error("加载失败：配置数据损坏");
     }
   };
 
@@ -346,7 +354,10 @@
     border: 1px solid #e8e8e8;
     border-radius: 6px;
     cursor: move;
-    transition: background-color 0.2s, border-color 0.2s, transform 0.2s;
+    transition:
+      background-color 0.2s,
+      border-color 0.2s,
+      transform 0.2s;
   }
 
   .node-item:hover {

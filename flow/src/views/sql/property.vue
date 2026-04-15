@@ -38,10 +38,11 @@
         </template>
         <template v-else>
           <template v-if="activeTab === 'config'">
-            <template v-if="isInputNode && inputBinding">
+            <template v-if="isInputNode && inputBindingPersisted">
               <InputNodeConfigSection
+                ref="inputNodeRef"
                 :key="`${nodeData.id}-config-input`"
-                :input-binding="inputBinding"
+                :binding="inputBindingPersisted"
                 @change-source="emit('change-input-source')"
               />
             </template>
@@ -110,10 +111,10 @@
           </template>
 
           <template v-else-if="activeTab === 'preview'">
-            <template v-if="isInputNode && inputBinding">
+            <template v-if="isInputNode && inputBindingPersisted">
               <NodePreviewTableSection
                 :key="`${nodeData.id}-preview-input`"
-                :payload="inputBinding"
+                :payload="inputBindingPersisted"
                 :fetcher="fetchInputPreviewByBinding"
               />
             </template>
@@ -202,10 +203,8 @@
     fetchOutputPreviewByPayload,
     fetchWherePreviewByPayload,
     fetchJoinPreviewByPayload,
-    resolveInputBinding,
   } from "./inputNodeMock";
   import type {
-    BoundInputSource,
     DistinctPreviewPayload,
     FieldNodePreviewPayload,
     FieldSettingPersistedItem,
@@ -254,6 +253,7 @@
   const draftFieldSettings = ref<FieldSettingPersistedItem[]>([]);
   const draftGroupFields = ref<string[]>([]);
   const draftAggregateFields = ref<GroupAggregateFieldPersistedItem[]>([]);
+  const inputNodeRef = ref<{ flushDraft: () => void } | null>(null);
   const whereNodeRef = ref<{ flushDraft: () => void } | null>(null);
   const joinNodeRef = ref<{ flushDraft: () => void } | null>(null);
   const draftWhereLogic = ref<WhereLogic>("and");
@@ -337,10 +337,10 @@
     return tabs;
   });
 
-  const inputBinding = computed<BoundInputSource | null>(() => {
+  const inputBindingPersisted = computed<InputBindingPersisted | null>(() => {
     const binding = props.nodeData?.properties?.inputBinding;
     if (!binding || typeof binding !== "object") return null;
-    return resolveInputBinding(binding as InputBindingPersisted);
+    return binding as InputBindingPersisted;
   });
 
   const distinctFields = computed<string[]>(() => {
@@ -615,11 +615,30 @@
    * 
    */
   const flushDraftProperties = () => {
-    if (!props.nodeData) return;
+    console.log('flushDraftProperties');
+    
+    if (!props.nodeData) {
+      console.log('不需要刷新');
+      
+      return
+    };
+
+    console.log(1111);
+    
 
     // 先让子组件 flush 草稿
+    inputNodeRef.value?.flushDraft();
     whereNodeRef.value?.flushDraft();
     joinNodeRef.value?.flushDraft();
+
+    // 节点名称在输入框失焦或回车时才会触发 submit-name。
+    // 但用户可能直接点击 toolbar 的保存按钮，此时 input 不会失焦，
+    // 因此必须在 flush 阶段主动把名称草稿同步出去，防止保存时丢失。
+    const currentName = nodeLabel.value;
+    const nextName = editableName.value.trim();
+    if (nextName && nextName !== currentName) {
+      emit("submit-name", nextName);
+    }
 
     const nextProperties: Record<string, unknown> = {};
     const currentRemark = String(props.nodeData.properties?.remark || "");
@@ -679,7 +698,11 @@
       nextProperties.joinConditions = draftJoinConfig.value.joinConditions.map((cond) => ({ ...cond }));
     }
 
-    if (Object.keys(nextProperties).length === 0) return;
+    if (Object.keys(nextProperties).length === 0) {
+      console.log('property 里不需要emit');
+      
+      return
+    }
     emit("submit-properties", nextProperties);
   };
 

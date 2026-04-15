@@ -6,17 +6,18 @@
           <span>数据源</span>
           <span class="input-config-link" @click="$emit('change-source')">更改数据源</span>
         </div>
-        <div class="input-config-source-name">{{ inputBinding.sourceName }}</div>
+        <div v-if="loading" class="input-config-source-name">计算中...</div>
+        <div v-else class="input-config-source-name">{{ displayBinding?.sourceName || "-" }}</div>
       </div>
 
       <div class="input-config-card input-config-card--grow">
         <div class="input-config-card__header">
           <span>字段列表</span>
-          <span class="input-config-count">{{ inputBinding.fields.length }} 个字段</span>
+          <span class="input-config-count">{{ displayBinding?.fields.length || 0 }} 个字段</span>
         </div>
         <div class="input-config-fields">
           <div
-            v-for="field in inputBinding.fields"
+            v-for="field in displayBinding?.fields || []"
             :key="field.key"
             class="input-config-field"
           >
@@ -47,9 +48,9 @@
 </template>
 
 <script setup lang="ts">
-  import { computed } from "vue";
-  import { getPreviewRowsByBinding } from "../inputNodeMock";
-  import type { BoundInputSource, InputField } from "../types";
+  import { computed, onMounted, onUnmounted, ref } from "vue";
+  import { fetchInputSourceDetail, getPreviewRowsByBinding } from "../inputNodeMock";
+  import type { BoundInputSource, InputBindingPersisted, InputField, InputSource } from "../types";
 
   interface TableColumn {
     title: string;
@@ -66,34 +67,60 @@
   }>();
 
   const props = defineProps<{
-    inputBinding: BoundInputSource;
+    binding?: InputBindingPersisted;
   }>();
 
+  const loading = ref(false);
+  const localSource = ref<InputSource | null>(null); // 表单的完整信息描述，包括字段列表
+  let loadToken = 0;
+
+  const displayBinding = computed<BoundInputSource | null>(() => {
+    if (!localSource.value) return null;
+    const fieldKeys = new Set(props.binding?.fieldKeys || []);
+    return {
+      sourceId: localSource.value.id,
+      sourceName: localSource.value.name,
+      fields: localSource.value.fields.filter((field) => fieldKeys.has(field.key)),//TODO
+    };
+  });
+
+  const loadSourceDetail = async () => {
+    const currentToken = ++loadToken;
+    loading.value = true;
+    const result = await fetchInputSourceDetail(props.binding);
+    console.log("🚀 ~ InputNodeConfigSection.vue:91 ~ loadSourceDetail ~ result:", result)
+
+    if (currentToken !== loadToken) return;
+    localSource.value = result;
+    loading.value = false;
+  };
+
+  onMounted(() => {
+    console.log('输入节点 mounted');
+    
+    void loadSourceDetail();
+  });
+
+  onUnmounted(() => {
+    console.log('输入节点 unmounted');
+  })
+
   const selectedFieldHeaderColumns = computed<TableColumn[]>(() => {
-    return (props.inputBinding?.fields || []).map((field: InputField) => ({
+    return (displayBinding.value?.fields || []).map((field: InputField) => ({
       title: field.name,
       dataIndex: field.key,
       key: field.key,
       width: 120,
       ellipsis: true,
-      customHeaderCell: () => ({
-        style: {
-          minWidth: "100px",
-        },
-      }),
-      customCell: () => ({
-        style: {
-          minWidth: "100px",
-        },
-      }),
     }));
   });
 
   const configTableRows = computed(() => {
+    if (!displayBinding.value) return [];
     // TODO: 这里先只对 customer 做特判，是因为当前配置面板仅接了 customer 的表头/样例数据，避免其他 source 误展示半成品预览。
-    if (props.inputBinding?.sourceId !== "customer") return [];
+    if (displayBinding.value.sourceId !== "customer") return [];
     // TODO: 这里读取的是 inputNodeMock 里的样例行数据，用来给输入节点配置面板展示前 10 条预览，后续应替换为真实的样例数据接口。
-    return getPreviewRowsByBinding(props.inputBinding)
+    return getPreviewRowsByBinding(displayBinding.value)
       .slice(0, 10)
       .map((row, index) => ({
         __configKey: `config-row-${index}`,
@@ -106,6 +133,13 @@
   });
 
   const configTableScrollY = "calc(100% - 40px)";
+
+  const flushDraft = () => {
+    // 当前输入节点配置面板为只读展示，字段选择通过弹窗直接修改节点属性。
+    // 保留 flushDraft 以统一所有配置组件的数据流接口。
+  };
+
+  defineExpose({ flushDraft });
 </script>
 
 <style scoped lang="scss">

@@ -672,6 +672,17 @@ export const resolveInputBinding = (
   };
 };
 
+// MOCK_API: fetch input source detail by sourceId (simulate backend request)
+export const fetchInputSourceDetail = async (
+  binding?: InputBindingPersisted | null,
+): Promise<InputSource | null> => {
+  console.log("[MOCK_API] fetchInputSourceDetail", binding?.sourceId);
+  await new Promise((resolve) => {
+    window.setTimeout(resolve, 2000);
+  });
+  return getInputSourceById(binding?.sourceId) || null;
+};
+
 export const getPreviewRowsByBinding = (
   binding?: BoundInputSource | InputBindingPersisted | null,
 ) => {

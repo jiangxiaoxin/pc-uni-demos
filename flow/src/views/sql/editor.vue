@@ -133,6 +133,8 @@
     nodeId: string,
     properties: Record<string, unknown>,
   ) => {
+    console.log('editor updateNodeProperties');
+    
     if (!lf) return;
     lf.setProperties(nodeId, properties);
   };
@@ -218,12 +220,14 @@
 
     lf.on("node:click", ({ data }) => {
       const node = data as SqlNodeData;
+      console.log("🚀 ~ editor.vue:223 ~ node:", node)
+
       emit("node-select", {
         node,
         incomingCount: getIncomingCountByNodeId(node.id), // 连接了几条线进来
       });
     });
-    
+
     lf.on("blank:click", () => {
       console.log("blank:clickkkkkkkkkkkkkkk");
       emit("blank-click");

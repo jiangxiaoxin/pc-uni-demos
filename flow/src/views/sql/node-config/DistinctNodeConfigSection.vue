@@ -177,6 +177,8 @@
   const pendingLocalChange = ref(false); // dirty flag. true = local data changed, need to reCalc
 
   const flushDraft = () => {
+    console.log('去重 flush');
+    
     if (!pendingLocalChange.value) return;
     pendingLocalChange.value = false;
     emit(

@@ -22,7 +22,7 @@
             type="button"
             class="property-tab"
             :class="{ 'property-tab--active': activeTab === tab.key }"
-            @click="activeTab = tab.key"
+            @click="handleTabClick(tab.key)"
           >
             {{ tab.label }}
           </button>
@@ -620,6 +620,12 @@
    * panel close so unsaved draft changes are committed once as a diff payload.
    * 
    */
+  const handleTabClick = (key: typeof activeTab.value) => {
+    if (activeTab.value === key) return;
+    flushDraftProperties();
+    activeTab.value = key;
+  };
+
   const flushDraftProperties = () => {
     console.log('flushDraftProperties');
     

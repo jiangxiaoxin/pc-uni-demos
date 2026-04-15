@@ -65,7 +65,8 @@
   import property from "./property.vue";
   import InputNodeBindModal from "./node-config/InputNodeBindModal.vue";
   import { buildNodeContext, sqlNodeContextKey, type SqlGraphData } from "./nodeContext";
-  import { inputNodeMockSources, type InputBindingPersisted, resolveInputBinding } from "./inputNodeMock";
+  import { inputNodeMockSources, resolveInputBinding } from "./inputNodeMock";
+  import type { InputBindingPersisted } from "./types";
 
   interface EditorExpose {
     resize: () => void;

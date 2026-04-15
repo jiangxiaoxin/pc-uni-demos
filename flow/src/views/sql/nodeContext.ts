@@ -1,5 +1,5 @@
 import type { InjectionKey } from "vue";
-import type { NodeConfigSnapshot, NodeRequestPayload } from "./inputNodeMock";
+import type { NodeConfigSnapshot, NodeRequestPayload } from "./types";
 
 export interface SqlGraphData {
   nodes?: Array<{

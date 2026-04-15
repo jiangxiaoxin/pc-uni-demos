@@ -191,11 +191,13 @@
   import {
     fetchGroupNodeUpstreamFields,
     getGroupAggregateMethodOptions,
-    type GroupAggregateFieldItem,
-    type GroupAggregateFieldPersistedItem,
-    type GroupAggregateMethod,
-    type InputField,
   } from "../inputNodeMock";
+  import type {
+    GroupAggregateFieldItem,
+    GroupAggregateFieldPersistedItem,
+    GroupAggregateMethod,
+    InputField,
+  } from "../types";
 
   const emit = defineEmits<{
     (e: "change-group-fields", value: string[]): void;

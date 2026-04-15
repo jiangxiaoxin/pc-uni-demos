@@ -158,14 +158,14 @@
   import { computed, inject, onMounted, onUnmounted, ref } from "vue";
   import { DeleteOutlined } from "@ant-design/icons-vue";
   import { sqlNodeContextKey, type GetNodeContext } from "../nodeContext";
-  import {
-    fetchJoinNodeUpstreamFields,
-    type InputField,
-    type JoinConditionPersisted,
-    type JoinConfig,
-    type JoinType,
-    type JoinUpstreamForm,
-  } from "../inputNodeMock";
+  import { fetchJoinNodeUpstreamFields } from "../inputNodeMock";
+  import type {
+    InputField,
+    JoinConditionPersisted,
+    JoinConfig,
+    JoinType,
+    JoinUpstreamForm,
+  } from "../types";
 
   const emit = defineEmits<{
     (e: "change-config", value: JoinConfig): void;

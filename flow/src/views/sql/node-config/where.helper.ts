@@ -1,6 +1,4 @@
-import {
-    type InputField,
-  } from "../inputNodeMock";
+import type { InputField } from "../types";
 
 const NUMERIC_FIELD_TYPES = new Set([
   'number',

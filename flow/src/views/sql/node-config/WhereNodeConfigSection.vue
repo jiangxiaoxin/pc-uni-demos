@@ -270,13 +270,13 @@
   import { DeleteOutlined } from "@ant-design/icons-vue";
   import WhereTagsInput from "./wheretagsinput.vue";
   import { sqlNodeContextKey, type GetNodeContext } from "../nodeContext";
-  import {
-    fetchWhereNodeUpstreamFields,
-    type InputField,
-    type WhereConditionPersisted,
-    type WhereLogic,
-    type WhereRelation,
-  } from "../inputNodeMock";
+  import { fetchWhereNodeUpstreamFields } from "../inputNodeMock";
+  import type {
+    InputField,
+    WhereConditionPersisted,
+    WhereLogic,
+    WhereRelation,
+  } from "../types";
   import {
     isNumericFieldType,
     isDateTimeFieldType,

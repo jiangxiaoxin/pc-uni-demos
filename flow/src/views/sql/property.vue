@@ -202,23 +202,25 @@
     fetchOutputPreviewByPayload,
     fetchWherePreviewByPayload,
     fetchJoinPreviewByPayload,
-    type BoundInputSource,
-    type DistinctPreviewPayload,
-    type FieldNodePreviewPayload,
-    type FieldSettingPersistedItem,
-    type GroupAggregateFieldPersistedItem,
-    type GroupNodePreviewPayload,
-    type InputBindingPersisted,
-    type OutputPreviewPayload,
-    type WhereConditionPersisted,
-    type WhereLogic,
-    type WhereNodePreviewPayload,
-    type JoinNodePreviewPayload,
-    type JoinConfig,
     resolveInputBinding,
-    type JoinConditionPersisted,
-    type JoinType
   } from "./inputNodeMock";
+  import type {
+    BoundInputSource,
+    DistinctPreviewPayload,
+    FieldNodePreviewPayload,
+    FieldSettingPersistedItem,
+    GroupAggregateFieldPersistedItem,
+    GroupNodePreviewPayload,
+    InputBindingPersisted,
+    JoinConditionPersisted,
+    JoinConfig,
+    JoinNodePreviewPayload,
+    JoinType,
+    OutputPreviewPayload,
+    WhereConditionPersisted,
+    WhereLogic,
+    WhereNodePreviewPayload,
+  } from "./types";
 
   interface SqlNodeData {
     id: string;

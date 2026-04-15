@@ -48,11 +48,8 @@
 
 <script setup lang="ts">
   import { computed } from "vue";
-  import {
-    getPreviewRowsByBinding,
-    type BoundInputSource,
-    type InputField,
-  } from "../inputNodeMock";
+  import { getPreviewRowsByBinding } from "../inputNodeMock";
+  import type { BoundInputSource, InputField } from "../types";
 
   interface TableColumn {
     title: string;

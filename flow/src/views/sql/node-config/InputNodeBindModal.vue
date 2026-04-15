@@ -77,12 +77,8 @@
 
 <script setup lang="ts">
   import { computed, ref, watch } from "vue";
-  import {
-    fetchInputSourceFields,
-    type InputBindingPersisted,
-    type InputField,
-    type InputSource,
-  } from "../inputNodeMock";
+  import { fetchInputSourceFields } from "../inputNodeMock";
+  import type { InputBindingPersisted, InputField, InputSource } from "../types";
 
   const emit = defineEmits<{
     (e: "update:open", value: boolean): void;

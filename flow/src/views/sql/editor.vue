@@ -70,6 +70,7 @@
   import SqlNode from "./nodes/SqlNode.vue";
   import SqlNodeModel from "./nodes/SqlNodeModel";
   import { nodeTypes } from "./menus";
+  import type { SqlGraphData } from "./nodeContext";
 
   interface SqlNodeData {
     id: string;
@@ -138,6 +139,12 @@
 
   const getGraphNodes = () => lf?.getGraphData()?.nodes || [];
   const getGraphData = () => lf?.getGraphData();
+  const renderGraph = async (data: SqlGraphData) => {
+    if (!lf) return;
+    lf.render(data as any);
+    await nextTick();
+    resizeEditor();
+  };
   const getIncomingCountByNodeId = (nodeId: string): number => {
     const edges = lf?.getGraphData()?.edges || [];
     return edges.filter((edge) => edge.targetNodeId === nodeId).length;
@@ -145,32 +152,6 @@
 
   const centerGraph = () => {
     if (!lf) return false;
-
-    // const nodes = getGraphNodes();
-    // if (nodes.length === 0) {
-    //   message.warning("画布中没有节点");
-    //   return false;
-    // }
-
-    // let minX = Infinity;
-    // let minY = Infinity;
-    // let maxX = -Infinity;
-    // let maxY = -Infinity;
-
-    // nodes.forEach((node) => {
-    //   const width = Number(node.properties?.width) || 180;
-    //   const height = Number(node.properties?.height) || 40;
-    //   minX = Math.min(minX, node.x - width / 2);
-    //   minY = Math.min(minY, node.y - height / 2);
-    //   maxX = Math.max(maxX, node.x + width / 2);
-    //   maxY = Math.max(maxY, node.y + height / 2);
-    // });
-
-    // lf.focusOn({
-    //   x: (minX + maxX) / 2,
-    //   y: (minY + maxY) / 2,
-    // });
-
     lf.translateCenter();
 
     return true;
@@ -242,32 +223,11 @@
         incomingCount: getIncomingCountByNodeId(node.id), // 连接了几条线进来
       });
     });
-
-    // lf.on("blank:dragstart", () => {
-    //   console.log('dragstartttttttttttt');
-    // });
-
-    // lf.on("blank:drop", () => {
-    //   console.log('dropppppppppppppppppppp');
-    // });
-
+    
     lf.on("blank:click", () => {
       console.log("blank:clickkkkkkkkkkkkkkk");
       emit("blank-click");
     });
-
-    // lf.on("blank:mousedown", ({e}) => {
-    //   console.log('blank mousedown', e);
-    // })
-
-    // lf.on("blank:mousemove", () => {
-    //   console.log('blank mousemove');
-    // })
-
-    // lf.on("blank:mouseup", () => {
-    //   console.log('blank mouseup');
-
-    // })
 
     lf.on("node:delete", ({ data }) => {
       if (data?.id) {
@@ -291,8 +251,6 @@
       console.warn("连接被阻止:", msg);
       message.warning(msg || "当前连接不被允许");
     });
-
-    lf.render({}); //TODO 初始化时可以传入配置，直接绘制
 
     resizeObserver = new ResizeObserver(() => {
       resizeEditor();
@@ -428,6 +386,7 @@
     saveToLocal,
     openPreview,
     load: handleLoad,
+    renderGraph,
   });
 </script>
 

@@ -57,6 +57,7 @@
 </template>
 
 <script setup lang="ts">
+  import { message } from "ant-design-vue";
   import { nextTick, onMounted, provide, ref, watch } from "vue";
   import { nodeTypes } from "./menus";
   import { sqlNodeIconMap } from "./nodes/iconMap";
@@ -78,6 +79,7 @@
     saveToLocal: () => void;
     openPreview: () => void;
     load: () => Promise<void>;
+    renderGraph: (data: SqlGraphData) => Promise<void>;
   }
 
   interface PropertyExpose {
@@ -279,10 +281,26 @@
     editorRef.value?.openPreview();
   };
 
+  const loadGraphData = async () => {
+    // TODO: 后续替换为真实接口获取配置
+    const STORAGE_KEY = "sql_editor_flow_data";
+    const savedData = localStorage.getItem(STORAGE_KEY);
+    if (savedData) {
+      try {
+        const data = JSON.parse(savedData);
+        await editorRef.value?.renderGraph(data);
+        message.success("流程配置已加载");
+      } catch {
+        await editorRef.value?.renderGraph({});
+        message.error("加载失败：配置数据损坏");
+      }
+    }
+  };
+
   onMounted(() => {
-    // TODO 从后台拿配置
+    // mock 延迟获取配置
     setTimeout(() => {
-      void editorRef.value?.load();
+      void loadGraphData();
     }, 1000);
   });
 </script>

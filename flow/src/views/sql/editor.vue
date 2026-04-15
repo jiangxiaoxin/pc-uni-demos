@@ -352,7 +352,7 @@
   const handleLoad = async () => {
     if (!lf) return;
 
-    const savedData = localStorage.getItem(STORAGE_KEY);
+    const savedData = localStorage.getItem(STORAGE_KEY); //TODO 从后端获取配置
     if (!savedData) {
       message.warning("没有找到已保存的配置");
       return;

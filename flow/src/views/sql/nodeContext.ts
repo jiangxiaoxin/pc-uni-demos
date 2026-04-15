@@ -45,6 +45,14 @@ export const buildNodeContext = (
 
   visit(nodeId);
 
+  // 辅助函数：计算某个节点的直接前置节点id（fromIds）
+  const getFromIds = (targetId: string): string[] => {
+    const fromIds = edges
+      .filter((edge) => edge.targetNodeId === targetId)
+      .map((edge) => edge.sourceNodeId);
+    return [...new Set(fromIds)];
+  };
+
   const uniquePredecessorIds = [...new Set(predecessorOrder)];
   const upstreamNodes = uniquePredecessorIds
     .map((id) => nodeMap.get(id))
@@ -55,6 +63,7 @@ export const buildNodeContext = (
       // 这里构建的是传给下游预览/mock 逻辑的链路快照。
       // properties 需要拷贝，避免后续误操作时通过引用污染 LogicFlow 的真实节点状态。
       properties: { ...((node.properties || {}) as Record<string, unknown>) },
+      fromIds: getFromIds(node.id),
     }));
 
   const currentNode = nodeMap.get(nodeId);
@@ -67,6 +76,7 @@ export const buildNodeContext = (
           id: currentNode.id,
           type: currentNode.type,
           properties: { ...((currentNode.properties || {}) as Record<string, unknown>) },
+          fromIds: getFromIds(currentNode.id),
         }
       : null,
   };

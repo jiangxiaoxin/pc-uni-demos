@@ -83,6 +83,15 @@
                 @change-conditions="handleWhereConditionsChange"
               />
             </template>
+            <template v-else-if="isJoinNode">
+              <JoinNodeConfigSection
+                ref="joinNodeRef"
+                :key="`${nodeData.id}-config-join`"
+                :node-id="nodeData.id"
+                :config="draftJoinConfig"
+                @change-config="handleJoinConfigChange"
+              />
+            </template>
 
             <template v-else>
               <div class="property-row">
@@ -136,6 +145,13 @@
                 :fetcher="fetchWherePreviewByPayload"
               />
             </template>
+            <template v-else-if="isJoinNode && nodeData">
+              <NodePreviewTableSection
+                :key="`${nodeData.id}-preview-join`"
+                :payload="buildJoinNodePreviewPayload"
+                :fetcher="fetchJoinPreviewByPayload"
+              />
+            </template>
             <template v-else-if="isOutputNode && nodeData">
               <NodePreviewTableSection
                 :key="`${nodeData.id}-preview-output`"
@@ -175,6 +191,7 @@
   import DistinctNodeConfigSection from "./node-config/DistinctNodeConfigSection.vue";
   import GroupNodeConfigSection from "./node-config/GroupNodeConfigSection.vue";
   import WhereNodeConfigSection from "./node-config/WhereNodeConfigSection.vue";
+  import JoinNodeConfigSection from "./node-config/JoinNodeConfigSection.vue";
   import NodePreviewTableSection from "./NodePreviewTableSection.vue";
   import { sqlNodeContextKey, type GetNodeContext } from "./nodeContext";
   import {
@@ -184,6 +201,7 @@
     fetchInputPreviewByBinding,
     fetchOutputPreviewByPayload,
     fetchWherePreviewByPayload,
+    fetchJoinPreviewByPayload,
     type BoundInputSource,
     type DistinctPreviewPayload,
     type FieldNodePreviewPayload,
@@ -195,6 +213,8 @@
     type WhereConditionPersisted,
     type WhereLogic,
     type WhereNodePreviewPayload,
+    type JoinNodePreviewPayload,
+    type JoinConfig,
     resolveInputBinding,
   } from "./inputNodeMock";
 
@@ -231,8 +251,15 @@
   const draftGroupFields = ref<string[]>([]);
   const draftAggregateFields = ref<GroupAggregateFieldPersistedItem[]>([]);
   const whereNodeRef = ref<{ flushDraft: () => void } | null>(null);
+  const joinNodeRef = ref<{ flushDraft: () => void } | null>(null);
   const draftWhereLogic = ref<WhereLogic>("and");
   const draftWhereConditions = ref<WhereConditionPersisted[]>([]);
+  const draftJoinConfig = ref<JoinConfig>({
+    joinType: "inner",
+    leftNodeId: "",
+    rightNodeId: "",
+    joinConditions: [],
+  });
   const activeTab = ref<"config" | "preview" | "remark">("config");
   const tabs = [
     { key: "config" as const, label: "节点配置" },
@@ -280,6 +307,7 @@
   const isDistinctNode = computed(() => props.nodeData?.type === "distinct-node");
   const isGroupNode = computed(() => props.nodeData?.type === "group-node");
   const isWhereNode = computed(() => props.nodeData?.type === "where-node");
+  const isJoinNode = computed(() => props.nodeData?.type === "join-node");
   const isOutputNode = computed(() => props.nodeData?.type === "out-node");
 
   const requiredMinIncoming = computed(() => {
@@ -360,6 +388,35 @@
         item !== null &&
         typeof (item as WhereConditionPersisted).key === "string" &&
         typeof (item as WhereConditionPersisted).relation === "string"
+      );
+    });
+  });
+
+  const joinType = computed<JoinType>(() => {
+    const type = props.nodeData?.properties?.joinType;
+    if (type === "inner" || type === "outer" || type === "left" || type === "right") {
+      return type;
+    }
+    return "inner";
+  });
+
+  const joinLeftNodeId = computed<string>(() => {
+    return String(props.nodeData?.properties?.leftNodeId || "");
+  });
+
+  const joinRightNodeId = computed<string>(() => {
+    return String(props.nodeData?.properties?.rightNodeId || "");
+  });
+
+  const joinConditions = computed<JoinConditionPersisted[]>(() => {
+    const conditions = props.nodeData?.properties?.joinConditions;
+    if (!Array.isArray(conditions)) return [];
+    return conditions.filter((item): item is JoinConditionPersisted => {
+      return (
+        typeof item === "object" &&
+        item !== null &&
+        typeof (item as JoinConditionPersisted).leftField === "string" &&
+        typeof (item as JoinConditionPersisted).rightField === "string"
       );
     });
   });
@@ -451,6 +508,27 @@
     };
   };
 
+  const buildJoinNodePreviewPayload = (): JoinNodePreviewPayload => {
+    const nodeContext = resolveCurrentNodeContext();
+    return {
+      nodeId: props.nodeData?.id || "",
+      nodeType: props.nodeData?.type || "",
+      upstreamNodes: nodeContext?.upstreamNodes || [],
+      currentNode: nodeContext?.currentNode
+        ? {
+            ...nodeContext.currentNode,
+            properties: {
+              ...(nodeContext.currentNode.properties || {}),
+              joinType: draftJoinConfig.value.joinType,
+              leftNodeId: draftJoinConfig.value.leftNodeId,
+              rightNodeId: draftJoinConfig.value.rightNodeId,
+              joinConditions: draftJoinConfig.value.joinConditions.map((cond) => ({ ...cond })),
+            },
+          }
+        : null,
+    };
+  };
+
   // Rebuild local drafts whenever the panel opens or the selected node changes.
   // Child editors work against these drafts first, then flush them back in one shot.
   watch(
@@ -464,6 +542,12 @@
       draftAggregateFields.value = aggregateFields.value.map((field) => ({ ...field }));
       draftWhereLogic.value = whereLogic.value;
       draftWhereConditions.value = whereConditions.value.map((cond) => ({ ...cond }));
+      draftJoinConfig.value = {
+        joinType: joinType.value,
+        leftNodeId: joinLeftNodeId.value,
+        rightNodeId: joinRightNodeId.value,
+        joinConditions: joinConditions.value.map((cond) => ({ ...cond })),
+      };
       const defaultTab = availableTabs.value[0]?.key || "remark";
       activeTab.value = defaultTab;
     },
@@ -514,6 +598,10 @@
     draftWhereConditions.value = conditions.map((cond) => ({ ...cond }));
   };
 
+  const handleJoinConfigChange = (config: JoinConfig) => {
+    draftJoinConfig.value = { ...config };
+  };
+
   /**
    * Flush local property drafts back to the parent editor state.
    *
@@ -527,6 +615,7 @@
 
     // 先让子组件 flush 草稿
     whereNodeRef.value?.flushDraft();
+    joinNodeRef.value?.flushDraft();
 
     const nextProperties: Record<string, unknown> = {};
     const currentRemark = String(props.nodeData.properties?.remark || "");
@@ -570,6 +659,20 @@
     const nextWhereConditions = JSON.stringify(draftWhereConditions.value);
     if (nextWhereConditions !== currentWhereConditions) {
       nextProperties.whereConditions = draftWhereConditions.value.map((cond) => ({ ...cond }));
+    }
+
+    const currentJoinConfig = JSON.stringify({
+      joinType: joinType.value,
+      leftNodeId: joinLeftNodeId.value,
+      rightNodeId: joinRightNodeId.value,
+      joinConditions: joinConditions.value,
+    });
+    const nextJoinConfig = JSON.stringify(draftJoinConfig.value);
+    if (nextJoinConfig !== currentJoinConfig) {
+      nextProperties.joinType = draftJoinConfig.value.joinType;
+      nextProperties.leftNodeId = draftJoinConfig.value.leftNodeId;
+      nextProperties.rightNodeId = draftJoinConfig.value.rightNodeId;
+      nextProperties.joinConditions = draftJoinConfig.value.joinConditions.map((cond) => ({ ...cond }));
     }
 
     if (Object.keys(nextProperties).length === 0) return;

@@ -269,6 +269,7 @@
   };
 
   const handleSaveRequest = async () => {
+    // 保存数据时，先让property flush 一遍本地的配置，写入到 lf 的节点配置里，然后调用editor 里的saveToLocal方法，将当前画布上的数据保存到本地。
     await flushPropertyDrafts();
     editorRef.value?.saveToLocal();
   };
@@ -279,7 +280,7 @@
   };
 
   onMounted(() => {
-    // TODO 从后天拿配置
+    // TODO 从后台拿配置
     setTimeout(() => {
       void editorRef.value?.load();
     }, 1000);

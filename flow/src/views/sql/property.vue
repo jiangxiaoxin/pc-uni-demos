@@ -617,25 +617,27 @@
     draftJoinConfig.value = { ...config };
   };
 
+  const isEqualByJSON = <T>(a: T, b: T): boolean => JSON.stringify(a) === JSON.stringify(b);
+
   /**
    * Flush local property drafts back to the parent editor state.
    *
    * This panel keeps remark, distinct fields, and field settings in local refs
    * while the user is editing. The parent calls this before node switches or
    * panel close so unsaved draft changes are committed once as a diff payload.
-   * 
+   *
    */
   const flushDraftProperties = () => {
     console.log('flushDraftProperties');
-    
+
     if (!props.nodeData) {
       console.log('不需要刷新');
-      
+
       return
     };
 
     console.log(1111);
-    
+
 
     // 先让子组件 flush 草稿
     inputNodeRef.value?.flushDraft();
@@ -662,50 +664,37 @@
     // TODO 既然节点类型是确定的，那对应的它的节点属性也就是确定的，它需要关心的数据也就是确定的，那就没必要每次都像下面这样，把每个种类的节点属性都判断一遍
 
     // Compare serialized structures so only changed fields are emitted upstream.
-    const currentDistinctFields = JSON.stringify(distinctFields.value);
-    const nextDistinctFields = JSON.stringify(draftDistinctFields.value);
-    if (nextDistinctFields !== currentDistinctFields) {
+    if (!isEqualByJSON(draftDistinctFields.value, distinctFields.value)) {
       nextProperties.distinctFields = [...draftDistinctFields.value];
     }
 
-    const currentFieldSettings = JSON.stringify(fieldSettings.value);
-    const nextFieldSettings = JSON.stringify(draftFieldSettings.value);
-    if (nextFieldSettings !== currentFieldSettings) {
+    if (!isEqualByJSON(draftFieldSettings.value, fieldSettings.value)) {
       nextProperties.fieldSettings = draftFieldSettings.value.map((field) => ({ ...field }));
     }
 
-    const currentGroupFields = JSON.stringify(groupFields.value);
-    const nextGroupFields = JSON.stringify(draftGroupFields.value);
-    if (nextGroupFields !== currentGroupFields) {
+    if (!isEqualByJSON(draftGroupFields.value, groupFields.value)) {
       nextProperties.groupFields = [...draftGroupFields.value];
     }
 
-    const currentAggregateFields = JSON.stringify(aggregateFields.value);
-    const nextAggregateFields = JSON.stringify(draftAggregateFields.value);
-    if (nextAggregateFields !== currentAggregateFields) {
+    if (!isEqualByJSON(draftAggregateFields.value, aggregateFields.value)) {
       nextProperties.aggregateFields = draftAggregateFields.value.map((field) => ({ ...field }));
     }
 
-    const currentWhereLogic = whereLogic.value;
-    const nextWhereLogic = draftWhereLogic.value;
-    if (nextWhereLogic !== currentWhereLogic) {
-      nextProperties.whereLogic = nextWhereLogic;
+    if (draftWhereLogic.value !== whereLogic.value) {
+      nextProperties.whereLogic = draftWhereLogic.value;
     }
 
-    const currentWhereConditions = JSON.stringify(whereConditions.value);
-    const nextWhereConditions = JSON.stringify(draftWhereConditions.value);
-    if (nextWhereConditions !== currentWhereConditions) {
+    if (!isEqualByJSON(draftWhereConditions.value, whereConditions.value)) {
       nextProperties.whereConditions = draftWhereConditions.value.map((cond) => ({ ...cond }));
     }
 
-    const currentJoinConfig = JSON.stringify({
+    const currentJoinConfig = {
       joinType: joinType.value,
       leftNodeId: joinLeftNodeId.value,
       rightNodeId: joinRightNodeId.value,
       joinConditions: joinConditions.value,
-    });
-    const nextJoinConfig = JSON.stringify(draftJoinConfig.value);
-    if (nextJoinConfig !== currentJoinConfig) {
+    };
+    if (!isEqualByJSON(draftJoinConfig.value, currentJoinConfig)) {
       nextProperties.joinType = draftJoinConfig.value.joinType;
       nextProperties.leftNodeId = draftJoinConfig.value.leftNodeId;
       nextProperties.rightNodeId = draftJoinConfig.value.rightNodeId;
@@ -714,7 +703,7 @@
 
     if (Object.keys(nextProperties).length === 0) {
       console.log('property 里不需要emit');
-      
+
       return
     }
     emit("submit-properties", nextProperties);

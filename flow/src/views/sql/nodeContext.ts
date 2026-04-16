@@ -36,10 +36,10 @@ export const buildNodeContext = (
     edges
       .filter((edge) => edge.targetNodeId === currentId)
       .forEach((edge) => {
-        visit(edge.sourceNodeId);
-        if (edge.sourceNodeId !== nodeId) {
+        if (edge.sourceNodeId !== nodeId) { // 做一个保护的，自己别出现在前置节点列表里
           predecessorOrder.push(edge.sourceNodeId);
         }
+        visit(edge.sourceNodeId); // a通过边找到了前置b，再去visit b，找出再前置的
       });
   };
 
@@ -50,10 +50,12 @@ export const buildNodeContext = (
     const fromIds = edges
       .filter((edge) => edge.targetNodeId === targetId)
       .map((edge) => edge.sourceNodeId);
-    return [...new Set(fromIds)];
+    return fromIds  // 这里不需要去重呀，两个节点之间的直接连线是唯一的，所以一个节点的直接前置id也都是唯一的
+    // return [...new Set(fromIds)];
   };
 
   const uniquePredecessorIds = [...new Set(predecessorOrder)];
+  // upstreamNodes 并没有严格的顺序，也不需要严格的顺序，因为通过内部的 fromdIds可以构建
   const upstreamNodes = uniquePredecessorIds
     .map((id) => nodeMap.get(id))
     .filter((node): node is NonNullable<typeof node> => Boolean(node))

@@ -48,12 +48,23 @@
             class="config-section__body config-section__body--panel join-source-form"
           >
             <div class="join-source-row">
-              <span class="join-source-label">左侧表单</span>
+              <div class="join-source-label-wrap">
+                <span class="join-source-label">左侧表单</span>
+                <button
+                  type="button"
+                  class="join-swap-btn"
+                  title="交换左右表单"
+                  :disabled="!localLeftNodeId && !localRightNodeId"
+                  @click="swapSources"
+                >
+                  <SwapOutlined class="join-swap-icon" />
+                </button>
+              </div>
               <a-select
                 class="join-source-select"
                 placeholder="选择左侧表单"
                 :value="localLeftNodeId"
-                :options="predecessorOptions"
+                :options="leftPredecessorOptions"
                 @change="(value) => setLeftNodeId(value as string)"
               />
             </div>
@@ -63,7 +74,7 @@
                 class="join-source-select"
                 placeholder="选择右侧表单"
                 :value="localRightNodeId"
-                :options="predecessorOptions"
+                :options="rightPredecessorOptions"
                 @change="(value) => setRightNodeId(value as string)"
               />
             </div>
@@ -156,7 +167,7 @@
 
 <script setup lang="ts">
   import { computed, inject, onMounted, onUnmounted, ref } from "vue";
-  import { DeleteOutlined } from "@ant-design/icons-vue";
+  import { DeleteOutlined, SwapOutlined } from "@ant-design/icons-vue";
   import { sqlNodeContextKey, type GetNodeContext } from "../nodeContext";
   import { fetchJoinNodeUpstreamFields } from "../inputNodeMock";
   import type {
@@ -206,11 +217,22 @@
   /**
    * 表单设置的选项。显示前置两个节点的节点名。前面这两个节点名用户可以自己修改
    */
-  const predecessorOptions = computed(() => {
-    return upstreamForms.value.map((form) => ({
-      label: form.name,
-      value: form.id,
-    }));
+  const leftPredecessorOptions = computed(() => {
+    return upstreamForms.value
+      .filter((form) => form.id !== localRightNodeId.value)
+      .map((form) => ({
+        label: form.name,
+        value: form.id,
+      }));
+  });
+
+  const rightPredecessorOptions = computed(() => {
+    return upstreamForms.value
+      .filter((form) => form.id !== localLeftNodeId.value)
+      .map((form) => ({
+        label: form.name,
+        value: form.id,
+      }));
   });
 
   const leftFields = computed<InputField[]>(() => {
@@ -234,6 +256,7 @@
   const canAddCondition = computed(() => {
     return (
       hasBothSources.value &&
+      localLeftNodeId.value !== localRightNodeId.value &&
       leftFields.value.length > 0 &&
       rightFields.value.length > 0
     );
@@ -285,7 +308,8 @@
       leftNodeValid &&
       rightNodeValid &&
       leftFieldsValid &&
-      rightFieldsValid
+      rightFieldsValid &&
+      localLeftNodeId.value !== localRightNodeId.value
     );
   };
 
@@ -354,6 +378,9 @@
   const setLeftNodeId = (nodeId: string) => {
     if (localLeftNodeId.value === nodeId) return;
     localLeftNodeId.value = nodeId;
+    if (nodeId === localRightNodeId.value) {
+      localRightNodeId.value = "";
+    }
     localConditions.value = [];
     pendingLocalChange.value = true;
   };
@@ -361,7 +388,23 @@
   const setRightNodeId = (nodeId: string) => {
     if (localRightNodeId.value === nodeId) return;
     localRightNodeId.value = nodeId;
+    if (nodeId === localLeftNodeId.value) {
+      localLeftNodeId.value = "";
+    }
     localConditions.value = [];
+    pendingLocalChange.value = true;
+  };
+
+  const swapSources = () => {
+    if (!localLeftNodeId.value && !localRightNodeId.value) return;
+    const prevLeft = localLeftNodeId.value;
+    const prevRight = localRightNodeId.value;
+    localLeftNodeId.value = prevRight;
+    localRightNodeId.value = prevLeft;
+    localConditions.value = localConditions.value.map((cond) => ({
+      leftField: cond.rightField,
+      rightField: cond.leftField,
+    }));
     pendingLocalChange.value = true;
   };
 
@@ -489,11 +532,47 @@
     gap: 2px;
   }
 
+  .join-source-label-wrap {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 6px;
+  }
+
   .join-source-label {
     font-size: 12px;
     font-weight: 600;
     color: #334155;
-    margin-bottom: 6px;
+  }
+
+  .join-swap-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 22px;
+    height: 22px;
+    padding: 0;
+    border: 1px solid #dbe2ea;
+    border-radius: 4px;
+    background: #f8fafc;
+    color: #64748b;
+    cursor: pointer;
+    transition: all 0.2s ease;
+
+    &:hover:not(:disabled) {
+      border-color: #7dd3fc;
+      background: #e0f2fe;
+      color: #0369a1;
+    }
+
+    &:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+  }
+
+  .join-swap-icon {
+    font-size: 12px;
   }
 
   .join-source-select {

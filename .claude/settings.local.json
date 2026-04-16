@@ -3,7 +3,11 @@
     "allow": [
       "Bash(npx vue-tsc:*)",
       "Bash(npx vite:*)",
-      "Bash(pnpm run *)"
+      "Bash(pnpm run *)",
+      "Bash(python3 -c ' *)",
+      "Bash(python3 -c \"print\\('test'\\)\")",
+      "Bash(python -c \"print\\('test'\\)\")",
+      "Bash(python -c ' *)"
     ]
   }
 }

@@ -46,41 +46,26 @@ export interface InputPreviewResult {
   rows: Record<string, unknown>[];
 }
 
-export interface DistinctPreviewPayload {
+export interface BaseNodePreviewPayload {
   nodeId: string;
   nodeType?: string;
   upstreamNodes: NodeConfigSnapshot[];
   currentNode?: NodeConfigSnapshot | null;
+}
+
+export interface DistinctPreviewPayload extends BaseNodePreviewPayload {
   fields: string[];
 }
 
-export interface FieldNodePreviewPayload {
-  nodeId: string;
-  nodeType?: string;
-  upstreamNodes: NodeConfigSnapshot[];
-  currentNode?: NodeConfigSnapshot | null;
-}
+export interface FieldNodePreviewPayload extends BaseNodePreviewPayload {}
 
-export interface GroupNodePreviewPayload {
-  nodeId: string;
-  nodeType?: string;
-  upstreamNodes: NodeConfigSnapshot[];
-  currentNode?: NodeConfigSnapshot | null;
-}
+export interface GroupNodePreviewPayload extends BaseNodePreviewPayload {}
 
-export interface OutputPreviewPayload {
-  nodeId: string;
-  nodeType?: string;
-  upstreamNodes: NodeConfigSnapshot[];
-  currentNode?: NodeConfigSnapshot | null;
-}
+export interface OutputPreviewPayload extends BaseNodePreviewPayload {}
 
-export interface WhereNodePreviewPayload {
-  nodeId: string;
-  nodeType?: string;
-  upstreamNodes: NodeConfigSnapshot[];
-  currentNode?: NodeConfigSnapshot | null;
-}
+export interface WhereNodePreviewPayload extends BaseNodePreviewPayload {}
+
+export interface JoinNodePreviewPayload extends BaseNodePreviewPayload {}
 
 export type WhereLogic = "and" | "or";
 
@@ -133,13 +118,6 @@ export interface JoinConfig {
   leftNodeId: string;
   rightNodeId: string;
   joinConditions: JoinConditionPersisted[];
-}
-
-export interface JoinNodePreviewPayload {
-  nodeId: string;
-  nodeType?: string;
-  upstreamNodes: NodeConfigSnapshot[];
-  currentNode?: NodeConfigSnapshot | null;
 }
 
 export type GroupAggregateMethod =

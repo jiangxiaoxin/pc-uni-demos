@@ -11,9 +11,7 @@ import type {
   InputField,
   InputPreviewResult,
   InputSource,
-  JoinConditionPersisted,
   JoinNodePreviewPayload,
-  JoinType,
   JoinUpstreamForm,
   NodeConfigSnapshot,
   NodeRequestPayload,
@@ -22,7 +20,11 @@ import type {
   WhereLogic,
   WhereNodePreviewPayload,
 } from "./types";
-
+import {
+  isDateTimeFieldType,
+  isNumericFieldType,
+  isStringFieldType,
+} from "./node-config/where.helper";
 
 // ============================================================
 // MOCK_API_NOTE
@@ -384,7 +386,7 @@ export const inputNodeMockSources: InputSource[] = [
       emergencyContact: `联系人${index + 1}`,
       emergencyPhone: `13900139${String(index).padStart(3, "0")}`,
       sourceChannel: ["线下门店", "公众号", "企业客户", "小程序"][index % 4],
-    })),
+    }), 15),
   },
   {
     id: "order",
@@ -880,18 +882,6 @@ const DEFAULT_METHOD_OPTIONS: GroupAggregateMethodOption[] = [
   { label: "去重计数", value: "distinctCount" },
 ];
 
-const isNumericFieldType = (type: string) => {
-  return /int|decimal|numeric|float|double|real|number/i.test(type);
-};
-
-const isStringFieldType = (type: string) => {
-  return /char|text|varchar|string|enum|set/i.test(type);
-};
-
-const isDateTimeFieldType = (type: string) => {
-  return /date|time|timestamp|year/i.test(type);
-};
-
 export const getGroupAggregateMethodOptions = (type: string): GroupAggregateMethodOption[] => {
   if (isNumericFieldType(type)) return NUMERIC_METHOD_OPTIONS;
   if (isStringFieldType(type)) return STRING_METHOD_OPTIONS;
@@ -1240,59 +1230,45 @@ export const fetchGroupNodeUpstreamFields = async (
   return [...result.columns];
 };
 
+const mockPreviewResult = (): InputPreviewResult => {
+  const source = getInputSourceById("customer");
+  return {
+    columns: source?.fields || [],
+    rows: source?.rows.slice(0, 15) || [],
+  };
+};
+
 // MOCK_API: fetch distinct node preview data (simulate backend request)
 export const fetchDistinctPreviewByPayload = async (
-  payload: DistinctPreviewPayload,
+  _payload: DistinctPreviewPayload,
 ): Promise<InputPreviewResult> => {
   console.log("[MOCK_API] fetchDistinctPreviewByPayload");
   await new Promise((resolve) => {
     window.setTimeout(resolve, 250);
   });
-
-  const { columns, rows } = buildChainPreviewResult(payload.upstreamNodes);
-  const distinctRows = applyDistinctRows(rows, payload.fields || []);
-  return { columns, rows: distinctRows };
+  return mockPreviewResult();
 };
 
 // MOCK_API: fetch field node preview data (simulate backend request)
 export const fetchFieldNodePreviewByPayload = async (
-  payload: FieldNodePreviewPayload,
+  _payload: FieldNodePreviewPayload,
 ): Promise<InputPreviewResult> => {
-  console.log("[MOCK_API] fetchFieldNodePreviewByPayload", payload);
+  console.log("[MOCK_API] fetchFieldNodePreviewByPayload");
   await new Promise((resolve) => {
     window.setTimeout(resolve, 250);
   });
-
-  const result =  {
-    columns: [
-      {
-        name: '随便个表头',
-        key: 'id',
-        type: 'string'
-      }
-    ],
-    rows: [{
-      id: 1
-    },{
-      id: 2
-    }]
-  }
-  return result;
+  return mockPreviewResult();
 };
 
 // MOCK_API: fetch group node preview data (simulate backend request)
 export const fetchGroupNodePreviewByPayload = async (
-  payload: GroupNodePreviewPayload,
+  _payload: GroupNodePreviewPayload,
 ): Promise<InputPreviewResult> => {
   console.log("[MOCK_API] fetchGroupNodePreviewByPayload");
   await new Promise((resolve) => {
     window.setTimeout(resolve, 250);
   });
-
-  return buildChainPreviewResult([
-    ...payload.upstreamNodes,
-    ...(payload.currentNode ? [payload.currentNode] : []),
-  ]);
+  return mockPreviewResult();
 };
 
 // MOCK_API: fetch upstream fields for where node (simulate backend request)
@@ -1310,129 +1286,24 @@ export const fetchWhereNodeUpstreamFields = async (
 
 // MOCK_API: fetch where node preview data (simulate backend request)
 export const fetchWherePreviewByPayload = async (
-  payload: WhereNodePreviewPayload,
+  _payload: WhereNodePreviewPayload,
 ): Promise<InputPreviewResult> => {
   console.log("[MOCK_API] fetchWherePreviewByPayload");
   await new Promise((resolve) => {
     window.setTimeout(resolve, 250);
   });
-
-  return buildChainPreviewResult([
-    ...payload.upstreamNodes,
-    ...(payload.currentNode ? [payload.currentNode] : []),
-  ]);
+  return mockPreviewResult();
 };
 
 // MOCK_API: fetch output node preview data (simulate backend request)
 export const fetchOutputPreviewByPayload = async (
-  payload: OutputPreviewPayload,
+  _payload: OutputPreviewPayload,
 ): Promise<InputPreviewResult> => {
   console.log("[MOCK_API] fetchOutputPreviewByPayload");
   await new Promise((resolve) => {
     window.setTimeout(resolve, 250);
   });
-
-  // Output node preview = final result snapshot returned by backend (mocked from chain context).
-  return buildChainPreviewResult(payload.upstreamNodes);
-};
-
-const parseJoinType = (value: unknown): JoinType => {
-  if (value === "inner" || value === "outer" || value === "left" || value === "right") {
-    return value;
-  }
-  return "inner";
-};
-
-const parseJoinConditions = (value: unknown): JoinConditionPersisted[] => {
-  if (!Array.isArray(value)) return [];
-  return value.filter((item): item is JoinConditionPersisted => {
-    return (
-      isRecord(item) &&
-      typeof item.leftField === "string" &&
-      typeof item.rightField === "string"
-    );
-  });
-};
-
-const rowsMatchJoinCondition = (
-  leftRow: Record<string, unknown>,
-  rightRow: Record<string, unknown>,
-  conditions: JoinConditionPersisted[],
-): boolean => {
-  if (conditions.length === 0) return true;
-  return conditions.every(
-    (c) => String(leftRow[c.leftField] ?? "") === String(rightRow[c.rightField] ?? ""),
-  );
-};
-
-const applyJoin = (
-  leftResult: InputPreviewResult,
-  rightResult: InputPreviewResult,
-  joinType: JoinType,
-  conditions: JoinConditionPersisted[],
-): InputPreviewResult => {
-  const leftKeys = new Set(leftResult.columns.map((c) => c.key));
-  const columns = [
-    ...leftResult.columns,
-    ...rightResult.columns.filter((c) => !leftKeys.has(c.key)),
-  ];
-
-  const matchedRight = new Set<number>();
-  const rows: Record<string, unknown>[] = [];
-
-  leftResult.rows.forEach((leftRow) => {
-    let hasMatch = false;
-    rightResult.rows.forEach((rightRow, rightIndex) => {
-      if (rowsMatchJoinCondition(leftRow, rightRow, conditions)) {
-        hasMatch = true;
-        matchedRight.add(rightIndex);
-        rows.push({ ...leftRow, ...rightRow });
-      }
-    });
-    if (!hasMatch && (joinType === "left" || joinType === "outer")) {
-      const emptyRight: Record<string, unknown> = {};
-      rightResult.columns.forEach((c) => (emptyRight[c.key] = null));
-      rows.push({ ...leftRow, ...emptyRight });
-    }
-  });
-
-  if (joinType === "right" || joinType === "outer") {
-    rightResult.rows.forEach((rightRow, index) => {
-      if (!matchedRight.has(index)) {
-        const emptyLeft: Record<string, unknown> = {};
-        leftResult.columns.forEach((c) => (emptyLeft[c.key] = null));
-        rows.push({ ...emptyLeft, ...rightRow });
-      }
-    });
-  }
-
-  return { columns, rows };
-};
-
-const buildChainForNode = (
-  nodes: NodeConfigSnapshot[],
-  targetNodeId: string,
-): NodeConfigSnapshot[] => {
-  const nodeMap = new Map(nodes.map((n) => [n.id, n]));
-  const visited = new Set<string>();
-  const order: string[] = [];
-
-  const visit = (id: string) => {
-    if (visited.has(id)) return;
-    visited.add(id);
-    const node = nodeMap.get(id);
-    if (!node) return;
-    node.fromIds?.forEach((fromId) => {
-      visit(fromId);
-      order.push(fromId);
-    });
-    order.push(id);
-  };
-
-  visit(targetNodeId);
-  return [...new Set(order)]
-    .map((id) => nodeMap.get(id))
-    .filter((n): n is NodeConfigSnapshot => Boolean(n));
+  return mockPreviewResult();
 };
 
 const mockCustomerFields: InputField[] = [
@@ -1475,25 +1346,11 @@ export const fetchJoinNodeUpstreamFields = async (
 
 // MOCK_API: fetch join node preview data (simulate backend request)
 export const fetchJoinPreviewByPayload = async (
-  payload: JoinNodePreviewPayload,
+  _payload: JoinNodePreviewPayload,
 ): Promise<InputPreviewResult> => {
   console.log("[MOCK_API] fetchJoinPreviewByPayload");
   await new Promise((resolve) => {
     window.setTimeout(resolve, 250);
   });
-
-  const currentNode = payload.currentNode;
-  const joinType = parseJoinType(currentNode?.properties?.joinType);
-  const joinConditions = parseJoinConditions(currentNode?.properties?.joinConditions);
-  const leftNodeId = String(currentNode?.properties?.leftNodeId || "");
-  const rightNodeId = String(currentNode?.properties?.rightNodeId || "");
-
-  const nodes = [...payload.upstreamNodes, ...(payload.currentNode ? [payload.currentNode] : [])];
-  const leftChain = leftNodeId ? buildChainForNode(nodes, leftNodeId) : [];
-  const rightChain = rightNodeId ? buildChainForNode(nodes, rightNodeId) : [];
-
-  const leftResult = buildChainPreviewResult(leftChain);
-  const rightResult = buildChainPreviewResult(rightChain);
-
-  return applyJoin(leftResult, rightResult, joinType, joinConditions);
+  return mockPreviewResult();
 };

@@ -651,6 +651,15 @@ export const getInputSourceById = (sourceId?: string | null) => {
   return inputNodeMockSources.find((source) => source.id === sourceId);
 };
 
+// MOCK_API: fetch all input sources (simulate backend request)
+export const fetchInputSources = async (): Promise<InputSource[]> => {
+  console.log("[MOCK_API] fetchInputSources");
+  await new Promise((resolve) => {
+    window.setTimeout(resolve, 200);
+  });
+  return inputNodeMockSources.map((source) => ({ ...source }));
+};
+
 // MOCK_API: fetch input source fields (simulate backend request)
 export const fetchInputSourceFields = async (sourceId?: string | null) => {
   console.log("[MOCK_API] fetchInputSourceFields");

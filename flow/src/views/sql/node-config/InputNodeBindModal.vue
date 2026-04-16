@@ -17,7 +17,8 @@
             <span class="bind-panel__meta">共 {{ sources.length }} 张表</span>
           </div>
         </div>
-        <div class="bind-source-list">
+        <div v-if="sourcesLoading" class="bind-empty">数据源加载中...</div>
+        <div v-else class="bind-source-list">
           <button
             v-for="source in sources"
             :key="source.id"
@@ -77,7 +78,7 @@
 
 <script setup lang="ts">
   import { computed, ref, watch } from "vue";
-  import { fetchInputSourceFields } from "../inputNodeMock";
+  import { fetchInputSourceFields, fetchInputSources } from "../inputNodeMock";
   import type { InputBindingPersisted, InputField, InputSource } from "../types";
 
   const emit = defineEmits<{
@@ -88,7 +89,6 @@
   const props = withDefaults(
     defineProps<{
       open: boolean;
-      sources: InputSource[];
       initialBinding?: InputBindingPersisted | null;
     }>(),
     {
@@ -96,6 +96,8 @@
     },
   );
 
+  const sources = ref<InputSource[]>([]);
+  const sourcesLoading = ref(false);
   const currentSourceId = ref<string>("");
   const currentFields = ref<InputField[]>([]);
   const selectedFieldKeys = ref<string[]>([]);
@@ -105,7 +107,7 @@
   let fieldRequestToken = 0;
 
   const selectedSource = computed(() => {
-    return props.sources.find((source) => source.id === currentSourceId.value);
+    return sources.value.find((source) => source.id === currentSourceId.value);
   });
 
   const isAllSelected = computed(() => {
@@ -146,16 +148,21 @@
   };
 
   watch(
-    () => [props.open, props.initialBinding?.sourceId],
-    async () => {
-      if (!props.open) return;
+    () => props.open,
+    async (open) => {
+      if (!open) return;
 
-      const sourceId = props.initialBinding?.sourceId || "";
+      sourcesLoading.value = true;
+      const loadedSources = await fetchInputSources();
+      sources.value = loadedSources;
+      sourcesLoading.value = false;
+
+      const sourceId = props.initialBinding?.sourceId || loadedSources[0]?.id || "";
       currentSourceId.value = sourceId;
       currentFields.value = [];
       selectedFieldKeys.value = [];
-      shouldRestoreInitialSelection.value = Boolean(sourceId);
-      hasInitialized.value = false;
+      shouldRestoreInitialSelection.value = Boolean(props.initialBinding?.sourceId);
+      hasInitialized.value = false; // 加载完数据源对应的字段以后就会设置init 为true
       await loadFieldsBySource(sourceId);
     },
     { immediate: true },

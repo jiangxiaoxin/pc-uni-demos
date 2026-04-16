@@ -305,10 +305,11 @@
     message.success(`已添加 ${nodeType.name} 节点`);
   };
 
+  //TODO 未来调用接口存到数据库
   const saveToLocal = () => {
     if (!lf) return;
     localStorage.setItem(STORAGE_KEY, JSON.stringify(lf.getGraphData()));
-    message.success("流程配置已保存到本地");
+    console.log("流程配置已保存到本地");
   };
 
   const handleLoad = async () => {
@@ -389,7 +390,6 @@
     getGraphData,
     saveToLocal,
     openPreview,
-    load: handleLoad,
     renderGraph,
   });
 </script>

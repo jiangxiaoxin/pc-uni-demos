@@ -49,7 +49,6 @@
 
     <InputNodeBindModal
       v-model:open="bindModalVisible"
-      :sources="inputNodeMockSources"
       :initial-binding="pendingInputBinding"
       @confirm="handleConfirmInputBinding"
     />
@@ -57,7 +56,6 @@
 </template>
 
 <script setup lang="ts">
-  import { message } from "ant-design-vue";
   import { nextTick, onMounted, provide, ref, watch } from "vue";
   import { nodeTypes } from "./menus";
   import { sqlNodeIconMap } from "./nodes/iconMap";
@@ -69,7 +67,7 @@
     sqlNodeContextKey,
     type SqlGraphData,
   } from "./nodeContext";
-  import { inputNodeMockSources, resolveInputBinding } from "./inputNodeMock";
+  import { resolveInputBinding } from "./inputNodeMock";
   import type { InputBindingPersisted } from "./types";
 
   interface EditorExpose {
@@ -296,13 +294,16 @@
     // TODO: 后续替换为真实接口获取配置
     const STORAGE_KEY = "sql_editor_flow_data";
     const savedData = localStorage.getItem(STORAGE_KEY)!;
+    console.log("🚀 ~ SqlEditor.vue:298 ~ loadGraphData ~ savedData:", savedData)
+
     try {
       const data = JSON.parse(savedData);
       await editorRef.value?.renderGraph(data);
-      message.success("流程配置已加载");
+      console.log("流程配置已加载");
+      
     } catch {
-      await editorRef.value?.renderGraph({});
-      message.error("加载失败：配置数据损坏");
+      await editorRef.value?.renderGraph({nodes: [], edges: []}); // 初始化一个空画布,作为兼容
+     console.log("加载失败：配置数据损坏");
     }
   };
 

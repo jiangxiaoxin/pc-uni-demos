@@ -96,6 +96,15 @@
                 @change-config="handleJoinConfigChange"
               />
             </template>
+            <template v-else-if="isUnionNode">
+              <UnionNodeConfigSection
+                ref="unionNodeRef"
+                :key="`${nodeData.id}-config-union`"
+                :node-id="nodeData.id"
+                :config="draftUnionConfig"
+                @change-config="handleUnionConfigChange"
+              />
+            </template>
 
             <template v-else>
               <div class="property-row">
@@ -162,6 +171,14 @@
                 :fetcher="fetchJoinPreviewByPayload"
               />
             </template>
+            <template v-else-if="isUnionNode && nodeData">
+              <NodePreviewTableSection
+                :key="`${nodeData.id}-preview-union`"
+                :visible="activeTab === 'preview'"
+                :payload="buildUnionNodePreviewPayload"
+                :fetcher="fetchUnionPreviewByPayload"
+              />
+            </template>
             <template v-else-if="isOutputNode && nodeData">
               <NodePreviewTableSection
                 :key="`${nodeData.id}-preview-output`"
@@ -201,6 +218,7 @@
   import GroupNodeConfigSection from "./node-config/GroupNodeConfigSection.vue";
   import WhereNodeConfigSection from "./node-config/WhereNodeConfigSection.vue";
   import JoinNodeConfigSection from "./node-config/JoinNodeConfigSection.vue";
+  import UnionNodeConfigSection from "./node-config/UnionNodeConfigSection.vue";
   import NodePreviewTableSection from "./NodePreviewTableSection.vue";
   import { sqlNodeContextKey, type GetNodeContext } from "./nodeContext";
   import {
@@ -211,6 +229,7 @@
     fetchOutputPreviewByPayload,
     fetchWherePreviewByPayload,
     fetchJoinPreviewByPayload,
+    fetchUnionPreviewByPayload,
   } from "./inputNodeMock";
   import type {
     DistinctPreviewPayload,
@@ -224,6 +243,10 @@
     JoinNodePreviewPayload,
     JoinType,
     OutputPreviewPayload,
+    UnionConfig,
+    UnionFieldMapping,
+    UnionMode,
+    UnionNodePreviewPayload,
     WhereConditionPersisted,
     WhereLogic,
     WhereNodePreviewPayload,
@@ -275,6 +298,12 @@
     rightNodeId: "",
     joinConditions: [],
   });
+  const unionNodeRef = ref<{ flushDraft: () => void } | null>(null);
+  const draftUnionConfig = ref<UnionConfig>({
+    mode: "union",
+    sourceNodeIds: [],
+    fieldMappings: [],
+  });
   const activeTab = ref<"config" | "preview" | "remark">("config");
   const tabs = [
     { key: "config" as const, label: "节点配置" },
@@ -323,6 +352,7 @@
   const isGroupNode = computed(() => props.nodeData?.type === "group-node");
   const isWhereNode = computed(() => props.nodeData?.type === "where-node");
   const isJoinNode = computed(() => props.nodeData?.type === "join-node");
+  const isUnionNode = computed(() => props.nodeData?.type === "union-node");
   const isOutputNode = computed(() => props.nodeData?.type === "out-node");
 
   const requiredMinIncoming = computed(() => {
@@ -436,6 +466,42 @@
     });
   });
 
+  const unionConfig = computed<UnionConfig>(() => {
+    const mode = props.nodeData?.properties?.mode;
+    const sourceNodeIds = props.nodeData?.properties?.sourceNodeIds;
+    const fieldMappings = props.nodeData?.properties?.fieldMappings;
+    return {
+      mode: mode === "unionAll" ? "unionAll" : "union",
+      sourceNodeIds: Array.isArray(sourceNodeIds)
+        ? sourceNodeIds.filter((id): id is string => typeof id === "string")
+        : [],
+      fieldMappings: Array.isArray(fieldMappings)
+        ? fieldMappings
+            .filter((item) => {
+              return (
+                typeof item === "object" &&
+                item !== null &&
+                typeof (item as any).targetField === "string" &&
+                typeof (item as any).sourceMap === "object" &&
+                (item as any).sourceMap !== null
+              );
+            })
+            .map((item) => ({
+              targetField: (item as any).targetField as string,
+              targetName:
+                typeof (item as any).targetName === "string"
+                  ? (item as any).targetName
+                  : ((item as any).targetField as string),
+              targetType:
+                typeof (item as any).targetType === "string"
+                  ? (item as any).targetType
+                  : "string",
+              sourceMap: { ...(item as any).sourceMap },
+            }))
+        : [],
+    };
+  });
+
   const resolveCurrentNodeContext = () => {
     if (!props.nodeData || !getNodeContext) return null;
     return getNodeContext(props.nodeData.id);
@@ -544,6 +610,29 @@
     };
   };
 
+  const buildUnionNodePreviewPayload = (): UnionNodePreviewPayload => {
+    const nodeContext = resolveCurrentNodeContext();
+    return {
+      nodeId: props.nodeData?.id || "",
+      nodeType: props.nodeData?.type || "",
+      upstreamNodes: nodeContext?.upstreamNodes || [],
+      currentNode: nodeContext?.currentNode
+        ? {
+            ...nodeContext.currentNode,
+            properties: {
+              ...(nodeContext.currentNode.properties || {}),
+              mode: draftUnionConfig.value.mode,
+              sourceNodeIds: [...draftUnionConfig.value.sourceNodeIds],
+              fieldMappings: draftUnionConfig.value.fieldMappings.map((m) => ({
+                targetField: m.targetField,
+                sourceMap: { ...m.sourceMap },
+              })),
+            },
+          }
+        : null,
+    };
+  };
+
   // Rebuild local drafts whenever the panel opens or the selected node changes.
   // Child editors work against these drafts first, then flush them back in one shot.
   watch(
@@ -562,6 +651,16 @@
         leftNodeId: joinLeftNodeId.value,
         rightNodeId: joinRightNodeId.value,
         joinConditions: joinConditions.value.map((cond) => ({ ...cond })),
+      };
+      draftUnionConfig.value = {
+        mode: unionConfig.value.mode,
+        sourceNodeIds: [...unionConfig.value.sourceNodeIds],
+        fieldMappings: unionConfig.value.fieldMappings.map((m) => ({
+          targetField: m.targetField,
+          targetName: m.targetName,
+          targetType: m.targetType,
+          sourceMap: { ...m.sourceMap },
+        })),
       };
       const defaultTab = availableTabs.value[0]?.key || "remark";
       activeTab.value = defaultTab;
@@ -617,6 +716,17 @@
     draftJoinConfig.value = { ...config };
   };
 
+  const handleUnionConfigChange = (config: UnionConfig) => {
+    draftUnionConfig.value = {
+      mode: config.mode,
+      sourceNodeIds: [...config.sourceNodeIds],
+      fieldMappings: config.fieldMappings.map((m) => ({
+        targetField: m.targetField,
+        sourceMap: { ...m.sourceMap },
+      })),
+    };
+  };
+
   const isEqualByJSON = <T>(a: T, b: T): boolean => JSON.stringify(a) === JSON.stringify(b);
 
   /**
@@ -646,6 +756,7 @@
     groupNodeRef.value?.flushDraft();
     whereNodeRef.value?.flushDraft();
     joinNodeRef.value?.flushDraft();
+    unionNodeRef.value?.flushDraft();
 
     // 节点名称在输入框失焦或回车时才会触发 submit-name。
     // 但用户可能直接点击 toolbar 的保存按钮，此时 input 不会失焦，
@@ -699,6 +810,22 @@
       nextProperties.leftNodeId = draftJoinConfig.value.leftNodeId;
       nextProperties.rightNodeId = draftJoinConfig.value.rightNodeId;
       nextProperties.joinConditions = draftJoinConfig.value.joinConditions.map((cond) => ({ ...cond }));
+    }
+
+    const currentUnionConfig = {
+      mode: unionConfig.value.mode,
+      sourceNodeIds: unionConfig.value.sourceNodeIds,
+      fieldMappings: unionConfig.value.fieldMappings,
+    };
+    if (!isEqualByJSON(draftUnionConfig.value, currentUnionConfig)) {
+      nextProperties.mode = draftUnionConfig.value.mode;
+      nextProperties.sourceNodeIds = [...draftUnionConfig.value.sourceNodeIds];
+      nextProperties.fieldMappings = draftUnionConfig.value.fieldMappings.map((m) => ({
+        targetField: m.targetField,
+        targetName: m.targetName,
+        targetType: m.targetType,
+        sourceMap: { ...m.sourceMap },
+      }));
     }
 
     if (Object.keys(nextProperties).length === 0) {

@@ -16,6 +16,8 @@ import type {
   NodeConfigSnapshot,
   NodeRequestPayload,
   OutputPreviewPayload,
+  UnionConfig,
+  UnionNodePreviewPayload,
   WhereConditionPersisted,
   WhereLogic,
   WhereNodePreviewPayload,
@@ -1232,7 +1234,7 @@ export const fetchGroupNodeUpstreamFields = async (
 ): Promise<InputField[]> => {
   console.log("[MOCK_API] fetchGroupNodeUpstreamFields");
   await new Promise((resolve) => {
-    window.setTimeout(resolve, 250);
+    window.setTimeout(resolve, 1000);
   });
 
   const result = buildChainPreviewResult(payload.upstreamNodes);
@@ -1358,6 +1360,40 @@ export const fetchJoinPreviewByPayload = async (
   _payload: JoinNodePreviewPayload,
 ): Promise<InputPreviewResult> => {
   console.log("[MOCK_API] fetchJoinPreviewByPayload");
+  await new Promise((resolve) => {
+    window.setTimeout(resolve, 250);
+  });
+  return mockPreviewResult();
+};
+
+// MOCK_API: fetch upstream fields for union node (simulate backend request)
+export const fetchUnionNodeUpstreamFields = async (
+  payload: NodeRequestPayload,
+): Promise<JoinUpstreamForm[]> => {
+  console.log("[MOCK_API] fetchUnionNodeUpstreamFields");
+  await new Promise((resolve) => {
+    window.setTimeout(resolve, 250);
+  });
+
+  const fromIds = payload.currentNode?.fromIds || [];
+  return fromIds.map((id, index) => {
+    const upstreamNode = payload.upstreamNodes.find((n) => n.id === id);
+    const name =
+      String(upstreamNode?.properties?.title || upstreamNode?.properties?.name || "") ||
+      `上游节点 ${index + 1}`;
+    return {
+      id,
+      name,
+      fields: index % 2 === 0 ? mockCustomerFields : mockOrderFields,
+    };
+  });
+};
+
+// MOCK_API: fetch union node preview data (simulate backend request)
+export const fetchUnionPreviewByPayload = async (
+  _payload: UnionNodePreviewPayload,
+): Promise<InputPreviewResult> => {
+  console.log("[MOCK_API] fetchUnionPreviewByPayload");
   await new Promise((resolve) => {
     window.setTimeout(resolve, 250);
   });

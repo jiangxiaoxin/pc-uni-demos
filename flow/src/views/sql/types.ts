@@ -143,3 +143,20 @@ export interface JoinUpstreamForm {
   name: string;
   fields: InputField[];
 }
+
+export type UnionMode = "union" | "unionAll";
+
+export interface UnionFieldMapping {
+  targetField: string;
+  targetName: string;
+  targetType: string;
+  sourceMap: Record<string, string>;
+}
+
+export interface UnionConfig {
+  mode: UnionMode;
+  sourceNodeIds: string[];
+  fieldMappings: UnionFieldMapping[];
+}
+
+export interface UnionNodePreviewPayload extends BaseNodePreviewPayload {}

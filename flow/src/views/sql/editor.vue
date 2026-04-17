@@ -133,8 +133,8 @@
     nodeId: string,
     properties: Record<string, unknown>,
   ) => {
-    console.log('editor updateNodeProperties');
-    
+    console.log("editor updateNodeProperties");
+
     if (!lf) return;
     lf.setProperties(nodeId, properties);
   };
@@ -220,7 +220,7 @@
 
     lf.on("node:click", ({ data }) => {
       const node = data as SqlNodeData;
-      console.log("🚀 ~ editor.vue:223 ~ node:", node)
+      console.log("🚀 ~ editor.vue:223 ~ node:", node);
 
       emit("node-select", {
         node,
@@ -279,7 +279,9 @@
       return;
     }
 
-    const { canvasOverlayPosition: { x, y } } = lf.getPointByClient(event.clientX, event.clientY);
+    const {
+      canvasOverlayPosition: { x, y },
+    } = lf.getPointByClient(event.clientX, event.clientY);
 
     lf.addNode({
       id: `${nodeType.type}_${Date.now()}`,

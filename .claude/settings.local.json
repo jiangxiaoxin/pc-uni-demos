@@ -7,7 +7,8 @@
       "Bash(python3 -c ' *)",
       "Bash(python3 -c \"print\\('test'\\)\")",
       "Bash(python -c \"print\\('test'\\)\")",
-      "Bash(python -c ' *)"
+      "Bash(python -c ' *)",
+      "Bash(xargs grep *)"
     ]
   }
 }

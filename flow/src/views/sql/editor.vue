@@ -273,17 +273,13 @@
     if (!data || !lf) return;
 
     const nodeType = JSON.parse(data);
-    const container = containerRef.value;
-    if (!container) return;
 
     if (nodeType.type === "out-node" && hasNodeType("out-node")) {
       message.warning("画布中只能有一个数据输出节点");
       return;
     }
 
-    const rect = container.getBoundingClientRect();
-    const x = event.clientX - rect.left;
-    const y = event.clientY - rect.top;
+    const { canvasOverlayPosition: { x, y } } = lf.getPointByClient(event.clientX, event.clientY);
 
     lf.addNode({
       id: `${nodeType.type}_${Date.now()}`,

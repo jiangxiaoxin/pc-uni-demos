@@ -249,6 +249,7 @@
     WhereLogic,
     WhereNodePreviewPayload,
   } from "./types";
+  import {JOIN_TYPE} from "./types"
 
   interface SqlNodeData {
     id: string;
@@ -291,7 +292,7 @@
   const draftWhereLogic = ref<WhereLogic>("and");
   const draftWhereConditions = ref<WhereConditionPersisted[]>([]);
   const draftJoinConfig = ref<JoinConfig>({
-    joinType: "inner",
+    joinType: JOIN_TYPE.INNER,
     leftNodeId: "",
     rightNodeId: "",
     joinConditions: [],
@@ -423,10 +424,15 @@
 
   const joinType = computed<JoinType>(() => {
     const type = props.nodeData?.properties?.joinType;
-    if (type === "inner" || type === "outer" || type === "left" || type === "right") {
+    if (
+      type === JOIN_TYPE.INNER ||
+      type === JOIN_TYPE.OUTER ||
+      type === JOIN_TYPE.LEFT ||
+      type === JOIN_TYPE.RIGHT
+    ) {
       return type;
     }
-    return "inner";
+    return JOIN_TYPE.INNER;
   });
 
   const joinLeftNodeId = computed<string>(() => {

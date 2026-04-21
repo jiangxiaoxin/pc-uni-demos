@@ -65,7 +65,6 @@
                 placeholder="选择左侧表单"
                 :value="localLeftNodeId"
                 :options="leftPredecessorOptions"
-                @change="(value) => setLeftNodeId(value as string)"
               />
             </div>
             <div class="join-source-row">
@@ -75,7 +74,6 @@
                 placeholder="选择右侧表单"
                 :value="localRightNodeId"
                 :options="rightPredecessorOptions"
-                @change="(value) => setRightNodeId(value as string)"
               />
             </div>
           </div>
@@ -98,13 +96,6 @@
             >
               添加连接字段
             </span>
-            <!-- <span
-              v-if="localConditions.length > 0"
-              class="config-section__link config-section__link--danger"
-              @click="removeAll"
-            >
-              删除全部
-            </span> -->
           </div>
         </div>
 
@@ -170,12 +161,13 @@
   import { DeleteOutlined, SwapOutlined } from "@ant-design/icons-vue";
   import { sqlNodeContextKey, type GetNodeContext } from "../nodeContext";
   import { fetchJoinNodeUpstreamFields } from "../inputNodeMock";
-  import type {
-    InputField,
-    JoinConditionPersisted,
-    JoinConfig,
-    JoinType,
-    JoinUpstreamForm,
+  import {
+    JOIN_TYPE,
+    type InputField,
+    type JoinConditionPersisted,
+    type JoinConfig,
+    type JoinType,
+    type JoinUpstreamForm,
   } from "../types";
 
   const emit = defineEmits<{
@@ -189,7 +181,7 @@
     }>(),
     {
       config: () => ({
-        joinType: "inner",
+        joinType: JOIN_TYPE.INNER,
         leftNodeId: "",
         rightNodeId: "",
         joinConditions: [],
@@ -208,14 +200,14 @@
   let loadToken = 0;
 
   const joinTypeOptions: { label: string; value: JoinType }[] = [
-    { label: "内连接", value: "inner" },
-    { label: "外连接", value: "outer" },
-    { label: "左连接", value: "left" },
-    { label: "右连接", value: "right" },
+    { label: "内连接", value: JOIN_TYPE.INNER },
+    { label: "外连接", value: JOIN_TYPE.OUTER },
+    { label: "左连接", value: JOIN_TYPE.LEFT },
+    { label: "右连接", value: JOIN_TYPE.RIGHT },
   ];
 
   /**
-   * 表单设置的选项。显示前置两个节点的节点名。前面这两个节点名用户可以自己修改
+   * 表单设置的选项。显示前置两个节点的节点名
    */
   const leftPredecessorOptions = computed(() => {
     return upstreamForms.value
@@ -282,7 +274,7 @@
    */
   const isConfigStale = (): boolean => {
     const hasConfig =
-      localJoinType.value !== "inner" ||
+      localJoinType.value !== JOIN_TYPE.INNER ||
       localLeftNodeId.value ||
       localRightNodeId.value ||
       localConditions.value.length > 0;
@@ -335,7 +327,7 @@
 
     // 如果已有配置与接口返回的表单/字段不一致，清空配置重新走配置流程
     if (isConfigStale()) {
-      localJoinType.value = "inner";
+      localJoinType.value = JOIN_TYPE.INNER;
       localLeftNodeId.value = "";
       localRightNodeId.value = "";
       localConditions.value = [];
@@ -362,7 +354,7 @@
   onMounted(() => {
     console.log("onMoutned");
 
-    void loadUpstreamFields();
+    loadUpstreamFields();
   });
 
   onUnmounted(() => {
@@ -372,26 +364,6 @@
   const setJoinType = (type: JoinType) => {
     if (localJoinType.value === type) return;
     localJoinType.value = type;
-    pendingLocalChange.value = true;
-  };
-
-  const setLeftNodeId = (nodeId: string) => {
-    if (localLeftNodeId.value === nodeId) return;
-    localLeftNodeId.value = nodeId;
-    if (nodeId === localRightNodeId.value) {
-      localRightNodeId.value = "";
-    }
-    localConditions.value = [];
-    pendingLocalChange.value = true;
-  };
-
-  const setRightNodeId = (nodeId: string) => {
-    if (localRightNodeId.value === nodeId) return;
-    localRightNodeId.value = nodeId;
-    if (nodeId === localLeftNodeId.value) {
-      localLeftNodeId.value = "";
-    }
-    localConditions.value = [];
     pendingLocalChange.value = true;
   };
 
@@ -410,17 +382,12 @@
 
   const addCondition = () => {
     if (!canAddCondition.value) return;
-    // 这里可以默认选择一项，也可以不选择
-    const defaultLeft = leftFields.value[0]?.key || "";
-    const defaultRight = rightFields.value[0]?.key || "";
     localConditions.value.push({ leftField: "", rightField: "" });
     pendingLocalChange.value = true;
   };
 
   const removeCondition = (index: number) => {
-    const next = [...localConditions.value];
-    next.splice(index, 1);
-    localConditions.value = next;
+    localConditions.value.splice(index,1)
     pendingLocalChange.value = true;
   };
 
@@ -439,7 +406,7 @@
     pendingLocalChange.value = false;
     emit("change-config", {
       joinType: localJoinType.value,
-      leftNodeId: localLeftNodeId.value, //TODO
+      leftNodeId: localLeftNodeId.value,
       rightNodeId: localRightNodeId.value,
       joinConditions: localConditions.value,
     });

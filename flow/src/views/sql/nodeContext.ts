@@ -51,7 +51,6 @@ export const buildNodeContext = (
       .filter((edge) => edge.targetNodeId === targetId)
       .map((edge) => edge.sourceNodeId);
     return fromIds  // 这里不需要去重呀，两个节点之间的直接连线是唯一的，所以一个节点的直接前置id也都是唯一的
-    // return [...new Set(fromIds)];
   };
 
   const uniquePredecessorIds = [...new Set(predecessorOrder)];

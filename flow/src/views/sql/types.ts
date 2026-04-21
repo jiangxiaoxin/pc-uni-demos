@@ -123,7 +123,14 @@ export interface NodeRequestPayload {
   currentNode?: NodeConfigSnapshot | null;
 }
 
-export type JoinType = "inner" | "outer" | "left" | "right";
+export const JOIN_TYPE = {
+  INNER: "inner",
+  OUTER: "outer",
+  LEFT: "left",
+  RIGHT: "right",
+} as const;
+
+export type JoinType = (typeof JOIN_TYPE)[keyof typeof JOIN_TYPE];
 
 export interface JoinConditionPersisted {
   leftField: string;

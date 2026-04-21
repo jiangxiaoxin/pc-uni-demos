@@ -72,7 +72,7 @@
         <div v-else class="where-conditions">
           <div
             v-for="(condition, index) in localConditions"
-            :key="index"
+            :key="`${condition.key}-${index}`"
             class="where-condition"
           >
             <a-select
@@ -369,6 +369,7 @@
         );
         if (field) {
           // 这个筛选条件还在，那就继续用
+          // TODO 这里有个疑问：会不会从后台得来的字段出现重复的key和type
           return {
             key: item.fieldKey,
             fieldName: field.name,
@@ -382,7 +383,7 @@
                   : "",
             rangeValue:
               item.operator === "range"
-                ? [String(item.value?.[0] ?? ""), String(item.value?.[1] || "")]
+                ? [String(item.value?.[0] ?? ""), String(item.value?.[1] ?? "")]
                 : ["", ""],
           };
         } else {

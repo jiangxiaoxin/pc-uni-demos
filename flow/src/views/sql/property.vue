@@ -378,9 +378,9 @@
   });
 
   const distinctFields = computed<string[]>(() => {
-    const fields = props.nodeData?.properties?.distinctFields;
+    const fields = props.nodeData?.properties?.dedupFields;
     if (!Array.isArray(fields)) return [];
-    return fields.filter((field): field is string => typeof field === "string");
+    return fields;
   });
 
   const fieldSettings = computed<FieldSettingPersistedItem[]>(() => {
@@ -396,7 +396,7 @@
   const groupFields = computed<string[]>(() => {
     const fields = props.nodeData?.properties?.groupFields;
     if (!Array.isArray(fields)) return [];
-    return fields.filter((field): field is string => typeof field === "string");
+    return fields;
   });
 
   const aggregateFields = computed<GroupAggregateFieldPersistedItem[]>(() => {
@@ -405,9 +405,7 @@
     return fields.filter((field): field is GroupAggregateFieldPersistedItem => {
       return (
         typeof field === "object" &&
-        field !== null &&
-        typeof (field as GroupAggregateFieldPersistedItem).key === "string" &&
-        typeof (field as GroupAggregateFieldPersistedItem).method === "string"
+        field !== null
       );
     });
   });
@@ -766,7 +764,7 @@
 
     // Compare serialized structures so only changed fields are emitted upstream.
     if (!isEqualByJSON(draftDistinctFields.value, distinctFields.value)) {
-      nextProperties.distinctFields = [...draftDistinctFields.value];
+      nextProperties.dedupFields = [...draftDistinctFields.value];
     }
 
     if (!isEqualByJSON(draftFieldSettings.value, fieldSettings.value)) {

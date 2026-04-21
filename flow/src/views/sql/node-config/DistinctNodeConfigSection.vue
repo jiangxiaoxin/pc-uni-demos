@@ -3,7 +3,9 @@
     <div class="config-section__header">
       <span>字段列表</span>
       <div class="config-section__header-actions">
-        <span class="config-section__count">{{ localSelectedFields.length }}/{{ upstreamFields.length }}</span>
+        <span class="config-section__count"
+          >{{ localSelectedFields.length }}/{{ upstreamFields.length }}</span
+        >
         <span
           class="config-section__link"
           :class="{ 'config-section__link--disabled': loading }"
@@ -45,17 +47,17 @@
             >
               <DeleteOutlined class="config-item__action-icon" />
             </span>
-            <span
-              title="拖动排序"
-              class="config-item__drag"
-            >
+            <span title="拖动排序" class="config-item__drag">
               <DragOutlined class="config-item__action-icon" />
             </span>
           </div>
         </div>
       </VueDraggable>
 
-      <div v-if="localSelectedFields.length === 0" class="config-section__empty">
+      <div
+        v-if="localSelectedFields.length === 0"
+        class="config-section__empty"
+      >
         暂未添加去重字段
       </div>
     </div>
@@ -70,8 +72,7 @@
     >
       <div class="config-selector">
         <div>{{ draftSelectedKeys }}</div>
-        <div v-if="loading" class="config-selector__empty">字段加载中...</div>
-        <div v-else-if="upstreamFields.length === 0" class="config-selector__empty">
+        <div v-if="upstreamFields.length === 0" class="config-selector__empty">
           当前无可选字段
         </div>
         <div v-else class="config-selector__list">
@@ -100,7 +101,6 @@
   import { DeleteOutlined, DragOutlined } from "@ant-design/icons-vue";
   import { VueDraggable } from "vue-draggable-plus";
   import { sqlNodeContextKey, type GetNodeContext } from "../nodeContext";
-  import { fetchDistinctNodeUpstreamFields } from "../inputNodeMock";
   import type { InputField } from "../types";
 
   const emit = defineEmits<{
@@ -130,10 +130,33 @@
     },
   });
   const syncLocalSelected = () => {
-    const upstreamFieldMap = new Map(upstreamFields.value.map((field) => [field.key, field]));
+    const upstreamFieldMap = new Map(
+      upstreamFields.value.map((field) => [field.key, field]),
+    );
     localSelectedFields.value = props.selectedFields
       .map((key) => upstreamFieldMap.get(key))
-      .filter((field): field is InputField => Boolean(field));
+      .filter((field): field is InputField => Boolean(field)); // 如果之前选的字段，现在上游字段列表里没有，那就忽略
+  };
+
+  // TODO 调接口
+  const fetchDistinctNodeUpstreamFields = async () => {
+    return [
+      {
+        key: "id",
+        name: "ID",
+        type: "string",
+      },
+      {
+        key: "name",
+        name: "姓名",
+        type: "string",
+      },
+      {
+        key: "age",
+        name: "年龄",
+        type: "number",
+      },
+    ];
   };
 
   const loadUpstreamFields = async () => {
@@ -145,40 +168,53 @@
       return;
     }
 
-    loading.value = true;
-    // TODO: 当前去重节点的可选字段来自 inputNodeMock 模拟接口，目的是先打通配置交互，后续应替换为真实上游字段接口。
-    const fields = await fetchDistinctNodeUpstreamFields(nodeContext);
-    upstreamFields.value = fields;
-    loading.value = false;
-    syncLocalSelected();
+    try {
+      loading.value = true;
+      const fields = await fetchDistinctNodeUpstreamFields(nodeContext);
+      upstreamFields.value = fields;
+      syncLocalSelected();
+    } catch (error) {
+      console.log('error');
+      
+    } finally {
+      loading.value = false;
+    }
   };
 
   onMounted(() => {
-    console.log('mounted');
-    
-    void loadUpstreamFields();
+    console.log("mounted");
+
+    loadUpstreamFields();
   });
 
   const handleOpenSelector = () => {
-    draftSelectedKeys.value = localSelectedFields.value.map((field) => field.key);
+    draftSelectedKeys.value = localSelectedFields.value.map(
+      (field) => field.key,
+    );
     selectorOpen.value = true;
   };
 
   const buildOrderedKeys = (draftKeys: string[], currentKeys: string[]) => {
     const selectedKeySet = new Set(draftKeys); // 这次弹框里选择的去重字段列表
-    // 如果本地配置里有，那就保持原有的顺序。没有的就加在后面
-    const orderedCurrentKeys = currentKeys.filter((key) => selectedKeySet.has(key));
+    // 找出本地配置里，仍然被选择的项，保留下顺序来
+    const orderedCurrentKeys = currentKeys.filter((key) =>
+      selectedKeySet.has(key),
+    );
+
+    // 找出选择了，但是还没有出现在本地配置里的字段，加在后面
     const appendedKeys = upstreamFields.value
       .map((field) => field.key)
-      .filter((key) => selectedKeySet.has(key) && !orderedCurrentKeys.includes(key));
+      .filter(
+        (key) => selectedKeySet.has(key) && !orderedCurrentKeys.includes(key),
+      );
     return [...orderedCurrentKeys, ...appendedKeys];
   };
 
   const pendingLocalChange = ref(false); // dirty flag. true = local data changed, need to reCalc
 
   const flushDraft = () => {
-    console.log('去重 flush');
-    
+    console.log("去重 flush");
+
     if (!pendingLocalChange.value) return;
     pendingLocalChange.value = false;
     emit(
@@ -192,7 +228,9 @@
       draftSelectedKeys.value,
       localSelectedFields.value.map((field) => field.key),
     );
-    const upstreamFieldMap = new Map(upstreamFields.value.map((field) => [field.key, field])); //构建好map以后下面就直接 get，时间O[1]
+    const upstreamFieldMap = new Map(
+      upstreamFields.value.map((field) => [field.key, field]),
+    ); //构建好map以后下面就直接 get，时间O[1]
     const selected = orderedKeys
       .map((key) => upstreamFieldMap.get(key))
       .filter((field): field is InputField => Boolean(field));

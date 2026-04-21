@@ -42,13 +42,11 @@ export interface FieldSettingItem extends InputField {
   selected: boolean;
 }
 
-export interface GroupAggregateFieldPersistedItem {
-  key: string;
+export interface GroupAggregateFieldItem {
+  sourceFieldKey: string;
+  alias: string;
   method: GroupAggregateMethod;
-}
-
-export interface GroupAggregateFieldItem extends InputField {
-  method: GroupAggregateMethod;
+  type: string;
 }
 
 export interface InputPreviewResult {

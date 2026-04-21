@@ -1,28 +1,27 @@
 import type { InputField } from "../types";
 
 const NUMERIC_FIELD_TYPES = new Set([
-  'NUMBER'
+  'number'
 ]);
 
 const STRING_FIELD_TYPES = new Set([
-  'STRING'
+  'string'
 ]);
 
 const DATETIME_FIELD_TYPES = new Set([
-  'DATETIME'
+  'datetime'
 ]);
 
-//TODO 简单判断类型，后续再优化
 export const isNumericFieldType = (type: string) => {
-  return NUMERIC_FIELD_TYPES.has(type);
+  return NUMERIC_FIELD_TYPES.has(type.toLowerCase()); // 转成小写方便统一处理
 };
 
 export const isStringFieldType = (type: string) => {
-  return STRING_FIELD_TYPES.has(type);
+  return STRING_FIELD_TYPES.has(type.toLowerCase());
 };
 
 export const isDateTimeFieldType = (type: string) => {
-  return DATETIME_FIELD_TYPES.has(type);
+  return DATETIME_FIELD_TYPES.has(type.toLowerCase());
 };
 
 // 定义 WhereRelation 类型

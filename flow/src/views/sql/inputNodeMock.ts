@@ -1237,9 +1237,15 @@ export const fetchGroupNodeUpstreamFields = async (
   await new Promise((resolve) => {
     window.setTimeout(resolve, 1000);
   });
-
-  const result = buildChainPreviewResult(payload.upstreamNodes);
-  return [...result.columns];
+  return [{
+    key: 'id',
+    name: 'id',
+    type: 'NUMBER',
+  }, {
+    key: 'name',
+    name: 'name',
+    type: 'STRING',
+  }];
 };
 
 const mockPreviewResult = (): InputPreviewResult => {

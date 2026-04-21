@@ -4,11 +4,18 @@
       <div class="config-section__header config-section__header--panel">
         <span>分组字段</span>
         <div class="config-section__header-actions">
-          <span class="config-section__count">{{ localGroupFields.length }}/{{ upstreamFields.length }}</span>
+          <span class="config-section__count"
+            >{{ localGroupFields.length }}/{{ upstreamFields.length }}</span
+          >
           <span
             class="config-section__link"
-            :class="{ 'config-section__link--disabled': loading || upstreamFields.length === 0 }"
-            @click="!loading && upstreamFields.length > 0 && openGroupSelector()"
+            :class="{
+              'config-section__link--disabled':
+                loading || upstreamFields.length === 0,
+            }"
+            @click="
+              !loading && upstreamFields.length > 0 && openGroupSelector()
+            "
           >
             添加字段
           </span>
@@ -17,7 +24,10 @@
 
       <div class="config-section__body config-section__body--panel">
         <div v-if="loading" class="config-section__empty">字段加载中...</div>
-        <div v-else-if="localGroupFields.length === 0" class="config-section__empty">
+        <div
+          v-else-if="localGroupFields.length === 0"
+          class="config-section__empty"
+        >
           暂未添加分组字段
         </div>
         <VueDraggable
@@ -39,8 +49,14 @@
           >
             <div class="config-item__meta config-item__meta--wide">
               <span class="config-item__name">{{ field.name }}</span>
-              <span class="config-item__code config-item__code--wide config-item__word-break">{{ field.key }}</span>
-              <span class="config-item__type config-item__type--compact config-item__word-break">{{ field.type }}</span>
+              <span
+                class="config-item__code config-item__code--wide config-item__word-break"
+                >{{ field.key }}</span
+              >
+              <span
+                class="config-item__type config-item__type--compact config-item__word-break"
+                >{{ field.type }}</span
+              >
             </div>
             <div class="config-item__actions">
               <span
@@ -63,11 +79,18 @@
       <div class="config-section__header config-section__header--panel">
         <span>汇总字段</span>
         <div class="config-section__header-actions">
-          <span class="config-section__count">{{ localAggregateFields.length }}/{{ upstreamFields.length }}</span>
+          <span class="config-section__count"
+            >{{ localAggregateFields.length }}/{{ upstreamFields.length }}</span
+          >
           <span
             class="config-section__link"
-            :class="{ 'config-section__link--disabled': loading || upstreamFields.length === 0 }"
-            @click="!loading && upstreamFields.length > 0 && openAggregateSelector()"
+            :class="{
+              'config-section__link--disabled':
+                loading || upstreamFields.length === 0,
+            }"
+            @click="
+              !loading && upstreamFields.length > 0 && openAggregateSelector()
+            "
           >
             添加字段
           </span>
@@ -76,7 +99,10 @@
 
       <div class="config-section__body config-section__body--panel">
         <div v-if="loading" class="config-section__empty">字段加载中...</div>
-        <div v-else-if="localAggregateFields.length === 0" class="config-section__empty">
+        <div
+          v-else-if="localAggregateFields.length === 0"
+          class="config-section__empty"
+        >
           暂未添加汇总字段
         </div>
         <VueDraggable
@@ -93,13 +119,19 @@
         >
           <div
             v-for="field in localAggregateFields"
-            :key="field.key"
+            :key="field.sourceFieldKey"
             class="config-item config-item--aggregate"
           >
             <div class="config-item__meta config-item__meta--wide">
-              <span class="config-item__name">{{ field.name }}</span>
-              <span class="config-item__code config-item__code--wide config-item__word-break">{{ field.key }}</span>
-              <span class="config-item__type config-item__type--compact config-item__word-break">{{ field.type }}</span>
+              <span class="config-item__name">{{ field.alias }}</span>
+              <span
+                class="config-item__code config-item__code--wide config-item__word-break"
+                >{{ field.sourceFieldKey }}</span
+              >
+              <span
+                class="config-item__type config-item__type--compact config-item__word-break"
+                >{{ field.type }}</span
+              >
             </div>
             <div class="config-item__controls">
               <a-select
@@ -107,12 +139,14 @@
                 class="config-item__method"
                 :value="field.method"
                 :options="getMethodOptions(field.type)"
-                @change="(value) => updateAggregateMethod(field.key, value)"
+                @change="
+                  (value) => updateAggregateMethod(field.sourceFieldKey, value)
+                "
               />
               <span
                 class="config-item__action config-item__action--danger"
                 title="删除"
-                @click="removeAggregateField(field.key)"
+                @click="removeAggregateField(field.sourceFieldKey)"
               >
                 <DeleteOutlined class="config-item__action-icon" />
               </span>
@@ -135,7 +169,10 @@
     >
       <div class="config-selector">
         <div v-if="loading" class="config-selector__empty">字段加载中...</div>
-        <div v-else-if="upstreamFields.length === 0" class="config-selector__empty">
+        <div
+          v-else-if="upstreamFields.length === 0"
+          class="config-selector__empty"
+        >
           当前前序节点无可选字段
         </div>
         <div v-else class="config-selector__list">
@@ -144,10 +181,23 @@
             :key="field.key"
             class="config-selector__item"
           >
-            <input v-model="draftGroupKeys" type="checkbox" :value="field.key" />
-            <span class="config-selector__name config-selector__name--compact">{{ field.name }}</span>
-            <span class="config-selector__code config-selector__code--compact">{{ field.key }}</span>
-            <span class="config-selector__type config-selector__type--compact">{{ field.type }}</span>
+            <input
+              v-model="draftGroupKeys"
+              type="checkbox"
+              :value="field.key"
+            />
+            <span
+              class="config-selector__name config-selector__name--compact"
+              >{{ field.name }}</span
+            >
+            <span
+              class="config-selector__code config-selector__code--compact"
+              >{{ field.key }}</span
+            >
+            <span
+              class="config-selector__type config-selector__type--compact"
+              >{{ field.type }}</span
+            >
           </label>
         </div>
       </div>
@@ -163,7 +213,10 @@
     >
       <div class="config-selector">
         <div v-if="loading" class="config-selector__empty">字段加载中...</div>
-        <div v-else-if="upstreamFields.length === 0" class="config-selector__empty">
+        <div
+          v-else-if="upstreamFields.length === 0"
+          class="config-selector__empty"
+        >
           当前前序节点无可选字段
         </div>
         <div v-else class="config-selector__list">
@@ -172,10 +225,23 @@
             :key="field.key"
             class="config-selector__item"
           >
-            <input v-model="draftAggregateKeys" type="checkbox" :value="field.key" />
-            <span class="config-selector__name config-selector__name--compact">{{ field.name }}</span>
-            <span class="config-selector__code config-selector__code--compact">{{ field.key }}</span>
-            <span class="config-selector__type config-selector__type--compact">{{ field.type }}</span>
+            <input
+              v-model="draftAggregateKeys"
+              type="checkbox"
+              :value="field.key"
+            />
+            <span
+              class="config-selector__name config-selector__name--compact"
+              >{{ field.name }}</span
+            >
+            <span
+              class="config-selector__code config-selector__code--compact"
+              >{{ field.key }}</span
+            >
+            <span
+              class="config-selector__type config-selector__type--compact"
+              >{{ field.type }}</span
+            >
           </label>
         </div>
       </div>
@@ -184,7 +250,7 @@
 </template>
 
 <script setup lang="ts">
-  import { computed, inject, onMounted, ref, watch } from "vue";
+  import { computed, inject, onMounted, ref } from "vue";
   import { DeleteOutlined, DragOutlined } from "@ant-design/icons-vue";
   import { VueDraggable } from "vue-draggable-plus";
   import { sqlNodeContextKey, type GetNodeContext } from "../nodeContext";
@@ -194,21 +260,20 @@
   } from "../inputNodeMock";
   import type {
     GroupAggregateFieldItem,
-    GroupAggregateFieldPersistedItem,
     GroupAggregateMethod,
     InputField,
   } from "../types";
 
   const emit = defineEmits<{
     (e: "change-group-fields", value: string[]): void;
-    (e: "change-aggregate-fields", value: GroupAggregateFieldPersistedItem[]): void;
+    (e: "change-aggregate-fields", value: GroupAggregateFieldItem[]): void;
   }>();
 
   const props = withDefaults(
     defineProps<{
       nodeId: string;
       groupFields?: string[];
-      aggregateFields?: GroupAggregateFieldPersistedItem[];
+      aggregateFields?: GroupAggregateFieldItem[];
     }>(),
     {
       groupFields: () => [], // 分组字段
@@ -227,21 +292,21 @@
   const draftAggregateKeys = ref<string[]>([]);
   let loadToken = 0;
 
-  const resolveMethod = (fieldType: string, method?: string): GroupAggregateMethod => {
+  // 字段类型可能发生变化，变化后，之前设定的汇总方法可能不适用，需要判断下汇总方法。
+  const resolveMethod = (
+    fieldType: string,
+    method?: string,
+  ): GroupAggregateMethod => {
+    // debugger
     const options = getGroupAggregateMethodOptions(fieldType);
     const matched = options.find((item) => item.value === method);
     return matched?.value || options[0]?.value || "count";
   };
 
-  const toAggregatePersisted = (fields: GroupAggregateFieldItem[]) => {
-    return fields.map<GroupAggregateFieldPersistedItem>((field) => ({
-      key: field.key,
-      method: field.method,
-    }));
-  };
-
   const syncLocalState = () => {
-    const upstreamMap = new Map(upstreamFields.value.map((field) => [field.key, field]));
+    const upstreamMap = new Map(
+      upstreamFields.value.map((field) => [field.key, field]),
+    );
 
     localGroupFields.value = props.groupFields
       .map((key) => upstreamMap.get(key))
@@ -249,12 +314,14 @@
 
     localAggregateFields.value = props.aggregateFields
       .map((field) => {
-        const upstreamField = upstreamMap.get(field.key);
+        const upstreamField = upstreamMap.get(field.sourceFieldKey);
         if (!upstreamField) return null;
         return {
-          ...upstreamField,
+          sourceFieldKey: field.sourceFieldKey,
+          alias: field.alias ?? upstreamField.name,
           method: resolveMethod(upstreamField.type, field.method),
-        } satisfies GroupAggregateFieldItem;
+          type: upstreamField.type,
+        } as GroupAggregateFieldItem;
       })
       .filter((field): field is GroupAggregateFieldItem => Boolean(field));
   };
@@ -273,6 +340,8 @@
     loading.value = true;
     // TODO: 当前分组节点的上游字段列表通过 inputNodeMock 模拟接口返回，先满足配置/预览联调，后续应替换为真实字段血缘接口。
     const fields = await fetchGroupNodeUpstreamFields(nodeContext);
+    // console.log('fields', fields);
+
     if (currentToken !== loadToken) return;
     upstreamFields.value = fields;
     loading.value = false;
@@ -281,10 +350,14 @@
 
   const buildOrderedKeys = (draftKeys: string[], currentKeys: string[]) => {
     const selectedKeySet = new Set(draftKeys);
-    const orderedCurrentKeys = currentKeys.filter((key) => selectedKeySet.has(key));
+    const orderedCurrentKeys = currentKeys.filter((key) =>
+      selectedKeySet.has(key),
+    );
     const appendedKeys = upstreamFields.value
       .map((field) => field.key)
-      .filter((key) => selectedKeySet.has(key) && !orderedCurrentKeys.includes(key));
+      .filter(
+        (key) => selectedKeySet.has(key) && !orderedCurrentKeys.includes(key),
+      );
     return [...orderedCurrentKeys, ...appendedKeys];
   };
 
@@ -296,7 +369,7 @@
   };
 
   const emitAggregateFields = (fields: GroupAggregateFieldItem[]) => {
-    emit("change-aggregate-fields", toAggregatePersisted(fields));
+    emit("change-aggregate-fields", fields);
   };
 
   const draggableGroupFields = computed({
@@ -321,21 +394,15 @@
     void loadUpstreamFields();
   });
 
-  watch(
-    () => [props.groupFields, props.aggregateFields],
-    () => {
-      syncLocalState();
-    },
-    { deep: true },
-  );
-
   const openGroupSelector = () => {
     draftGroupKeys.value = localGroupFields.value.map((field) => field.key);
     groupSelectorOpen.value = true;
   };
 
   const openAggregateSelector = () => {
-    draftAggregateKeys.value = localAggregateFields.value.map((field) => field.key);
+    draftAggregateKeys.value = localAggregateFields.value.map(
+      (field) => field.sourceFieldKey,
+    );
     aggregateSelectorOpen.value = true;
   };
 
@@ -353,7 +420,9 @@
       draftGroupKeys.value,
       localGroupFields.value.map((field) => field.key),
     );
-    const upstreamMap = new Map(upstreamFields.value.map((field) => [field.key, field]));
+    const upstreamMap = new Map(
+      upstreamFields.value.map((field) => [field.key, field]),
+    );
     const nextFields = orderedKeys
       .map((key) => upstreamMap.get(key))
       .filter((field): field is InputField => Boolean(field));
@@ -365,33 +434,46 @@
   const confirmAggregateFields = () => {
     const orderedKeys = buildOrderedKeys(
       draftAggregateKeys.value,
-      localAggregateFields.value.map((field) => field.key),
+      localAggregateFields.value.map((field) => field.sourceFieldKey),
     );
-    const upstreamMap = new Map(upstreamFields.value.map((field) => [field.key, field]));
-    const currentMethodMap = new Map(localAggregateFields.value.map((field) => [field.key, field.method]));
+    const upstreamMap = new Map(
+      upstreamFields.value.map((field) => [field.key, field]),
+    );
+    const currentMap = new Map(
+      localAggregateFields.value.map((field) => [field.sourceFieldKey, field]),
+    );
     const nextFields = orderedKeys
       .map((key) => {
         const upstreamField = upstreamMap.get(key);
         if (!upstreamField) return null;
+        const currentField = currentMap.get(key);
         return {
-          ...upstreamField,
-          method: resolveMethod(upstreamField.type, currentMethodMap.get(key)),
-        } satisfies GroupAggregateFieldItem;
+          sourceFieldKey: key,
+          alias: currentField?.alias || upstreamField.name,
+          method: resolveMethod(upstreamField.type, currentField?.method),
+          type: upstreamField.type,
+        } as GroupAggregateFieldItem;
       })
       .filter((field): field is GroupAggregateFieldItem => Boolean(field));
+      console.log('nextFields',nextFields);
+      
     localAggregateFields.value = nextFields;
     pendingLocalChange.value = true;
     aggregateSelectorOpen.value = false;
   };
 
   const removeGroupField = (fieldKey: string) => {
-    const nextFields = localGroupFields.value.filter((field) => field.key !== fieldKey);
+    const nextFields = localGroupFields.value.filter(
+      (field) => field.key !== fieldKey,
+    );
     localGroupFields.value = nextFields;
     pendingLocalChange.value = true;
   };
 
   const removeAggregateField = (fieldKey: string) => {
-    const nextFields = localAggregateFields.value.filter((field) => field.key !== fieldKey);
+    const nextFields = localAggregateFields.value.filter(
+      (field) => field.sourceFieldKey !== fieldKey,
+    );
     localAggregateFields.value = nextFields;
     pendingLocalChange.value = true;
   };
@@ -404,8 +486,13 @@
     pendingLocalChange.value = true;
   };
 
-  const updateAggregateMethod = (fieldKey: string, value: GroupAggregateMethod) => {
-    const targetField = localAggregateFields.value.find((field) => field.key === fieldKey);
+  const updateAggregateMethod = (
+    fieldKey: string,
+    value: GroupAggregateMethod,
+  ) => {
+    const targetField = localAggregateFields.value.find(
+      (field) => field.sourceFieldKey === fieldKey,
+    );
     if (!targetField) return;
     targetField.method = value;
     pendingLocalChange.value = true;

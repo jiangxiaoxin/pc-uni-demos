@@ -1,5 +1,6 @@
 import { type BaseNodeModel, type Model, LogicFlow } from "@logicflow/core";
 import { VueNodeModel } from "@logicflow/vue-node-registry";
+import { SQL_NODE_TYPE } from "../menus";
 
 /**
  * SQL 节点通用 Model
@@ -31,7 +32,7 @@ export default class SqlNodeModel extends VueNodeModel {
     this.sourceRules.push({
       message: "数据输出节点不能连接其他节点",
       validate: (source: BaseNodeModel, target: BaseNodeModel) => {
-        if (nodeType === "out-node") {
+        if (nodeType === SQL_NODE_TYPE.OUT_NODE) {
           return false;
         }
         return true;
@@ -63,7 +64,7 @@ export default class SqlNodeModel extends VueNodeModel {
     this.targetRules.push({
       message: "数据输入节点不能作为连接目标",
       validate: (source: BaseNodeModel, target: BaseNodeModel) => {
-        if (nodeType === "in-node") {
+        if (nodeType === SQL_NODE_TYPE.IN_NODE) {
           return false;
         }
         return true;
@@ -74,7 +75,7 @@ export default class SqlNodeModel extends VueNodeModel {
     this.targetRules.push({
       message: "数据输出节点只能由一个前置节点连接",
       validate: (source?: BaseNodeModel, target?: BaseNodeModel) => {
-        if (nodeType === "out-node" && target) {
+        if (nodeType === SQL_NODE_TYPE.OUT_NODE && target) {
           const incoming = target.graphModel.getNodeIncomingNode(target.id);
           // 如果已经有输入连接，则不能再连接
           return incoming.length === 0;
@@ -90,10 +91,10 @@ export default class SqlNodeModel extends VueNodeModel {
       validate: (source?: BaseNodeModel, target?: BaseNodeModel) => {
         // 单输入节点列表（join-node 和 union-node 是多输入，不限制）
         const singleInputNodes = [
-          "where-node",
-          "field-node",
-          "group-node",
-          "distinct-node",
+          SQL_NODE_TYPE.WHERE_NODE,
+          SQL_NODE_TYPE.FIELD_NODE,
+          SQL_NODE_TYPE.GROUP_NODE,
+          SQL_NODE_TYPE.DISTINCT_NODE,
         ];
         if (singleInputNodes.includes(nodeType) && target) {
           const incoming = target.graphModel.getNodeIncomingNode(target.id);
@@ -108,7 +109,7 @@ export default class SqlNodeModel extends VueNodeModel {
     this.targetRules.push({
       message: "横向连接节点最多只能有两个前置节点连接",
       validate: (source?: BaseNodeModel, target?: BaseNodeModel) => {
-        if (nodeType === "join-node" && target) {
+        if (nodeType === SQL_NODE_TYPE.JOIN_NODE && target) {
           const incoming = target.graphModel.getNodeIncomingNode(target.id);
           // 如果已经有 2 个或更多输入连接，则不能再连接
           return incoming.length < 2;
@@ -160,10 +161,10 @@ export default class SqlNodeModel extends VueNodeModel {
     };
 
     switch (type) {
-      case "in-node":
+      case SQL_NODE_TYPE.IN_NODE:
         // 数据输入节点只有输出锚点（右侧）
         return [outAnchor];
-      case "out-node":
+      case SQL_NODE_TYPE.OUT_NODE:
         // 数据输出节点只有输入锚点（左侧）
         return [inAnchor];
       default:

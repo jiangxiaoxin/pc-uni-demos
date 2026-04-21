@@ -57,53 +57,20 @@
 
 <script setup lang="ts">
   import { nextTick, onMounted, provide, ref, watch } from "vue";
-  import { nodeTypes } from "./menus";
+  import { nodeTypes, SQL_NODE_TYPE } from "./menus";
   import { sqlNodeIconMap } from "./nodes/iconMap";
   import editor from "./editor.vue";
   import property from "./property.vue";
   import InputNodeBindModal from "./node-config/InputNodeBindModal.vue";
-  import {
-    buildNodeContext,
-    sqlNodeContextKey,
-    type SqlGraphData,
-  } from "./nodeContext";
-  import { resolveInputBinding } from "./inputNodeMock";
-  import type { InputBindingPersisted } from "./types";
-
-  interface EditorExpose {
-    resize: () => void;
-    focusNode: (nodeId: string) => void;
-    updateNodeTitle: (nodeId: string, title: string) => void;
-    updateNodeProperties: (
-      nodeId: string,
-      properties: Record<string, unknown>,
-    ) => void;
-    getGraphData: () => SqlGraphData | undefined;
-    saveToLocal: () => void;
-    openPreview: () => void;
-    load: () => Promise<void>;
-    renderGraph: (data: SqlGraphData) => Promise<void>;
-  }
-
-  interface PropertyExpose {
-    flushDraftProperties: () => void;
-  }
-
-  interface SqlNodeData {
-    id: string;
-    type: string;
-    properties?: Record<string, unknown>;
-  }
-
-  interface NodeSelectPayload {
-    node: SqlNodeData;
-    incomingCount: number;
-  }
-
-  interface ConnectionChangePayload {
-    nodeId: string;
-    incomingCount: number;
-  }
+  import { buildNodeContext, sqlNodeContextKey } from "./nodeContext";
+  import type {
+    InputBindingPersisted,
+    EditorExpose,
+    PropertyExpose,
+    SqlNodeData,
+    NodeSelectPayload,
+    ConnectionChangePayload,
+  } from "./types";
 
   // LogicFlow 编辑器实例，用于操作画布、节点和读取当前图数据。
   const editorRef = ref<EditorExpose | null>(null);
@@ -158,11 +125,11 @@
     selectedIncomingCount.value = payload.incomingCount || 0;
 
     if (selectedNode.value?.id && selectedNode.value.id !== node.id) {
-      // 如果直接在画布上切换到另一个节点，要先flush 一下前面节点的属性配置
+      // 如果直接在画布上切换到另一个节点，要先flush 一下前面这个节点的属性配置，好保存起来，要不然就丢了
       propertyRef.value?.flushDraftProperties();
     }
 
-    if (node.type === "in-node" && !node.properties?.inputBinding) {
+    if (node.type === SQL_NODE_TYPE.IN_NODE && !node.properties?.inputBinding) {
       // 如果当前是输入节点，且没有绑定数据源，则弹出绑定数据源弹框。
       pendingBindNode.value = node;
       pendingInputBinding.value = null;
@@ -237,7 +204,7 @@
 
   const handleChangeInputSource = () => {
     const currentNode = selectedNode.value;
-    if (!currentNode || currentNode.type !== "in-node") return;
+    if (!currentNode || currentNode.type !== SQL_NODE_TYPE.IN_NODE) return;
 
     propertyRef.value?.flushDraftProperties();
 
@@ -251,17 +218,13 @@
   const handleConfirmInputBinding = async (binding: InputBindingPersisted) => {
     const currentNode = pendingBindNode.value;
     if (!currentNode) return;
-    // TODO: 这里用 mock 元数据把 sourceId 解析成 sourceName/fields 做回填，后续接真实接口后应改成以后端返回的绑定结果为准。
-    const resolvedBinding = resolveInputBinding(binding);
-    if (!resolvedBinding) return;
-
     editorRef.value?.updateNodeProperties(currentNode.id, {
       inputBinding: binding,
-      title: resolvedBinding.sourceName,
+      title: binding.sourceName,
     });
 
     ensureNodeProperties(currentNode).inputBinding = binding;
-    ensureNodeProperties(currentNode).title = resolvedBinding.sourceName;
+    ensureNodeProperties(currentNode).title = binding.sourceName;
     selectedNode.value = currentNode;
     pendingBindNode.value = null;
     pendingInputBinding.value = binding;
@@ -290,20 +253,22 @@
     editorRef.value?.openPreview();
   };
 
+  // TODO: 后续替换为真实接口获取配置
   const loadGraphData = async () => {
-    // TODO: 后续替换为真实接口获取配置
     const STORAGE_KEY = "sql_editor_flow_data";
     const savedData = localStorage.getItem(STORAGE_KEY)!;
-    console.log("🚀 ~ SqlEditor.vue:298 ~ loadGraphData ~ savedData:", savedData)
+    console.log(
+      "🚀 ~ SqlEditor.vue:298 ~ loadGraphData ~ savedData:",
+      savedData,
+    );
 
     try {
       const data = JSON.parse(savedData);
       await editorRef.value?.renderGraph(data);
       console.log("流程配置已加载");
-      
     } catch {
-      await editorRef.value?.renderGraph({nodes: [], edges: []}); // 初始化一个空画布,作为兼容
-     console.log("加载失败：配置数据损坏");
+      await editorRef.value?.renderGraph({ nodes: [], edges: [] }); // 初始化一个空画布,作为容错
+      console.log("加载失败：配置数据损坏");
     }
   };
 

@@ -27,6 +27,7 @@ import {
   isNumericFieldType,
   isStringFieldType,
 } from "./node-config/where.helper";
+import { SQL_NODE_TYPE } from "./menus";
 
 // ============================================================
 // MOCK_API_NOTE
@@ -1134,14 +1135,14 @@ const buildChainPreviewResult = (chainNodes: NodeConfigSnapshot[] = []) => {
   let rows: Record<string, unknown>[] = [];
 
   chainNodes.forEach((node) => {
-    if (node.type === "in-node") {
+    if (node.type === SQL_NODE_TYPE.IN_NODE) {
       const binding = resolveInputBinding(parseInputBinding(node.properties?.inputBinding));
       columns = [...(binding?.fields || [])];
       rows = getPreviewRowsByBinding(binding).map((row) => ({ ...row }));
       return;
     }
 
-    if (node.type === "field-node") {
+    if (node.type === SQL_NODE_TYPE.FIELD_NODE) {
       const fieldSettings = parseFieldSettingItems(node.properties?.fieldSettings);
       if (
         fieldSettings.length > 0 ||
@@ -1154,13 +1155,13 @@ const buildChainPreviewResult = (chainNodes: NodeConfigSnapshot[] = []) => {
       return;
     }
 
-    if (node.type === "distinct-node") {
+    if (node.type === SQL_NODE_TYPE.DISTINCT_NODE) {
       const distinctFields = parseDistinctFieldKeys(node.properties?.distinctFields);
       rows = applyDistinctRows(rows, distinctFields);
       return;
     }
 
-    if (node.type === "group-node") {
+    if (node.type === SQL_NODE_TYPE.GROUP_NODE) {
       const groupFields = parseDistinctFieldKeys(node.properties?.groupFields);
       const aggregateFields = parseGroupAggregateFields(node.properties?.aggregateFields);
       const nextResult = applyGroupAggregation(columns, rows, groupFields, aggregateFields);
@@ -1168,7 +1169,7 @@ const buildChainPreviewResult = (chainNodes: NodeConfigSnapshot[] = []) => {
       rows = nextResult.rows;
     }
 
-    if (node.type === "where-node") {
+    if (node.type === SQL_NODE_TYPE.WHERE_NODE) {
       const conditions = parseWhereConditions(node.properties?.whereConditions);
       const logic = (node.properties?.whereLogic as WhereLogic) || "and";
       rows = applyWhereFilter(rows, conditions, logic);

@@ -5,7 +5,9 @@
     width="820px"
     ok-text="确定"
     cancel-text="取消"
-    :ok-button-props="{ disabled: !selectedSource || selectedFieldKeys.length === 0 }"
+    :ok-button-props="{
+      disabled: !selectedSource || selectedFieldKeys.length === 0,
+    }"
     @ok="handleConfirm"
     @cancel="$emit('update:open', false)"
   >
@@ -24,11 +26,15 @@
             :key="source.id"
             type="button"
             class="bind-source-item"
-            :class="{ 'bind-source-item--active': source.id === currentSourceId }"
+            :class="{
+              'bind-source-item--active': source.id === currentSourceId,
+            }"
             @click="handleSelectSource(source.id)"
           >
             <div class="bind-source-item__name">{{ source.name }}</div>
-            <div class="bind-source-item__desc">{{ source.description || "暂无描述" }}</div>
+            <div class="bind-source-item__desc">
+              {{ source.description || "暂无描述" }}
+            </div>
           </button>
         </div>
       </div>
@@ -79,7 +85,11 @@
 <script setup lang="ts">
   import { computed, ref, watch } from "vue";
   import { fetchInputSourceFields, fetchInputSources } from "../inputNodeMock";
-  import type { InputBindingPersisted, InputField, InputSource } from "../types";
+  import type {
+    InputBindingPersisted,
+    InputField,
+    InputSource,
+  } from "../types";
 
   const emit = defineEmits<{
     (e: "update:open", value: boolean): void;
@@ -111,7 +121,10 @@
   });
 
   const isAllSelected = computed(() => {
-    return currentFields.value.length > 0 && selectedFieldKeys.value.length === currentFields.value.length;
+    return (
+      currentFields.value.length > 0 &&
+      selectedFieldKeys.value.length === currentFields.value.length
+    );
   });
 
   const loadFieldsBySource = async (sourceId: string) => {
@@ -126,7 +139,10 @@
     fieldsLoading.value = true;
     // TODO: 当前字段列表通过 inputNodeMock 模拟异步接口返回，用于跑通“选择数据源 -> 拉取字段”流程，后续应替换为真实字段查询接口。
     const fields = await fetchInputSourceFields(sourceId);
-    if (requestToken !== fieldRequestToken || currentSourceId.value !== sourceId) {
+    if (
+      requestToken !== fieldRequestToken ||
+      currentSourceId.value !== sourceId
+    ) {
       return;
     }
 
@@ -136,8 +152,9 @@
       props.initialBinding?.sourceId === sourceId &&
       (props.initialBinding?.fieldKeys?.length || 0) > 0
     ) {
-      selectedFieldKeys.value = (props.initialBinding?.fieldKeys || [])
-        .filter((key) => fields.some((field) => field.key === key));
+      selectedFieldKeys.value = props.initialBinding?.fieldKeys
+        .filter((key) => fields.some((field) => field.key === key.fieldKey))
+        .map((item) => item.fieldKey);
     } else {
       selectedFieldKeys.value = fields.map((field) => field.key);
     }
@@ -152,18 +169,29 @@
     async (open) => {
       if (!open) return;
 
-      sourcesLoading.value = true;
-      const loadedSources = await fetchInputSources();
-      sources.value = loadedSources;
-      sourcesLoading.value = false;
+      try {
+        sourcesLoading.value = true;
+        const loadedSources = await fetchInputSources(); //TODO 返回的结构是什么
+        sources.value = loadedSources;
+        sourcesLoading.value = false;
 
-      const sourceId = props.initialBinding?.sourceId || loadedSources[0]?.id || "";
-      currentSourceId.value = sourceId;
-      currentFields.value = [];
-      selectedFieldKeys.value = [];
-      shouldRestoreInitialSelection.value = Boolean(props.initialBinding?.sourceId);
-      hasInitialized.value = false; // 加载完数据源对应的字段以后就会设置init 为true
-      await loadFieldsBySource(sourceId);
+        const sourceId =
+          props.initialBinding?.sourceId || loadedSources[0]?.id || "";
+        currentSourceId.value = sourceId;
+        currentFields.value = [];
+        selectedFieldKeys.value = [];
+        // 打开时传入已经绑定的，那就要回显已经选定的数据
+        shouldRestoreInitialSelection.value = Boolean(
+          props.initialBinding?.sourceId,
+        );
+        hasInitialized.value = false; // 加载完数据源对应的字段以后就会设置init 为true
+        await loadFieldsBySource(sourceId);
+      } catch (error) {
+        sourcesLoading.value = false;
+        shouldRestoreInitialSelection.value = false;
+        hasInitialized.value = true;
+        fieldsLoading.value = false;
+      }
     },
     { immediate: true },
   );
@@ -172,7 +200,7 @@
     if (currentSourceId.value === sourceId && hasInitialized.value) return;
     shouldRestoreInitialSelection.value = false;
     currentSourceId.value = sourceId;
-    void loadFieldsBySource(sourceId);
+    loadFieldsBySource(sourceId);
   };
 
   const handleToggleSelectAll = () => {
@@ -185,12 +213,25 @@
   const handleConfirm = () => {
     if (!selectedSource.value) return;
 
-    emit("confirm", {
+    const sourceParams: InputBindingPersisted = {
+      sourceType: "DB_TABLE", // 先固定
+      sourceExtra: {}, // 先写上，后期扩展用
       sourceId: selectedSource.value.id,
+      sourceName: selectedSource.value.name,
       fieldKeys: currentFields.value
         .filter((field) => selectedFieldKeys.value.includes(field.key))
-        .map((field) => field.key),
-    });
+        .map((field) => {
+          return {
+            fieldKey: field.key,
+            fieldName: field.name,
+            fieldAlias: field.name, //TODO 后续可以在这里扩展字段别名，1期不做
+            fieldType: field.type,
+          };
+        }), // 先遍历currentFields，在遍历selectedFieldKeys，可以保持字段顺序,
+    };
+    console.log("绑定数据源", sourceParams);
+
+    emit("confirm", sourceParams);
     emit("update:open", false);
   };
 </script>

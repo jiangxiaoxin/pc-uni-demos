@@ -4,16 +4,22 @@
       <div class="input-config-card input-config-card--fixed">
         <div class="input-config-card__header">
           <span>数据源</span>
-          <span class="input-config-link" @click="$emit('change-source')">更改数据源</span>
+          <span class="input-config-link" @click="$emit('change-source')"
+            >更改数据源</span
+          >
         </div>
         <div v-if="loading" class="input-config-source-name">计算中...</div>
-        <div v-else class="input-config-source-name">{{ displayBinding?.sourceName || "-" }}</div>
+        <div v-else class="input-config-source-name">
+          {{ displayBinding?.sourceName || "-" }}
+        </div>
       </div>
 
       <div class="input-config-card input-config-card--grow">
         <div class="input-config-card__header">
           <span>字段列表</span>
-          <span class="input-config-count">{{ displayBinding?.fields.length || 0 }} 个字段</span>
+          <span class="input-config-count"
+            >{{ displayBinding?.fields.length || 0 }} 个字段</span
+          >
         </div>
         <div class="input-config-fields">
           <div
@@ -23,7 +29,9 @@
           >
             <div class="input-config-field__main">
               <span class="input-config-field__name">{{ field.name }}</span>
-              <span class="input-config-field__code"> ( {{ field.key }} ) </span>
+              <span class="input-config-field__code">
+                ( {{ field.key }} )
+              </span>
             </div>
             <span class="input-config-field__type">{{ field.type }}</span>
           </div>
@@ -49,18 +57,10 @@
 
 <script setup lang="ts">
   import { computed, onMounted, onUnmounted, ref } from "vue";
-  import { fetchInputSourceDetail, getPreviewRowsByBinding } from "../inputNodeMock";
-  import type { BoundInputSource, InputBindingPersisted, InputField, InputSource } from "../types";
-
-  interface TableColumn {
-    title: string;
-    dataIndex: string;
-    key: string;
-    width?: number;
-    ellipsis?: boolean;
-    customHeaderCell?: () => { style: Record<string, string> };
-    customCell?: () => { style: Record<string, string> };
-  }
+  import type {
+    BoundInputSource,
+    InputBindingPersisted,
+  } from "../types";
 
   defineEmits<{
     (e: "change-source"): void;
@@ -71,62 +71,117 @@
   }>();
 
   const loading = ref(false);
-  const localSource = ref<InputSource | null>(null); // 表单的完整信息描述，包括字段列表
+  const localSource = ref<BoundInputSource | null>(null);
   let loadToken = 0;
 
   const displayBinding = computed<BoundInputSource | null>(() => {
     if (!localSource.value) return null;
-    const fieldKeys = new Set(props.binding?.fieldKeys || []);
+    const fieldKeys = props.binding?.fieldKeys || [];
     return {
-      sourceId: localSource.value.id,
-      sourceName: localSource.value.name,
-      fields: localSource.value.fields.filter((field) => fieldKeys.has(field.key)),//TODO
+      sourceId: localSource.value.sourceId,
+      sourceName: localSource.value.sourceName,
+      fields: localSource.value.fields.filter((field) =>
+        fieldKeys.some((key) => key.fieldKey == field.key),
+      ),
     };
   });
+
+  // TODO
+  const fetchInputSourceDetail = async () => {
+    await new Promise((resolve) => {
+      window.setTimeout(resolve, 2000);
+    });
+    return {
+      id: "customer",
+      name: "我是个customer 表",
+      fields: [
+        {
+          key: "id",
+          name: "我是个id",
+          type: "number",
+        },
+        {
+          key: "name",
+          name: "我是个name",
+          type: "string",
+        },
+        {
+          key: "createTime",
+          name: "我是个createTime",
+          type: "datetime",
+        },
+      ],
+    };
+  };
 
   const loadSourceDetail = async () => {
     const currentToken = ++loadToken;
     loading.value = true;
+    // 打开时获取数据源字段列表详情，匹配字段名，类型等
     const result = await fetchInputSourceDetail(props.binding);
-    console.log("🚀 ~ InputNodeConfigSection.vue:91 ~ loadSourceDetail ~ result:", result)
+    console.log(
+      "🚀 ~ InputNodeConfigSection.vue:91 ~ loadSourceDetail ~ result:",
+      result,
+    );
 
     if (currentToken !== loadToken) return;
-    localSource.value = result;
+    localSource.value = {
+      sourceId: props.binding?.sourceId || result.id,
+      sourceName: result.name,
+      fields: result.fields || [],
+    };
     loading.value = false;
   };
 
+  // TODO 调接口
+  const loadTableData = async () => {
+    await new Promise((resolve) => {
+      window.setTimeout(resolve, 2000);
+    });
+    selectedFieldHeaderColumns.value = ["id", "name", "age"].map((key) => {
+      return {
+        title: key,
+        dataIndex: key,
+        key: key,
+        width: 100,
+        ellipsis: true,
+      };
+    });
+    configTableRows.value = [
+      {
+        id: 1,
+        name: "张三",
+        age: 18,
+      },
+      {
+        id: 2,
+        name: "李四",
+        age: 19,
+      },
+      {
+        id: 3,
+        name: "王五",
+        age: 20,
+      },
+    ];
+  };
+
   onMounted(() => {
-    console.log('输入节点 mounted');
-    
-    void loadSourceDetail();
+    console.log("输入节点 mounted");
+
+    console.log("props", props.binding);
+
+    loadSourceDetail();
+    loadTableData();
   });
 
   onUnmounted(() => {
-    console.log('输入节点 unmounted');
-  })
-
-  const selectedFieldHeaderColumns = computed<TableColumn[]>(() => {
-    return (displayBinding.value?.fields || []).map((field: InputField) => ({
-      title: field.name,
-      dataIndex: field.key,
-      key: field.key,
-      width: 120,
-      ellipsis: true,
-    }));
+    console.log("输入节点 unmounted");
   });
 
-  const configTableRows = computed(() => {
-    if (!displayBinding.value) return [];
-    // TODO: 这里先只对 customer 做特判，是因为当前配置面板仅接了 customer 的表头/样例数据，避免其他 source 误展示半成品预览。
-    if (displayBinding.value.sourceId !== "customer") return [];
-    // TODO: 这里读取的是 inputNodeMock 里的样例行数据，用来给输入节点配置面板展示前 10 条预览，后续应替换为真实的样例数据接口。
-    return getPreviewRowsByBinding(displayBinding.value)
-      .slice(0, 10)
-      .map((row, index) => ({
-        __configKey: `config-row-${index}`,
-        ...row,
-      }));
-  });
+  const selectedFieldHeaderColumns = ref<any[]>([]);
+
+  const configTableRows = ref<any[]>([]);
 
   const configHeaderScrollX = computed(() => {
     return Math.max(selectedFieldHeaderColumns.value.length * 100, 320);

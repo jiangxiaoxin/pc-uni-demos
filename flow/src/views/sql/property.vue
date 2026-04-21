@@ -210,7 +210,7 @@
 
 <script setup lang="ts">
   import { computed, inject, ref, watch } from "vue";
-  import { getNodeTypeConfig } from "./menus";
+  import { getNodeTypeConfig, SQL_NODE_TYPE } from "./menus";
   import { defaultSqlNodeIcon, sqlNodeIconMap } from "./nodes/iconMap";
   import FieldNodeConfigSection from "./node-config/FieldNodeConfigSection.vue";
   import InputNodeConfigSection from "./node-config/InputNodeConfigSection.vue";
@@ -244,8 +244,6 @@
     JoinType,
     OutputPreviewPayload,
     UnionConfig,
-    UnionFieldMapping,
-    UnionMode,
     UnionNodePreviewPayload,
     WhereConditionPersisted,
     WhereLogic,
@@ -318,12 +316,7 @@
 
   const nodeLabel = computed(() => {
     if (!props.nodeData) return "";
-    return (
-      String(props.nodeData.properties?.title || "") ||
-      String(props.nodeData.properties?.name || "") ||
-      nodeConfig.value?.name ||
-      props.nodeData.type
-    );
+    return props.nodeData.properties?.title || props.nodeData.properties?.name || "";
   });
 
   const nodeTypeLabel = computed(() => {
@@ -346,14 +339,14 @@
     return JSON.stringify(props.nodeData, null, 2);
   });
 
-  const isInputNode = computed(() => props.nodeData?.type === "in-node");
-  const isFieldNode = computed(() => props.nodeData?.type === "field-node");
-  const isDistinctNode = computed(() => props.nodeData?.type === "distinct-node");
-  const isGroupNode = computed(() => props.nodeData?.type === "group-node");
-  const isWhereNode = computed(() => props.nodeData?.type === "where-node");
-  const isJoinNode = computed(() => props.nodeData?.type === "join-node");
-  const isUnionNode = computed(() => props.nodeData?.type === "union-node");
-  const isOutputNode = computed(() => props.nodeData?.type === "out-node");
+  const isInputNode = computed(() => props.nodeData?.type === SQL_NODE_TYPE.IN_NODE);
+  const isFieldNode = computed(() => props.nodeData?.type === SQL_NODE_TYPE.FIELD_NODE);
+  const isDistinctNode = computed(() => props.nodeData?.type === SQL_NODE_TYPE.DISTINCT_NODE);
+  const isGroupNode = computed(() => props.nodeData?.type === SQL_NODE_TYPE.GROUP_NODE);
+  const isWhereNode = computed(() => props.nodeData?.type === SQL_NODE_TYPE.WHERE_NODE);
+  const isJoinNode = computed(() => props.nodeData?.type === SQL_NODE_TYPE.JOIN_NODE);
+  const isUnionNode = computed(() => props.nodeData?.type === SQL_NODE_TYPE.UNION_NODE);
+  const isOutputNode = computed(() => props.nodeData?.type === SQL_NODE_TYPE.OUT_NODE);
 
   const requiredMinIncoming = computed(() => {
     return Number(nodeConfig.value?.defaultConfig?.requiredMinIncoming || 0);
@@ -638,6 +631,8 @@
   watch(
     () => [props.visible, props.nodeData?.id],
     () => {
+      console.log('watch name');
+      
       editableName.value = nodeLabel.value;
       editableRemark.value = String(props.nodeData?.properties?.remark || "");
       draftDistinctFields.value = [...distinctFields.value];
@@ -680,6 +675,8 @@
   );
 
   const handleSubmitName = () => {
+    console.log('--submit name');
+    
     const nextName = editableName.value.trim();
     if (!nextName || nextName === nodeLabel.value) {
       editableName.value = nodeLabel.value;

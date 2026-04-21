@@ -4,7 +4,7 @@ const Number_180 = 180;
 const Number_40 = 40;
 
 export interface NodeType {
-  type: string;
+  type: SqlNodeType;
   name: string;
   color: string;
   iconBgColor: string;
@@ -26,9 +26,22 @@ const nodeEmptyLinkTip1 = "请将 1 个节点连接至本节点";
 const nodeEmptyLinkTip2 = "请将 2 个节点连接至本节点";
 const nodeEmptyLinkTip3 = "请将 2 个及以上节点连接至本节点";
 
+export const SQL_NODE_TYPE = {
+  IN_NODE: "in-node",
+  OUT_NODE: "out-node",
+  JOIN_NODE: "join-node",
+  UNION_NODE: "union-node",
+  GROUP_NODE: "group-node",
+  WHERE_NODE: "where-node",
+  FIELD_NODE: "field-node",
+  DISTINCT_NODE: "distinct-node",
+} as const;
+
+export type SqlNodeType = (typeof SQL_NODE_TYPE)[keyof typeof SQL_NODE_TYPE];
+
 export const nodeTypes: NodeType[] = [
   {
-    type: "in-node",
+    type: SQL_NODE_TYPE.IN_NODE,
     name: "数据输入",
     title: "数据输入",
     icon: "database",
@@ -42,7 +55,7 @@ export const nodeTypes: NodeType[] = [
     },
   },
   {
-    type: "out-node",
+    type: SQL_NODE_TYPE.OUT_NODE,
     name: "数据输出",
     title: "数据输出",
     icon: "export",
@@ -57,7 +70,7 @@ export const nodeTypes: NodeType[] = [
     },
   },
   {
-    type: "join-node",
+    type: SQL_NODE_TYPE.JOIN_NODE,
     name: "横向连接",
     title: "横向连接",
     icon: "join",
@@ -72,7 +85,7 @@ export const nodeTypes: NodeType[] = [
     },
   },
   {
-    type: "union-node",
+    type: SQL_NODE_TYPE.UNION_NODE,
     name: "追加合并",
     title: "追加合并",
     icon: "merge",
@@ -87,7 +100,7 @@ export const nodeTypes: NodeType[] = [
     },
   },
   {
-    type: "group-node",
+    type: SQL_NODE_TYPE.GROUP_NODE,
     name: "分组汇总",
     title: "分组汇总",
     icon: "functions",
@@ -102,7 +115,7 @@ export const nodeTypes: NodeType[] = [
     },
   },
   {
-    type: "where-node",
+    type: SQL_NODE_TYPE.WHERE_NODE,
     name: "数据筛选",
     title: "数据筛选",
     icon: "filter",
@@ -117,7 +130,7 @@ export const nodeTypes: NodeType[] = [
     },
   },
   {
-    type: "field-node",
+    type: SQL_NODE_TYPE.FIELD_NODE,
     name: "字段设置",
     title: "字段设置",
     icon: "text",
@@ -132,7 +145,7 @@ export const nodeTypes: NodeType[] = [
     },
   },
   {
-    type: "distinct-node",
+    type: SQL_NODE_TYPE.DISTINCT_NODE,
     name: "去重",
     title: "去重",
     icon: "cut",

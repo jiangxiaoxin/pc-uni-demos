@@ -13,8 +13,18 @@ export interface InputSource {
 }
 
 export interface InputBindingPersisted {
-  sourceId: string;
-  fieldKeys: string[];
+  sourceId: string; // 表的id
+  sourceName: string; // 表的name
+  sourceAlias?: string; // 表的别名
+  sourceType: "DB_TABLE";
+  fieldKeys: {
+    fieldKey: string;
+    fieldAlias?: string;
+    fieldType: String;
+    fieldName: string;
+  }[];
+
+  [key: string]: any;
 }
 
 export interface BoundInputSource {
@@ -89,7 +99,13 @@ export type WhereRelation =
 export interface WhereConditionPersisted {
   key: string;
   relation: WhereRelation;
-  value?: string | number | string[] | [string, string] | [number, number] | null;
+  value?:
+    | string
+    | number
+    | string[]
+    | [string, string]
+    | [number, number]
+    | null;
 }
 
 export interface NodeConfigSnapshot {
@@ -160,3 +176,40 @@ export interface UnionConfig {
 }
 
 export interface UnionNodePreviewPayload extends BaseNodePreviewPayload {}
+
+import type { SqlGraphData } from "./nodeContext";
+
+export interface EditorExpose {
+  resize: () => void;
+  // focusNode: (nodeId: string) => void;
+  updateNodeTitle: (nodeId: string, title: string) => void;
+  updateNodeProperties: (
+    nodeId: string,
+    properties: Record<string, unknown>,
+  ) => void;
+  getGraphData: () => SqlGraphData | undefined;
+  saveToLocal: () => void;
+  openPreview: () => void;
+  // load: () => Promise<void>;
+  renderGraph: (data: SqlGraphData) => Promise<void>;
+}
+
+export interface PropertyExpose {
+  flushDraftProperties: () => void;
+}
+
+export interface SqlNodeData {
+  id: string;
+  type: string;
+  properties?: Record<string, unknown>;
+}
+
+export interface NodeSelectPayload {
+  node: SqlNodeData;
+  incomingCount: number;
+}
+
+export interface ConnectionChangePayload {
+  nodeId: string;
+  incomingCount: number;
+}

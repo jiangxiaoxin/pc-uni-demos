@@ -6,18 +6,18 @@
           <template #icon><SaveOutlined /></template>
           保存
         </a-button>
-        <a-button @click="handleLoad">
+        <!-- <a-button @click="handleLoad">
           <template #icon><UploadOutlined /></template>
           加载
-        </a-button>
+        </a-button> -->
         <a-button @click="emit('preview-request')">
           <template #icon><EyeOutlined /></template>
           预览
         </a-button>
-        <a-button @click="handleCenter">
+        <!-- <a-button @click="handleCenter">
           <template #icon><FullscreenOutlined /></template>
           居中
-        </a-button>
+        </a-button> -->
         <a-button danger @click="handleClear">
           <template #icon><DeleteOutlined /></template>
           清空
@@ -69,7 +69,7 @@
   import { register, getTeleport } from "@logicflow/vue-node-registry";
   import SqlNode from "./nodes/SqlNode.vue";
   import SqlNodeModel from "./nodes/SqlNodeModel";
-  import { nodeTypes } from "./menus";
+  import { nodeTypes, SQL_NODE_TYPE } from "./menus";
   import type { SqlGraphData } from "./nodeContext";
 
   interface SqlNodeData {
@@ -113,7 +113,7 @@
   const STORAGE_KEY = "sql_editor_flow_data";
 
   const resizeEditor = () => {
-    lf?.resize();
+    lf?.resize(); //调整画布大小
   };
 
   const focusNode = (nodeId: string) => {
@@ -142,6 +142,7 @@
   const getGraphNodes = () => lf?.getGraphData()?.nodes || [];
   const getGraphData = () => lf?.getGraphData();
   const renderGraph = async (data: SqlGraphData) => {
+    await nextTick();
     if (!lf) return;
     lf.render(data as any);
     await nextTick();
@@ -220,11 +221,11 @@
 
     lf.on("node:click", ({ data }) => {
       const node = data as SqlNodeData;
-      console.log("🚀 ~ editor.vue:223 ~ node:", node);
+      console.log("🚀 ~ editor. click node:\n", node);
 
       emit("node-select", {
         node,
-        incomingCount: getIncomingCountByNodeId(node.id), // 连接了几条线进来
+        incomingCount: getIncomingCountByNodeId(node.id), // 连接了几条线进来,要判断是否连接正确
       });
     });
 
@@ -262,10 +263,10 @@
     resizeObserver.observe(containerRef.value);
   });
 
-  const hasNodeType = (type: string): boolean => {
+  const hasOutNodeType = () : boolean => {
     if (!lf) return false;
-    return getGraphNodes().some((node) => node.type === type);
-  };
+    return getGraphNodes().some((node) => node.type === SQL_NODE_TYPE.OUT_NODE);
+  }
 
   const handleDrop = (event: DragEvent) => {
     event.preventDefault();
@@ -274,11 +275,12 @@
 
     const nodeType = JSON.parse(data);
 
-    if (nodeType.type === "out-node" && hasNodeType("out-node")) {
+    if (nodeType.type === SQL_NODE_TYPE.OUT_NODE && hasOutNodeType()) {
       message.warning("画布中只能有一个数据输出节点");
       return;
     }
 
+    // 添加初始配置的节点
     const {
       canvasOverlayPosition: { x, y },
     } = lf.getPointByClient(event.clientX, event.clientY);
@@ -290,7 +292,7 @@
       y,
       properties: {
         name: nodeType.name,
-        title: nodeType.title || nodeType.name,
+        title: nodeType.title,
         color: nodeType.color,
         icon: nodeType.icon,
         anchors: nodeType.anchors,
@@ -306,28 +308,31 @@
   //TODO 未来调用接口存到数据库
   const saveToLocal = () => {
     if (!lf) return;
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(lf.getGraphData()));
+    const data = lf.getGraphData()
+    console.log("🚀 ~ editor.vue:311 ~ saveToLocal ~ data:\n", data)
+
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
     console.log("流程配置已保存到本地");
   };
 
-  const handleLoad = async () => {
-    const savedData = localStorage.getItem(STORAGE_KEY); //TODO 从后端获取配置
-    if (!savedData) {
-      message.warning("没有找到已保存的配置");
-      return;
-    }
+  // const handleLoad = async () => {
+  //   const savedData = localStorage.getItem(STORAGE_KEY); //TODO 从后端获取配置
+  //   if (!savedData) {
+  //     message.warning("没有找到已保存的配置");
+  //     return;
+  //   }
 
-    if (!lf) return;
+  //   if (!lf) return;
 
-    try {
-      lf.render(JSON.parse(savedData));
-      await nextTick();
-      resizeEditor();
-      message.success("流程配置已加载");
-    } catch {
-      message.error("加载失败：配置数据损坏");
-    }
-  };
+  //   try {
+  //     lf.render(JSON.parse(savedData));
+  //     await nextTick();
+  //     resizeEditor();
+  //     message.success("流程配置已加载");
+  //   } catch {
+  //     message.error("加载失败：配置数据损坏");
+  //   }
+  // };
 
   const openPreview = () => {
     if (!lf) return;
@@ -344,14 +349,14 @@
     }
   };
 
-  const handleCenter = async () => {
-    if (!lf) return;
-    await nextTick();
-    resizeEditor();
-    if (centerGraph()) {
-      message.success("节点已居中显示");
-    }
-  };
+  // const handleCenter = async () => {
+  //   if (!lf) return;
+  //   await nextTick();
+  //   resizeEditor();
+  //   if (centerGraph()) {
+  //     message.success("节点已居中显示");
+  //   }
+  // };
 
   const handleClear = () => {
     Modal.confirm({
@@ -381,8 +386,8 @@
 
   defineExpose({
     resize: resizeEditor,
-    focusNode,
-    centerGraph,
+    // focusNode,
+    // centerGraph,
     updateNodeTitle,
     updateNodeProperties,
     getGraphData,

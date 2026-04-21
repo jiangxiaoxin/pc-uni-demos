@@ -72,7 +72,7 @@
         <div v-else class="where-conditions">
           <div
             v-for="(condition, index) in localConditions"
-            :key="condition.__id"
+            :key="index"
             class="where-condition"
           >
             <a-select
@@ -210,7 +210,9 @@
                 <WhereTagsInput
                   class="where-condition__value"
                   :model-value="condition.value"
-                  @update:model-value="(value) => handleValueChange(index, value)"
+                  @update:model-value="
+                    (value) => handleValueChange(index, value)
+                  "
                 />
               </template>
 
@@ -270,7 +272,6 @@
   import { DeleteOutlined } from "@ant-design/icons-vue";
   import WhereTagsInput from "./wheretagsinput.vue";
   import { sqlNodeContextKey, type GetNodeContext } from "../nodeContext";
-  import { fetchWhereNodeUpstreamFields } from "../inputNodeMock";
   import type {
     InputField,
     WhereConditionPersisted,
@@ -286,9 +287,8 @@
     type LocalWhereCondition,
     type SelectOption,
     buildDefaultCondition,
-    generateId,
   } from "./where.helper";
-  import locale from 'ant-design-vue/es/date-picker/locale/zh_CN';
+  import locale from "ant-design-vue/es/date-picker/locale/zh_CN";
 
   const emit = defineEmits<{
     (e: "change-logic", value: WhereLogic): void;
@@ -317,7 +317,12 @@
   const pendingLocalChange = ref(false);
 
   const flushDraft = () => {
+    console.log("filter flush");
+
     if (!pendingLocalChange.value) return;
+
+    console.log("filter did flush");
+
     pendingLocalChange.value = false;
     emit("change-logic", localLogic.value);
     emit("change-conditions", toPersistedConditions(localConditions.value));
@@ -336,79 +341,101 @@
   ): WhereConditionPersisted[] => {
     return conditions.map((condition) => {
       const persisted: WhereConditionPersisted = {
-        key: condition.key,
-        relation: condition.relation,
+        fieldKey: condition.key,
+        operator: condition.relation,
+        fieldType: condition.fieldType,
+        valueType: "LITERAL",
       };
       if (!isNoValueRelation(condition.relation)) {
+        // 需要保存值的
         if (condition.relation === "range") {
           persisted.value = [condition.rangeValue[0], condition.rangeValue[1]];
         } else {
-          persisted.value = condition.value;
+          persisted.value = [condition.value];
         }
       }
       return persisted;
     });
   };
 
-  const buildLocalCondition = (
-    item: WhereConditionPersisted,
-    fields: InputField[],
-    existingId?: string,
-  ): LocalWhereCondition => {
-    const fieldMap = new Map(fields.map((field) => [field.key, field]));
-    const field = fieldMap.get(item.key);
-    const rangeValue: [string, string] =
-      item.relation === "range" &&
-      Array.isArray(item.value) &&
-      item.value.length === 2
-        ? [String(item.value[0] || ""), String(item.value[1] || "")]
-        : ["", ""];
-    return {
-      __id: existingId || generateId(),
-      key: item.key,
-      fieldName: field?.name || item.key,
-      fieldType: field?.type || "varchar",
-      relation: item.relation,
-      value: item.relation === "range" ? "" : String(item.value ?? ""),
-      rangeValue,
-    };
-  };
-
-  const conditionDataEqual = (
-    a: LocalWhereCondition,
-    b: LocalWhereCondition,
-  ): boolean => {
-    return (
-      a.key === b.key &&
-      a.relation === b.relation &&
-      a.value === b.value &&
-      a.rangeValue[0] === b.rangeValue[0] &&
-      a.rangeValue[1] === b.rangeValue[1]
-    );
-  };
-
   const syncLocalConditions = () => {
-    const current = localConditions.value;
     const persisted = props.whereConditions;
 
-    // 如果长度和内容都相同，直接保留现有数组（避免不必要的重新渲染）
-    if (
-      current.length === persisted.length &&
-      persisted.every((item, index) => {
-        const next = buildLocalCondition(item, upstreamFields.value);
-        return conditionDataEqual(current[index], next);
+    localConditions.value = persisted
+      .map((item) => {
+        const field = upstreamFields.value.find(
+          (field) =>
+            field.key === item.fieldKey && field.type == item.fieldType,
+        );
+        if (field) {
+          // 这个筛选条件还在，那就继续用
+          return {
+            key: item.fieldKey,
+            fieldName: field.name,
+            fieldType: field.type,
+            relation: item.operator,
+            value:
+              item.operator === "range"
+                ? ""
+                : item.value && item.value.length > 0
+                  ? item.value[0]
+                  : "",
+            rangeValue:
+              item.operator === "range"
+                ? [String(item.value?.[0] ?? ""), String(item.value?.[1] || "")]
+                : ["", ""],
+          };
+        } else {
+          // 之前设置的筛选条件已经不在了
+          return null;
+        }
       })
-    ) {
-      return;
-    }
+      .filter(Boolean) as LocalWhereCondition[];
+  };
 
-    localConditions.value = persisted.map((item, index) =>
-      buildLocalCondition(item, upstreamFields.value, current[index]?.__id),
-    );
+  // TODO
+  const fetchWhereNodeUpstreamFields = async (params: any) => {
+    return [
+      {
+        key: "id",
+        name: "ID",
+        type: "NUMBER",
+      },
+      {
+        key: "name",
+        name: "名称",
+        type: "STRING",
+      },
+      {
+        key: "age",
+        name: "年龄",
+        type: "NUMBER",
+      },
+      {
+        key: "birthday",
+        name: "生日",
+        type: "DATE", // TODO date 也没支持
+      },
+      {
+        key: "created_at",
+        name: "创建时间",
+        type: "DATETIME",
+      },
+      {
+        key: "status",
+        name: "状态",
+        type: "BOOLEAN", //TODO boolean 的还没支持
+      },
+    ];
   };
 
   const loadUpstreamFields = async () => {
     const nodeContext = getNodeContext?.(props.nodeId);
+    console.log(
+      "🚀 ~ WhereNodeConfigSection.vue:412 ~ loadUpstreamFields ~ nodeContext:",
+      nodeContext,
+    );
+
     if (!nodeContext) {
       upstreamFields.value = [];
       localConditions.value = [];
@@ -426,19 +453,10 @@
   };
 
   onMounted(() => {
-    void loadUpstreamFields();
+    console.log("filter mounted");
+
+    loadUpstreamFields();
   });
-
-  watch(
-    () => [props.whereConditions, props.whereLogic],
-    () => {
-      console.log("--whereConditions--whereLogic");
-
-      localLogic.value = props.whereLogic ?? "and";
-      syncLocalConditions();
-    },
-    { deep: true },
-  );
 
   const fieldOptions = computed<SelectOption[]>(() => {
     return upstreamFields.value.map((field) => ({
@@ -456,14 +474,12 @@
   const addCondition = () => {
     const defaultCondition = buildDefaultCondition(upstreamFields.value);
     if (!defaultCondition) return;
-    localConditions.value = [...localConditions.value, defaultCondition];
+    localConditions.value.push(defaultCondition);
     pendingLocalChange.value = true;
   };
 
   const removeCondition = (index: number) => {
-    const next = [...localConditions.value];
-    next.splice(index, 1);
-    localConditions.value = next;
+    localConditions.value.splice(index, 1);
     pendingLocalChange.value = true;
   };
 
@@ -492,22 +508,20 @@
   };
 
   const handleRelationChange = (index: number, relation: WhereRelation) => {
-    const next = [...localConditions.value];
-    next[index] = {
-      ...next[index],
+    const old = localConditions.value[index];
+    localConditions.value[index] = {
+      ...old,
       relation,
       value: "",
       rangeValue: ["", ""],
     };
-    localConditions.value = next;
     pendingLocalChange.value = true;
   };
 
   const handleValueChange = (index: number, value: string) => {
-    console.log('handleValueChange', value);
-    const next = [...localConditions.value];
-    next[index] = { ...next[index], value };
-    localConditions.value = next;
+    console.log("handleValueChange", value);
+
+    localConditions.value[index].value = value;
     pendingLocalChange.value = true;
   };
 
@@ -516,14 +530,7 @@
     rangeIndex: 0 | 1,
     value: string,
   ) => {
-    const next = [...localConditions.value];
-    const nextRange: [string, string] = [...next[index].rangeValue] as [
-      string,
-      string,
-    ];
-    nextRange[rangeIndex] = value;
-    next[index] = { ...next[index], rangeValue: nextRange };
-    localConditions.value = next;
+    localConditions.value[index].rangeValue[rangeIndex] = value;
     pendingLocalChange.value = true;
   };
 
@@ -564,20 +571,19 @@
     color: #64748b;
     font-size: 12px;
     font-weight: 500;
-    cursor: pointer;
-    transition: all 0.2s ease;
-  }
+    transition: 0.2s;
 
-  .where-logic__btn--active {
-    border-color: #7dd3fc;
-    background: #e0f2fe;
-    color: #0369a1;
-  }
+    &--active {
+      border-color: #7dd3fc;
+      background: #e0f2fe;
+      color: #0369a1;
+    }
 
-  .where-logic__btn--debug {
-    border-color: #fbbf24;
-    background: #fef9c3;
-    color: #92400e;
+    &--debug {
+      border-color: #fbbf24;
+      background: #fef9c3;
+      color: #92400e;
+    }
   }
 
   .where-conditions {
@@ -636,6 +642,4 @@
     justify-content: flex-start !important;
     gap: 20px !important;
   }
-
-
 </style>

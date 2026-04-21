@@ -1,23 +1,15 @@
 import type { InputField } from "../types";
 
 const NUMERIC_FIELD_TYPES = new Set([
-  'number',
-  'integer',
-  'float',
-  'decimal',
-  'double',
-  'bigint',
-  'int'
+  'NUMBER'
 ]);
 
 const STRING_FIELD_TYPES = new Set([
-  'string',
-  'text',
-  'varchar'
+  'STRING'
 ]);
 
 const DATETIME_FIELD_TYPES = new Set([
-  'datetime'
+  'DATETIME'
 ]);
 
 //TODO 简单判断类型，后续再优化
@@ -59,7 +51,6 @@ export interface SelectOption {
 
 // 定义 LocalWhereCondition 接口
 export interface LocalWhereCondition {
-  __id: string;
   key: string;
   fieldName: string;
   fieldType: string;
@@ -133,7 +124,6 @@ export const isNoValueRelation = (relation: WhereRelation): boolean => {
     const field = fields[0];
     const relation = getDefaultRelation(field.type);
     return {
-      __id: generateId(),
       key: field.key,
       fieldName: field.name,
       fieldType: field.type,

@@ -97,15 +97,16 @@ export type WhereRelation =
   | "range";
 
 export interface WhereConditionPersisted {
-  key: string;
-  relation: WhereRelation;
+  fieldKey: string;
+  fieldType: string;
+  operator: WhereRelation;
   value?:
-    | string
-    | number
+    | number[]
     | string[]
     | [string, string]
     | [number, number]
     | null;
+  valueType: 'LITERAL' // 暂时固定，后续扩展用
 }
 
 export interface NodeConfigSnapshot {

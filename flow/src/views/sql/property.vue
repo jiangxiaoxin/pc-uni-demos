@@ -420,14 +420,7 @@
   const whereConditions = computed<WhereConditionPersisted[]>(() => {
     const conditions = props.nodeData?.properties?.whereConditions;
     if (!Array.isArray(conditions)) return [];
-    return conditions.filter((item): item is WhereConditionPersisted => {
-      return (
-        typeof item === "object" &&
-        item !== null &&
-        typeof (item as WhereConditionPersisted).key === "string" &&
-        typeof (item as WhereConditionPersisted).relation === "string"
-      );
-    });
+    return conditions
   });
 
   const joinType = computed<JoinType>(() => {
@@ -633,7 +626,7 @@
     () => {
       console.log('watch name');
       
-      editableName.value = nodeLabel.value;
+      editableName.value = nodeLabel.value as string;
       editableRemark.value = String(props.nodeData?.properties?.remark || "");
       draftDistinctFields.value = [...distinctFields.value];
       draftFieldSettings.value = fieldSettings.value.map((field) => ({ ...field }));

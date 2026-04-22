@@ -42,7 +42,7 @@ export function formatToServer(graphData: any) {
                 targetField: field.targetField,
                 outputAlias: field.targetName,
                 fieldType: field.targetType,
-                sourceMappings: Object.keys(field.sourceMap).forEach(key => {
+                sourceMappings: Object.keys(field.sourceMap).map(key => {
                     return {
                         nodeKey: key,
                         fieldKey: field.sourceMap[key]
@@ -69,4 +69,74 @@ export function formatToServer(graphData: any) {
   return nextData;
 }
 
-export function formatFromServer() {}
+export function formatFromServer(graphData: any) {
+  const nextData = JSON.parse(JSON.stringify(graphData));
+  nextData.nodes.forEach((node) => {
+    if (node.type == SQL_NODE_TYPE.IN_NODE) {
+      const {
+        sourceType,
+        objectId,
+        selectedFields = [],
+        sourceExtra = {},
+      } = node.properties;
+      node.properties = {
+        ...node.properties,
+        inputBinding: {
+          sourceType,
+          sourceId: objectId,
+          sourceName: "",
+          fieldKeys: selectedFields.map((field) => ({
+            fieldKey: field.fieldKey,
+            fieldAlias: field.alias,
+            fieldType: field.fieldType,
+          })),
+          sourceExtra,
+        },
+      };
+      delete node.properties.sourceType;
+      delete node.properties.objectId;
+      delete node.properties.selectedFields;
+      delete node.properties.sourceExtra;
+    } else if (node.type == SQL_NODE_TYPE.WHERE_NODE) {
+      const { logic, conditions } = node.properties;
+      node.properties = {
+        ...node.properties,
+        whereLogic: logic,
+        whereConditions: conditions,
+      };
+      delete node.properties.logic;
+      delete node.properties.conditions;
+    } else if (node.type == SQL_NODE_TYPE.UNION_NODE) {
+      const { fieldMapping = [] } = node.properties;
+      node.properties = {
+        ...node.properties,
+        fieldMappings: fieldMapping.map((field) => {
+          const sourceMap: Record<string, string> = {};
+          if (Array.isArray(field.sourceMappings)) {
+            field.sourceMappings.forEach((sm: any) => {
+              sourceMap[sm.nodeKey] = sm.fieldKey;
+            });
+          }
+          return {
+            targetField: field.targetField,
+            targetName: field.outputAlias,
+            targetType: field.fieldType,
+            sourceMap,
+          };
+        }),
+      };
+      delete node.properties.fieldMapping;
+    } else if (node.type == SQL_NODE_TYPE.GROUP_NODE) {
+      // 服务器数据中 aggregateFields 仍然存在，只是 type 已丢失，保持原样即可
+    } else if (node.type == SQL_NODE_TYPE.FIELD_NODE) {
+      const { fields = [] } = node.properties;
+      node.properties = {
+        ...node.properties,
+        fieldSettings: fields,
+      };
+      delete node.properties.fields;
+    }
+  });
+
+  return nextData;
+}

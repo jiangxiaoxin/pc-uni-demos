@@ -92,8 +92,8 @@
       window.setTimeout(resolve, 2000);
     });
     return {
-      id: "customer",
-      name: "我是个customer 表",
+      id: "customer" + Math.random(),
+      name: "我是个customer 表" + Math.random(),
       fields: [
         {
           key: "id",

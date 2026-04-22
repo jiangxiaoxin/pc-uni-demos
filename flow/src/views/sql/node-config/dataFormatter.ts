@@ -34,6 +34,35 @@ export function formatToServer(graphData: any) {
         }
         delete node.properties.whereConditions;
         delete node.properties.whereLogic;
+    } else if(node.type == SQL_NODE_TYPE.UNION_NODE) {
+        const  {fieldMappings = [], } = node.properties;
+        node.properties = {
+            ...node.properties,
+            fieldMapping: fieldMappings.map((field) => ({
+                targetField: field.targetField,
+                outputAlias: field.targetName,
+                fieldType: field.targetType,
+                sourceMappings: Object.keys(field.sourceMap).forEach(key => {
+                    return {
+                        nodeKey: key,
+                        fieldKey: field.sourceMap[key]
+                    }
+                })
+            }))
+        }
+        delete node.properties.fieldMappings;
+    } else if(node.type == SQL_NODE_TYPE.GROUP_NODE) {
+        const {aggregateFields = []} = node.properties;
+        aggregateFields.forEach(field => {
+            delete field.type
+        })
+    } else if(node.type == SQL_NODE_TYPE.FIELD_NODE) {
+        const {fieldSettings = []} = node.properties
+        node.properties = {
+            ...node.properties,
+            fields: fieldSettings
+        }
+        delete node.properties.fieldSettings
     }
   });
 

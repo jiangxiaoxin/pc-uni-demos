@@ -1,0 +1,924 @@
+{
+    "nodes": [
+        {
+            "id": "INPUT_1776848543287",
+            "type": "INPUT",
+            "x": 206,
+            "y": 224,
+            "properties": {
+                "name": "数据输入",
+                "title": "客户表 customer",
+                "color": "#1890ff",
+                "icon": "database",
+                "anchors": {
+                    "in": false,
+                    "out": true
+                },
+                "hoverOutlineColor": "#1890ff",
+                "width": 180,
+                "height": 40,
+                "sourceType": "DB_TABLE",
+                "objectId": "customer",
+                "selectedFields": [
+                    {
+                        "fieldKey": "id",
+                        "alias": "主键ID",
+                        "fieldType": "bigint"
+                    },
+                    {
+                        "fieldKey": "createTime",
+                        "alias": "创建时间",
+                        "fieldType": "datetime"
+                    },
+                    {
+                        "fieldKey": "updateTime",
+                        "alias": "更新时间",
+                        "fieldType": "datetime"
+                    },
+                    {
+                        "fieldKey": "isDelete",
+                        "alias": "是否删除",
+                        "fieldType": "tinyint"
+                    },
+                    {
+                        "fieldKey": "customerCode",
+                        "alias": "客户编码",
+                        "fieldType": "varchar"
+                    },
+                    {
+                        "fieldKey": "customerName",
+                        "alias": "客户名称",
+                        "fieldType": "varchar"
+                    },
+                    {
+                        "fieldKey": "gender",
+                        "alias": "性别",
+                        "fieldType": "varchar"
+                    },
+                    {
+                        "fieldKey": "mobile",
+                        "alias": "手机号",
+                        "fieldType": "varchar"
+                    },
+                    {
+                        "fieldKey": "age",
+                        "alias": "年龄",
+                        "fieldType": "int"
+                    },
+                    {
+                        "fieldKey": "level",
+                        "alias": "客户等级",
+                        "fieldType": "varchar"
+                    },
+                    {
+                        "fieldKey": "birthday",
+                        "alias": "生日",
+                        "fieldType": "date"
+                    },
+                    {
+                        "fieldKey": "idCard",
+                        "alias": "身份证号",
+                        "fieldType": "varchar"
+                    },
+                    {
+                        "fieldKey": "email",
+                        "alias": "邮箱",
+                        "fieldType": "varchar"
+                    },
+                    {
+                        "fieldKey": "address",
+                        "alias": "地址",
+                        "fieldType": "varchar"
+                    },
+                    {
+                        "fieldKey": "maritalStatus",
+                        "alias": "婚姻状态",
+                        "fieldType": "varchar"
+                    },
+                    {
+                        "fieldKey": "company",
+                        "alias": "公司名称",
+                        "fieldType": "varchar"
+                    },
+                    {
+                        "fieldKey": "jobTitle",
+                        "alias": "职位",
+                        "fieldType": "varchar"
+                    },
+                    {
+                        "fieldKey": "emergencyContact",
+                        "alias": "紧急联系人",
+                        "fieldType": "varchar"
+                    },
+                    {
+                        "fieldKey": "emergencyPhone",
+                        "alias": "紧急联系人电话",
+                        "fieldType": "varchar"
+                    },
+                    {
+                        "fieldKey": "sourceChannel",
+                        "alias": "来源渠道",
+                        "fieldType": "varchar"
+                    }
+                ],
+                "sourceExtra": {}
+            }
+        },
+        {
+            "id": "DEDUP_1776848958549",
+            "type": "DEDUP",
+            "x": 401,
+            "y": 333,
+            "properties": {
+                "name": "去重",
+                "title": "去重",
+                "color": "#fa541c",
+                "icon": "cut",
+                "anchors": {
+                    "in": true,
+                    "out": true
+                },
+                "hoverOutlineColor": "#fa541c",
+                "width": 180,
+                "height": 40,
+                "dedupFields": [
+                    "id",
+                    "name"
+                ]
+            }
+        },
+        {
+            "id": "FIELD_SETTING_1776849017536",
+            "type": "FIELD_SETTING",
+            "x": 670,
+            "y": 332,
+            "properties": {
+                "name": "字段设置",
+                "title": "字段设置",
+                "color": "#13c2c2",
+                "icon": "text",
+                "anchors": {
+                    "in": true,
+                    "out": true
+                },
+                "hoverOutlineColor": "#13c2c2",
+                "width": 180,
+                "height": 40,
+                "fields": [
+                    {
+                        "sourceFieldKey": "id",
+                        "alias": "id给个名字",
+                        "fieldType": "NUMBER"
+                    },
+                    {
+                        "sourceFieldKey": "name",
+                        "alias": "name",
+                        "fieldType": "STRING"
+                    },
+                    {
+                        "sourceFieldKey": "age",
+                        "alias": "age",
+                        "fieldType": "NUMBER"
+                    },
+                    {
+                        "sourceFieldKey": "gender",
+                        "alias": "gender",
+                        "fieldType": "STRING"
+                    },
+                    {
+                        "sourceFieldKey": "email",
+                        "alias": "email",
+                        "fieldType": "STRING"
+                    },
+                    {
+                        "sourceFieldKey": "birthday",
+                        "alias": "birthday",
+                        "fieldType": "DATE"
+                    },
+                    {
+                        "sourceFieldKey": "createTime",
+                        "alias": "createTime",
+                        "fieldType": "DATETIME"
+                    }
+                ]
+            }
+        },
+        {
+            "id": "OUTPUT_1776849032511",
+            "type": "OUTPUT",
+            "x": 1258,
+            "y": 403,
+            "properties": {
+                "name": "数据输出",
+                "title": "数据输出",
+                "color": "#52c41a",
+                "icon": "export",
+                "anchors": {
+                    "in": true,
+                    "out": false
+                },
+                "hoverOutlineColor": "#52c41a",
+                "width": 180,
+                "height": 40
+            }
+        },
+        {
+            "id": "JOIN_1776849037088",
+            "type": "JOIN",
+            "x": 1009,
+            "y": 307,
+            "properties": {
+                "name": "横向连接",
+                "title": "横向连接",
+                "color": "#722ed1",
+                "icon": "join",
+                "anchors": {
+                    "in": true,
+                    "out": true
+                },
+                "hoverOutlineColor": "#722ed1",
+                "width": 180,
+                "height": 40,
+                "joinType": "INNER",
+                "leftNodeId": "FILTER_1776849044692",
+                "rightNodeId": "UNION_1776849039286",
+                "joinConditions": [
+                    {
+                        "leftField": "customer_id",
+                        "rightField": "order_id"
+                    }
+                ]
+            }
+        },
+        {
+            "id": "UNION_1776849039286",
+            "type": "UNION",
+            "x": 823,
+            "y": 440,
+            "properties": {
+                "name": "追加合并",
+                "title": "追加合并",
+                "color": "#2f54eb",
+                "icon": "merge",
+                "anchors": {
+                    "in": true,
+                    "out": true
+                },
+                "hoverOutlineColor": "#2f54eb",
+                "width": 180,
+                "height": 40,
+                "sourceNodeIds": [
+                    "FIELD_SETTING_1776849017536",
+                    "GROUP_BY_1776849042349"
+                ],
+                "fieldMapping": [
+                    {
+                        "targetField": "customer_id_[type:number]",
+                        "outputAlias": "客户ID",
+                        "fieldType": "number"
+                    },
+                    {
+                        "targetField": "customer_name_[type:string]",
+                        "outputAlias": "客户姓名",
+                        "fieldType": "string"
+                    },
+                    {
+                        "targetField": "phone_[type:string]",
+                        "outputAlias": "手机号",
+                        "fieldType": "string"
+                    },
+                    {
+                        "targetField": "email_[type:string]",
+                        "outputAlias": "邮箱",
+                        "fieldType": "string"
+                    },
+                    {
+                        "targetField": "gender_[type:string]",
+                        "outputAlias": "性别",
+                        "fieldType": "string"
+                    },
+                    {
+                        "targetField": "age_[type:number]",
+                        "outputAlias": "年龄",
+                        "fieldType": "number"
+                    },
+                    {
+                        "targetField": "address_[type:string]",
+                        "outputAlias": "地址",
+                        "fieldType": "string"
+                    },
+                    {
+                        "targetField": "create_time_[type:date]",
+                        "outputAlias": "创建时间",
+                        "fieldType": "date"
+                    },
+                    {
+                        "targetField": "order_id_[type:number]",
+                        "outputAlias": "订单ID",
+                        "fieldType": "number"
+                    },
+                    {
+                        "targetField": "order_no_[type:string]",
+                        "outputAlias": "订单编号",
+                        "fieldType": "string"
+                    },
+                    {
+                        "targetField": "amount_[type:number]",
+                        "outputAlias": "订单金额",
+                        "fieldType": "number"
+                    },
+                    {
+                        "targetField": "status_[type:string]",
+                        "outputAlias": "订单状态",
+                        "fieldType": "string"
+                    },
+                    {
+                        "targetField": "pay_time_[type:datetime]",
+                        "outputAlias": "支付时间",
+                        "fieldType": "datetime"
+                    },
+                    {
+                        "targetField": "create_time_[type:datetime]",
+                        "outputAlias": "创建时间",
+                        "fieldType": "datetime"
+                    }
+                ]
+            }
+        },
+        {
+            "id": "GROUP_BY_1776849042349",
+            "type": "GROUP_BY",
+            "x": 408,
+            "y": 435,
+            "properties": {
+                "name": "分组汇总",
+                "title": "分组汇总",
+                "color": "#eb2f96",
+                "icon": "functions",
+                "anchors": {
+                    "in": true,
+                    "out": true
+                },
+                "hoverOutlineColor": "#eb2f96",
+                "width": 180,
+                "height": 40,
+                "groupFields": [
+                    "id"
+                ],
+                "aggregateFields": [
+                    {
+                        "sourceFieldKey": "name",
+                        "alias": "name",
+                        "method": "count"
+                    }
+                ]
+            }
+        },
+        {
+            "id": "FILTER_1776849044692",
+            "type": "FILTER",
+            "x": 503,
+            "y": 140,
+            "properties": {
+                "name": "数据筛选",
+                "title": "数据筛选",
+                "color": "#fa8c16",
+                "icon": "filter",
+                "anchors": {
+                    "in": true,
+                    "out": true
+                },
+                "hoverOutlineColor": "#fa8c16",
+                "width": 180,
+                "height": 40,
+                "logic": "or",
+                "conditions": [
+                    {
+                        "fieldKey": "id",
+                        "operator": "eq",
+                        "fieldType": "NUMBER",
+                        "valueType": "LITERAL",
+                        "value": [
+                            "13"
+                        ]
+                    }
+                ]
+            }
+        },
+        {
+            "id": "INPUT_1776849053873",
+            "type": "INPUT",
+            "x": 162,
+            "y": 393,
+            "properties": {
+                "name": "数据输入",
+                "title": "订单表 order",
+                "color": "#1890ff",
+                "icon": "database",
+                "anchors": {
+                    "in": false,
+                    "out": true
+                },
+                "hoverOutlineColor": "#1890ff",
+                "width": 180,
+                "height": 40,
+                "sourceType": "DB_TABLE",
+                "objectId": "order",
+                "selectedFields": [
+                    {
+                        "fieldKey": "id",
+                        "alias": "主键ID",
+                        "fieldType": "bigint"
+                    },
+                    {
+                        "fieldKey": "createTime",
+                        "alias": "创建时间",
+                        "fieldType": "datetime"
+                    },
+                    {
+                        "fieldKey": "updateTime",
+                        "alias": "更新时间",
+                        "fieldType": "datetime"
+                    },
+                    {
+                        "fieldKey": "isDelete",
+                        "alias": "是否删除",
+                        "fieldType": "tinyint"
+                    },
+                    {
+                        "fieldKey": "orderNo",
+                        "alias": "订单号",
+                        "fieldType": "varchar"
+                    },
+                    {
+                        "fieldKey": "customerId",
+                        "alias": "客户ID",
+                        "fieldType": "bigint"
+                    },
+                    {
+                        "fieldKey": "packageId",
+                        "alias": "套餐ID",
+                        "fieldType": "bigint"
+                    },
+                    {
+                        "fieldKey": "amount",
+                        "alias": "金额",
+                        "fieldType": "decimal(10,2)"
+                    },
+                    {
+                        "fieldKey": "status",
+                        "alias": "状态",
+                        "fieldType": "varchar"
+                    },
+                    {
+                        "fieldKey": "payTime",
+                        "alias": "支付时间",
+                        "fieldType": "datetime"
+                    }
+                ],
+                "sourceExtra": {}
+            }
+        },
+        {
+            "id": "INPUT_1776849089039",
+            "type": "INPUT",
+            "x": 215,
+            "y": 104,
+            "properties": {
+                "name": "数据输入",
+                "title": "客户表 customer",
+                "color": "#1890ff",
+                "icon": "database",
+                "anchors": {
+                    "in": false,
+                    "out": true
+                },
+                "hoverOutlineColor": "#1890ff",
+                "width": 180,
+                "height": 40,
+                "sourceType": "DB_TABLE",
+                "objectId": "customer",
+                "selectedFields": [
+                    {
+                        "fieldKey": "id",
+                        "alias": "主键ID",
+                        "fieldType": "bigint"
+                    },
+                    {
+                        "fieldKey": "createTime",
+                        "alias": "创建时间",
+                        "fieldType": "datetime"
+                    },
+                    {
+                        "fieldKey": "updateTime",
+                        "alias": "更新时间",
+                        "fieldType": "datetime"
+                    },
+                    {
+                        "fieldKey": "isDelete",
+                        "alias": "是否删除",
+                        "fieldType": "tinyint"
+                    },
+                    {
+                        "fieldKey": "customerCode",
+                        "alias": "客户编码",
+                        "fieldType": "varchar"
+                    },
+                    {
+                        "fieldKey": "customerName",
+                        "alias": "客户名称",
+                        "fieldType": "varchar"
+                    },
+                    {
+                        "fieldKey": "gender",
+                        "alias": "性别",
+                        "fieldType": "varchar"
+                    },
+                    {
+                        "fieldKey": "mobile",
+                        "alias": "手机号",
+                        "fieldType": "varchar"
+                    },
+                    {
+                        "fieldKey": "age",
+                        "alias": "年龄",
+                        "fieldType": "int"
+                    },
+                    {
+                        "fieldKey": "level",
+                        "alias": "客户等级",
+                        "fieldType": "varchar"
+                    },
+                    {
+                        "fieldKey": "birthday",
+                        "alias": "生日",
+                        "fieldType": "date"
+                    },
+                    {
+                        "fieldKey": "idCard",
+                        "alias": "身份证号",
+                        "fieldType": "varchar"
+                    },
+                    {
+                        "fieldKey": "email",
+                        "alias": "邮箱",
+                        "fieldType": "varchar"
+                    },
+                    {
+                        "fieldKey": "address",
+                        "alias": "地址",
+                        "fieldType": "varchar"
+                    },
+                    {
+                        "fieldKey": "maritalStatus",
+                        "alias": "婚姻状态",
+                        "fieldType": "varchar"
+                    },
+                    {
+                        "fieldKey": "company",
+                        "alias": "公司名称",
+                        "fieldType": "varchar"
+                    },
+                    {
+                        "fieldKey": "jobTitle",
+                        "alias": "职位",
+                        "fieldType": "varchar"
+                    },
+                    {
+                        "fieldKey": "emergencyContact",
+                        "alias": "紧急联系人",
+                        "fieldType": "varchar"
+                    },
+                    {
+                        "fieldKey": "emergencyPhone",
+                        "alias": "紧急联系人电话",
+                        "fieldType": "varchar"
+                    },
+                    {
+                        "fieldKey": "sourceChannel",
+                        "alias": "来源渠道",
+                        "fieldType": "varchar"
+                    }
+                ],
+                "sourceExtra": {}
+            }
+        }
+    ],
+    "edges": [
+        {
+            "id": "eef2112b-b783-4463-b7d2-739aa74aced1",
+            "type": "bezier",
+            "properties": {},
+            "sourceNodeId": "INPUT_1776848543287",
+            "targetNodeId": "DEDUP_1776848958549",
+            "sourceAnchorId": "INPUT_1776848543287-out",
+            "targetAnchorId": "DEDUP_1776848958549-in",
+            "startPoint": {
+                "x": 296,
+                "y": 224
+            },
+            "endPoint": {
+                "x": 311,
+                "y": 333
+            },
+            "pointsList": [
+                {
+                    "x": 296,
+                    "y": 224
+                },
+                {
+                    "x": 396,
+                    "y": 224
+                },
+                {
+                    "x": 211,
+                    "y": 333
+                },
+                {
+                    "x": 311,
+                    "y": 333
+                }
+            ]
+        },
+        {
+            "id": "a7eb9173-75d4-42af-8838-3494584b5ee2",
+            "type": "bezier",
+            "properties": {},
+            "sourceNodeId": "DEDUP_1776848958549",
+            "targetNodeId": "FIELD_SETTING_1776849017536",
+            "sourceAnchorId": "DEDUP_1776848958549-out",
+            "targetAnchorId": "FIELD_SETTING_1776849017536-in",
+            "startPoint": {
+                "x": 491,
+                "y": 333
+            },
+            "endPoint": {
+                "x": 580,
+                "y": 332
+            },
+            "pointsList": [
+                {
+                    "x": 491,
+                    "y": 333
+                },
+                {
+                    "x": 591,
+                    "y": 333
+                },
+                {
+                    "x": 480,
+                    "y": 332
+                },
+                {
+                    "x": 580,
+                    "y": 332
+                }
+            ]
+        },
+        {
+            "id": "25c6277b-0791-4503-9bfb-c36dc3f8a131",
+            "type": "bezier",
+            "properties": {},
+            "sourceNodeId": "INPUT_1776849053873",
+            "targetNodeId": "GROUP_BY_1776849042349",
+            "sourceAnchorId": "INPUT_1776849053873-out",
+            "targetAnchorId": "GROUP_BY_1776849042349-in",
+            "startPoint": {
+                "x": 252,
+                "y": 393
+            },
+            "endPoint": {
+                "x": 318,
+                "y": 435
+            },
+            "pointsList": [
+                {
+                    "x": 252,
+                    "y": 393
+                },
+                {
+                    "x": 352,
+                    "y": 393
+                },
+                {
+                    "x": 218,
+                    "y": 435
+                },
+                {
+                    "x": 318,
+                    "y": 435
+                }
+            ]
+        },
+        {
+            "id": "588d3cf2-7883-4f34-bc7c-00ea1c63fa47",
+            "type": "bezier",
+            "properties": {},
+            "sourceNodeId": "FIELD_SETTING_1776849017536",
+            "targetNodeId": "UNION_1776849039286",
+            "sourceAnchorId": "FIELD_SETTING_1776849017536-out",
+            "targetAnchorId": "UNION_1776849039286-in",
+            "startPoint": {
+                "x": 760,
+                "y": 332
+            },
+            "endPoint": {
+                "x": 733,
+                "y": 440
+            },
+            "pointsList": [
+                {
+                    "x": 760,
+                    "y": 332
+                },
+                {
+                    "x": 860,
+                    "y": 332
+                },
+                {
+                    "x": 633,
+                    "y": 440
+                },
+                {
+                    "x": 733,
+                    "y": 440
+                }
+            ]
+        },
+        {
+            "id": "c83219ec-92ee-4ae8-86c2-6e25235289f3",
+            "type": "bezier",
+            "properties": {},
+            "sourceNodeId": "GROUP_BY_1776849042349",
+            "targetNodeId": "UNION_1776849039286",
+            "sourceAnchorId": "GROUP_BY_1776849042349-out",
+            "targetAnchorId": "UNION_1776849039286-in",
+            "startPoint": {
+                "x": 498,
+                "y": 435
+            },
+            "endPoint": {
+                "x": 733,
+                "y": 440
+            },
+            "pointsList": [
+                {
+                    "x": 498,
+                    "y": 435
+                },
+                {
+                    "x": 598,
+                    "y": 435
+                },
+                {
+                    "x": 633,
+                    "y": 440
+                },
+                {
+                    "x": 733,
+                    "y": 440
+                }
+            ]
+        },
+        {
+            "id": "6fb06742-ff54-43cb-bbe7-2e628ad8cbdb",
+            "type": "bezier",
+            "properties": {},
+            "sourceNodeId": "INPUT_1776849089039",
+            "targetNodeId": "FILTER_1776849044692",
+            "sourceAnchorId": "INPUT_1776849089039-out",
+            "targetAnchorId": "FILTER_1776849044692-in",
+            "startPoint": {
+                "x": 305,
+                "y": 104
+            },
+            "endPoint": {
+                "x": 413,
+                "y": 140
+            },
+            "pointsList": [
+                {
+                    "x": 305,
+                    "y": 104
+                },
+                {
+                    "x": 405,
+                    "y": 104
+                },
+                {
+                    "x": 313,
+                    "y": 140
+                },
+                {
+                    "x": 413,
+                    "y": 140
+                }
+            ]
+        },
+        {
+            "id": "8d1b2a19-b4c3-4100-a59d-3e9f14ded84d",
+            "type": "bezier",
+            "properties": {},
+            "sourceNodeId": "FILTER_1776849044692",
+            "targetNodeId": "JOIN_1776849037088",
+            "sourceAnchorId": "FILTER_1776849044692-out",
+            "targetAnchorId": "JOIN_1776849037088-in",
+            "startPoint": {
+                "x": 593,
+                "y": 140
+            },
+            "endPoint": {
+                "x": 919,
+                "y": 307
+            },
+            "pointsList": [
+                {
+                    "x": 593,
+                    "y": 140
+                },
+                {
+                    "x": 693,
+                    "y": 140
+                },
+                {
+                    "x": 819,
+                    "y": 307
+                },
+                {
+                    "x": 919,
+                    "y": 307
+                }
+            ]
+        },
+        {
+            "id": "498333db-b565-4f50-809c-0bc8fd93f2a4",
+            "type": "bezier",
+            "properties": {},
+            "sourceNodeId": "UNION_1776849039286",
+            "targetNodeId": "JOIN_1776849037088",
+            "sourceAnchorId": "UNION_1776849039286-out",
+            "targetAnchorId": "JOIN_1776849037088-in",
+            "startPoint": {
+                "x": 913,
+                "y": 440
+            },
+            "endPoint": {
+                "x": 919,
+                "y": 307
+            },
+            "pointsList": [
+                {
+                    "x": 913,
+                    "y": 440
+                },
+                {
+                    "x": 1013,
+                    "y": 440
+                },
+                {
+                    "x": 819,
+                    "y": 307
+                },
+                {
+                    "x": 919,
+                    "y": 307
+                }
+            ]
+        },
+        {
+            "id": "e043824f-a4c7-425c-b1b6-5a474f14b18d",
+            "type": "bezier",
+            "properties": {},
+            "sourceNodeId": "JOIN_1776849037088",
+            "targetNodeId": "OUTPUT_1776849032511",
+            "sourceAnchorId": "JOIN_1776849037088-out",
+            "targetAnchorId": "OUTPUT_1776849032511-in",
+            "startPoint": {
+                "x": 1099,
+                "y": 307
+            },
+            "endPoint": {
+                "x": 1168,
+                "y": 403
+            },
+            "pointsList": [
+                {
+                    "x": 1099,
+                    "y": 307
+                },
+                {
+                    "x": 1199,
+                    "y": 307
+                },
+                {
+                    "x": 1068,
+                    "y": 403
+                },
+                {
+                    "x": 1168,
+                    "y": 403
+                }
+            ]
+        }
+    ]
+}

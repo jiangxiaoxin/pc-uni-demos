@@ -123,10 +123,10 @@ export interface NodeRequestPayload {
 }
 
 export const JOIN_TYPE = {
-  INNER: "inner",
-  OUTER: "outer",
-  LEFT: "left",
-  RIGHT: "right",
+  INNER: "INNER",
+  OUTER: "OUTER",
+  LEFT: "LEFT",
+  RIGHT: "RIGHT",
 } as const;
 
 export type JoinType = (typeof JOIN_TYPE)[keyof typeof JOIN_TYPE];

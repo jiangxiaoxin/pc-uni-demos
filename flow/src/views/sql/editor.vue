@@ -6,6 +6,10 @@
           <template #icon><SaveOutlined /></template>
           保存
         </a-button>
+        <a-button type="primary" ghost @click="handleSaveToBackend">
+          <template #icon><CloudUploadOutlined /></template>
+          保存到后台
+        </a-button>
         <!-- <a-button @click="handleLoad">
           <template #icon><UploadOutlined /></template>
           加载
@@ -60,17 +64,17 @@
   import { message, Modal } from "ant-design-vue";
   import {
     SaveOutlined,
-    UploadOutlined,
     EyeOutlined,
     DeleteOutlined,
     CopyOutlined,
-    FullscreenOutlined,
+    CloudUploadOutlined,
   } from "@ant-design/icons-vue";
   import { register, getTeleport } from "@logicflow/vue-node-registry";
   import SqlNode from "./nodes/SqlNode.vue";
   import SqlNodeModel from "./nodes/SqlNodeModel";
   import { nodeTypes, SQL_NODE_TYPE } from "./menus";
   import type { SqlGraphData } from "./nodeContext";
+import { formatToServer } from "./node-config/dataFormatter";
 
   interface SqlNodeData {
     id: string;
@@ -357,6 +361,14 @@
   //     message.success("节点已居中显示");
   //   }
   // };
+
+  const handleSaveToBackend = () => {
+    if (!lf) return;
+    const data = lf.getGraphData();
+    const nextData = formatToServer(data)
+    console.log("[editor.vue] 当前整体配置:\n", nextData);
+    message.success("整体配置已输出到控制台");
+  };
 
   const handleClear = () => {
     Modal.confirm({

@@ -643,7 +643,6 @@
         joinConditions: joinConditions.value.map((cond) => ({ ...cond })),
       };
       draftUnionConfig.value = {
-        mode: unionConfig.value.mode,
         sourceNodeIds: [...unionConfig.value.sourceNodeIds],
         fieldMappings: unionConfig.value.fieldMappings.map((m) => ({
           targetField: m.targetField,
@@ -784,9 +783,11 @@
       nextProperties.aggregateFields = draftAggregateFields.value.map((field) => ({ ...field }));
     }
 
-    if (draftWhereLogic.value !== whereLogic.value) {
-      nextProperties.whereLogic = draftWhereLogic.value;
+    // 判断是where 节点才有
+    if(props.nodeData.type == SQL_NODE_TYPE.WHERE_NODE) {
+      nextProperties.whereLogic = draftWhereLogic.value
     }
+    ;
 
     if (!isEqualByJSON(draftWhereConditions.value, whereConditions.value)) {
       nextProperties.whereConditions = draftWhereConditions.value.map((cond) => ({ ...cond }));
@@ -806,12 +807,11 @@
     }
 
     const currentUnionConfig = {
-      mode: unionConfig.value.mode,
       sourceNodeIds: unionConfig.value.sourceNodeIds,
       fieldMappings: unionConfig.value.fieldMappings,
     };
     if (!isEqualByJSON(draftUnionConfig.value, currentUnionConfig)) {
-      nextProperties.mode = draftUnionConfig.value.mode;
+
       nextProperties.sourceNodeIds = [...draftUnionConfig.value.sourceNodeIds];
       nextProperties.fieldMappings = draftUnionConfig.value.fieldMappings.map((m) => ({
         targetField: m.targetField,

@@ -193,7 +193,7 @@
   };
 
   const handleSubmitProperties = (properties: Record<string, unknown>) => {
-    console.log(" main handleSubmitProperties");
+    console.log(" main handleSubmitProperties" , properties);
 
     const currentNode = selectedNode.value;
     if (!currentNode) return;

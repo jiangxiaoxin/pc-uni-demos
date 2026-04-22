@@ -34,11 +34,12 @@ export interface BoundInputSource {
 }
 
 export interface FieldSettingPersistedItem {
-  key: string;
-  name: string;
+  sourceFieldKey: string;
+  alias: string;
+  fieldType: string;
 }
 
-export interface FieldSettingItem extends InputField {
+export interface FieldSettingItem extends FieldSettingPersistedItem {
   selected: boolean;
 }
 

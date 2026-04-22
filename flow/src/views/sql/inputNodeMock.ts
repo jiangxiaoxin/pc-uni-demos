@@ -267,7 +267,7 @@ const reportFields = buildFields([
   { key: "riskLevel", type: "varchar" },
   { key: "publishStatus", type: "varchar" },
   { key: "publishTime", type: "datetime" },
-  { key: "doctorId", type: "bigint"},
+  { key: "doctorId", type: "bigint" },
   { key: "diagnosis", type: "varchar" },
   { key: "treatment", type: "varchar" },
   { key: "followUp", type: "varchar" },
@@ -371,25 +371,28 @@ export const inputNodeMockSources: InputSource[] = [
     name: "客户表 customer",
     description: "客户基础信息",
     fields: customerFields,
-    rows: createRows((index) => ({
-      ...buildCommonRow(index),
-      customerCode: `CUS${String(index + 1).padStart(4, "0")}`,
-      customerName: `客户${index + 1}`,
-      gender: index % 2 === 0 ? "男" : "女",
-      mobile: `13800138${String(index).padStart(3, "0")}`,
-      age: 22 + index,
-      level: ["普通", "银卡", "金卡", "黑金"][index % 4],
-      birthday: `199${index}-05-${String((index % 9) + 1).padStart(2, "0")}`,
-      idCard: `44010119900${index}1234`,
-      email: `customer${index + 1}@example.com`,
-      address: `深圳市南山区科技园 ${index + 1} 栋`,
-      maritalStatus: index % 2 === 0 ? "未婚" : "已婚",
-      company: `企业${index + 1}`,
-      jobTitle: ["工程师", "产品经理", "运营", "销售"][index % 4],
-      emergencyContact: `联系人${index + 1}`,
-      emergencyPhone: `13900139${String(index).padStart(3, "0")}`,
-      sourceChannel: ["线下门店", "公众号", "企业客户", "小程序"][index % 4],
-    }), 15),
+    rows: createRows(
+      (index) => ({
+        ...buildCommonRow(index),
+        customerCode: `CUS${String(index + 1).padStart(4, "0")}`,
+        customerName: `客户${index + 1}`,
+        gender: index % 2 === 0 ? "男" : "女",
+        mobile: `13800138${String(index).padStart(3, "0")}`,
+        age: 22 + index,
+        level: ["普通", "银卡", "金卡", "黑金"][index % 4],
+        birthday: `199${index}-05-${String((index % 9) + 1).padStart(2, "0")}`,
+        idCard: `44010119900${index}1234`,
+        email: `customer${index + 1}@example.com`,
+        address: `深圳市南山区科技园 ${index + 1} 栋`,
+        maritalStatus: index % 2 === 0 ? "未婚" : "已婚",
+        company: `企业${index + 1}`,
+        jobTitle: ["工程师", "产品经理", "运营", "销售"][index % 4],
+        emergencyContact: `联系人${index + 1}`,
+        emergencyPhone: `13900139${String(index).padStart(3, "0")}`,
+        sourceChannel: ["线下门店", "公众号", "企业客户", "小程序"][index % 4],
+      }),
+      15,
+    ),
   },
   {
     id: "order",
@@ -740,11 +743,15 @@ const parseInputBinding = (value: unknown): InputBindingPersisted | null => {
   }
   return {
     sourceId: value.sourceId,
-    fieldKeys: value.fieldKeys.filter((key): key is string => typeof key === "string"),
+    fieldKeys: value.fieldKeys.filter(
+      (key): key is string => typeof key === "string",
+    ),
   };
 };
 
-const parseFieldSettingItems = (value: unknown): FieldSettingPersistedItem[] => {
+const parseFieldSettingItems = (
+  value: unknown,
+): FieldSettingPersistedItem[] => {
   if (!Array.isArray(value)) return [];
   return value.filter((field): field is FieldSettingPersistedItem => {
     return (
@@ -760,7 +767,9 @@ const parseDistinctFieldKeys = (value: unknown): string[] => {
   return value.filter((field): field is string => typeof field === "string");
 };
 
-const parseGroupAggregateFields = (value: unknown): GroupAggregateFieldPersistedItem[] => {
+const parseGroupAggregateFields = (
+  value: unknown,
+): GroupAggregateFieldPersistedItem[] => {
   if (!Array.isArray(value)) return [];
   return value.filter((field): field is GroupAggregateFieldPersistedItem => {
     return (
@@ -814,17 +823,13 @@ const evaluateWhereCondition = (
     case "in": {
       const values = Array.isArray(conditionValue)
         ? conditionValue.map(String)
-        : String(conditionValue)
-            .split(",")
-            .filter(Boolean);
+        : String(conditionValue).split(",").filter(Boolean);
       return values.includes(String(cellValue));
     }
     case "notIn": {
       const values = Array.isArray(conditionValue)
         ? conditionValue.map(String)
-        : String(conditionValue)
-            .split(",")
-            .filter(Boolean);
+        : String(conditionValue).split(",").filter(Boolean);
       return !values.includes(String(cellValue));
     }
     case "gt":
@@ -857,7 +862,9 @@ const applyWhereFilter = (
   if (conditions.length === 0) return rows;
 
   return rows.filter((row) => {
-    const results = conditions.map((condition) => evaluateWhereCondition(row, condition));
+    const results = conditions.map((condition) =>
+      evaluateWhereCondition(row, condition),
+    );
     if (logic === "and") {
       return results.every(Boolean);
     }
@@ -894,7 +901,9 @@ const DEFAULT_METHOD_OPTIONS: GroupAggregateMethodOption[] = [
   { label: "去重计数", value: "distinctCount" },
 ];
 
-export const getGroupAggregateMethodOptions = (type: string): GroupAggregateMethodOption[] => {
+export const getGroupAggregateMethodOptions = (
+  type: string,
+): GroupAggregateMethodOption[] => {
   if (isNumericFieldType(type)) return NUMERIC_METHOD_OPTIONS;
   if (isStringFieldType(type)) return STRING_METHOD_OPTIONS;
   if (isDateTimeFieldType(type)) return DATETIME_METHOD_OPTIONS;
@@ -907,23 +916,34 @@ const getDefaultGroupAggregateMethod = (type: string): GroupAggregateMethod => {
 
 const getGroupAggregateMethodLabel = (method: GroupAggregateMethod) => {
   return (
-    [...NUMERIC_METHOD_OPTIONS, ...STRING_METHOD_OPTIONS, ...DATETIME_METHOD_OPTIONS]
-      .find((item) => item.value === method)?.label || "计数"
+    [
+      ...NUMERIC_METHOD_OPTIONS,
+      ...STRING_METHOD_OPTIONS,
+      ...DATETIME_METHOD_OPTIONS,
+    ].find((item) => item.value === method)?.label || "计数"
   );
 };
 
-const normalizeGroupAggregateMethod = (type: string, method?: string): GroupAggregateMethod => {
+const normalizeGroupAggregateMethod = (
+  type: string,
+  method?: string,
+): GroupAggregateMethod => {
   const options = getGroupAggregateMethodOptions(type);
   const matched = options.find((item) => item.value === method);
   return matched?.value || getDefaultGroupAggregateMethod(type);
 };
 
-const applyDistinctRows = (rows: Record<string, unknown>[], fieldKeys: string[]) => {
+const applyDistinctRows = (
+  rows: Record<string, unknown>[],
+  fieldKeys: string[],
+) => {
   if (fieldKeys.length === 0) return rows;
   const keys = fieldKeys;
   const seen = new Set<string>();
   return rows.filter((row) => {
-    const fingerprint = keys.map((key) => String(row[key] ?? "__NULL__")).join("|");
+    const fingerprint = keys
+      .map((key) => String(row[key] ?? "__NULL__"))
+      .join("|");
     if (seen.has(fingerprint)) return false;
     seen.add(fingerprint);
     return true;
@@ -989,7 +1009,10 @@ const parseNumberList = (rows: Record<string, unknown>[], key: string) => {
     .filter((value) => Number.isFinite(value));
 };
 
-const parseDistinctValueCount = (rows: Record<string, unknown>[], key: string) => {
+const parseDistinctValueCount = (
+  rows: Record<string, unknown>[],
+  key: string,
+) => {
   return new Set(rows.map((row) => String(row[key] ?? "__NULL__"))).size;
 };
 
@@ -1005,7 +1028,9 @@ const parseDateTimeValues = (rows: Record<string, unknown>[], key: string) => {
 const calcVariance = (values: number[]) => {
   if (values.length === 0) return null;
   const avg = values.reduce((sum, value) => sum + value, 0) / values.length;
-  return values.reduce((sum, value) => sum + (value - avg) ** 2, 0) / values.length;
+  return (
+    values.reduce((sum, value) => sum + (value - avg) ** 2, 0) / values.length
+  );
 };
 
 const calcMedian = (values: number[]) => {
@@ -1035,7 +1060,9 @@ const calcAggregateValue = (
     const values = parseDateTimeValues(rows, field.key);
     if (values.length === 0) return null;
     const sorted = values.sort((left, right) => left.time - right.time);
-    return method === "earliest" ? sorted[0].raw : sorted[sorted.length - 1].raw;
+    return method === "earliest"
+      ? sorted[0].raw
+      : sorted[sorted.length - 1].raw;
   }
 
   const numbers = parseNumberList(rows, field.key);
@@ -1103,7 +1130,9 @@ const applyGroupAggregation = (
     const bucketKey =
       groupFields.length === 0
         ? "__all__"
-        : groupFields.map((field) => String(row[field.key] ?? "__NULL__")).join("|");
+        : groupFields
+            .map((field) => String(row[field.key] ?? "__NULL__"))
+            .join("|");
     const bucketRows = groupBuckets.get(bucketKey);
     if (bucketRows) {
       bucketRows.push(row);
@@ -1119,13 +1148,20 @@ const applyGroupAggregation = (
       nextRow[field.key] = firstRow[field.key];
     });
     aggregateConfigs.forEach((config) => {
-      nextRow[config.column.key] = calcAggregateValue(bucketRows, config.field, config.method);
+      nextRow[config.column.key] = calcAggregateValue(
+        bucketRows,
+        config.field,
+        config.method,
+      );
     });
     return nextRow;
   });
 
   return {
-    columns: [...groupFields, ...aggregateConfigs.map((config) => config.column)],
+    columns: [
+      ...groupFields,
+      ...aggregateConfigs.map((config) => config.column),
+    ],
     rows: nextRows,
   };
 };
@@ -1136,17 +1172,24 @@ const buildChainPreviewResult = (chainNodes: NodeConfigSnapshot[] = []) => {
 
   chainNodes.forEach((node) => {
     if (node.type === SQL_NODE_TYPE.IN_NODE) {
-      const binding = resolveInputBinding(parseInputBinding(node.properties?.inputBinding));
+      const binding = resolveInputBinding(
+        parseInputBinding(node.properties?.inputBinding),
+      );
       columns = [...(binding?.fields || [])];
       rows = getPreviewRowsByBinding(binding).map((row) => ({ ...row }));
       return;
     }
 
     if (node.type === SQL_NODE_TYPE.FIELD_NODE) {
-      const fieldSettings = parseFieldSettingItems(node.properties?.fieldSettings);
+      const fieldSettings = parseFieldSettingItems(
+        node.properties?.fieldSettings,
+      );
       if (
         fieldSettings.length > 0 ||
-        Object.prototype.hasOwnProperty.call(node.properties || {}, "fieldSettings")
+        Object.prototype.hasOwnProperty.call(
+          node.properties || {},
+          "fieldSettings",
+        )
       ) {
         const nextResult = applyFieldSettings(columns, rows, fieldSettings);
         columns = nextResult.columns;
@@ -1156,15 +1199,24 @@ const buildChainPreviewResult = (chainNodes: NodeConfigSnapshot[] = []) => {
     }
 
     if (node.type === SQL_NODE_TYPE.DISTINCT_NODE) {
-      const distinctFields = parseDistinctFieldKeys(node.properties?.distinctFields);
+      const distinctFields = parseDistinctFieldKeys(
+        node.properties?.distinctFields,
+      );
       rows = applyDistinctRows(rows, distinctFields);
       return;
     }
 
     if (node.type === SQL_NODE_TYPE.GROUP_NODE) {
       const groupFields = parseDistinctFieldKeys(node.properties?.groupFields);
-      const aggregateFields = parseGroupAggregateFields(node.properties?.aggregateFields);
-      const nextResult = applyGroupAggregation(columns, rows, groupFields, aggregateFields);
+      const aggregateFields = parseGroupAggregateFields(
+        node.properties?.aggregateFields,
+      );
+      const nextResult = applyGroupAggregation(
+        columns,
+        rows,
+        groupFields,
+        aggregateFields,
+      );
       columns = nextResult.columns;
       rows = nextResult.rows;
     }
@@ -1192,7 +1244,9 @@ export const fetchInputPreviewByBinding = async (
   });
 
   const resolvedBinding =
-    binding && "fields" in binding ? binding : resolveInputBinding(binding || null);
+    binding && "fields" in binding
+      ? binding
+      : resolveInputBinding(binding || null);
 
   if (!resolvedBinding) {
     return { columns: [], rows: [] };
@@ -1225,8 +1279,43 @@ export const fetchFieldNodeUpstreamFields = async (
     window.setTimeout(resolve, 250);
   });
 
-  const result = buildChainPreviewResult(payload.upstreamNodes);
-  return [...result.columns];
+  return [
+    {
+      key: "id",
+      name: "id",
+      type: "NUMBER",
+    },
+    {
+      key: "name",
+      name: "name",
+      type: "STRING",
+    },
+    {
+      key: "age",
+      name: "age",
+      type: "NUMBER",
+    },
+    {
+      key: "gender",
+      name: "gender",
+      type: "STRING",
+    },
+    {
+      key: "email",
+      name: "email",
+      type: "STRING",
+    },
+    {
+      key: "birthday",
+      name: "birthday",
+      type: "DATE",
+    },
+    {
+      key: "createTime",
+      name: "createTime",
+      type: "DATETIME",
+    },
+  ];
 };
 
 // MOCK_API: fetch upstream fields for group node (simulate backend request)
@@ -1237,15 +1326,18 @@ export const fetchGroupNodeUpstreamFields = async (
   await new Promise((resolve) => {
     window.setTimeout(resolve, 1000);
   });
-  return [{
-    key: 'id',
-    name: 'id',
-    type: 'NUMBER',
-  }, {
-    key: 'name',
-    name: 'name',
-    type: 'STRING',
-  }];
+  return [
+    {
+      key: "id",
+      name: "id",
+      type: "NUMBER",
+    },
+    {
+      key: "name",
+      name: "name",
+      type: "STRING",
+    },
+  ];
 };
 
 const mockPreviewResult = (): InputPreviewResult => {
@@ -1386,8 +1478,9 @@ export const fetchUnionNodeUpstreamFields = async (
   return fromIds.map((id, index) => {
     const upstreamNode = payload.upstreamNodes.find((n) => n.id === id);
     const name =
-      String(upstreamNode?.properties?.title || upstreamNode?.properties?.name || "") ||
-      `上游节点 ${index + 1}`;
+      String(
+        upstreamNode?.properties?.title || upstreamNode?.properties?.name || "",
+      ) || `上游节点 ${index + 1}`;
     return {
       id,
       name,

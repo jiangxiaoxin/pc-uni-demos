@@ -4,10 +4,15 @@
       <div class="config-section__header">
         <span>字段列表</span>
         <div class="config-section__header-actions">
-          <span class="config-section__count">{{ selectedCount }}/{{ upstreamFields.length }}</span>
+          <span class="config-section__count"
+            >{{ selectedCount }}/{{ upstreamFields.length }}</span
+          >
           <span
             class="config-section__link"
-            :class="{ 'config-section__link--disabled': loading || upstreamFields.length === 0 }"
+            :class="{
+              'config-section__link--disabled':
+                loading || upstreamFields.length === 0,
+            }"
             @click="toggleSelectAll"
           >
             {{ allSelected ? "取消全选" : "全选" }}
@@ -24,7 +29,7 @@
           v-else
           v-model="draggableFields"
           class="config-section__draggable"
-          item-key="key"
+          item-key="sourceFieldKey"
           handle=".config-item__drag"
           ghost-class="config-item--ghost"
           chosen-class="config-item--chosen"
@@ -34,7 +39,7 @@
         >
           <div
             v-for="field in localFields"
-            :key="field.key"
+            :key="field.sourceFieldKey"
             class="config-item field-config-item"
           >
             <div class="field-config-item__row">
@@ -42,34 +47,44 @@
                 <input
                   :checked="field.selected"
                   type="checkbox"
-                  @change="toggleField(field.key)"
+                  @change="toggleField(field.sourceFieldKey)"
                 />
               </label>
               <a-input
-                v-if="editingFieldKey === field.key"
+                v-if="editingFieldKey === field.sourceFieldKey"
                 ref="editingInputRef"
                 v-model:value="editingName"
                 class="config-item__name field-config-item__name--editing"
                 @blur="confirmRename"
                 @keydown="handleEditingKeydown"
               />
-              <span v-else class="config-item__name" :title="field.name">{{ field.name }}</span>
-              <span class="config-item__code">{{ field.key }}</span>
-              <span class="config-item__type">{{ field.type }}</span>
+              <span v-else class="config-item__name" :title="field.alias">{{
+                field.alias
+              }}</span>
+              <span class="config-item__code">{{ field.sourceFieldKey }}</span>
+              <span class="config-item__type">{{ field.fieldType }}</span>
               <span
                 class="config-item__action"
-                :title="editingFieldKey === field.key ? '确认修改名称' : '修改名称'"
+                :title="
+                  editingFieldKey === field.sourceFieldKey
+                    ? '确认修改名称'
+                    : '修改名称'
+                "
                 @mousedown.prevent
-                @click="editingFieldKey === field.key ? confirmRename() : startRename(field)"
+                @click="
+                  editingFieldKey === field.sourceFieldKey
+                    ? confirmRename()
+                    : startRename(field)
+                "
               >
                 <CheckOutlined
-                  v-if="editingFieldKey === field.key"
+                  v-if="editingFieldKey === field.sourceFieldKey"
                   class="config-item__action-icon"
                 />
                 <EditOutlined v-else class="config-item__action-icon" />
               </span>
               <span
-                v-if="editingFieldKey === field.key"
+                v-if="editingFieldKey === field.sourceFieldKey"
                 class="config-item__action"
                 title="取消修改名称"
                 @mousedown.prevent
@@ -88,7 +103,10 @@
 
     <div class="field-config-main">
       <div class="field-config-table-wrap">
-        <div v-if="selectedCount === 0" class="config-section__empty field-config-table-empty">
+        <div
+          v-if="selectedCount === 0"
+          class="config-section__empty field-config-table-empty"
+        >
           请选择字段
         </div>
         <a-table
@@ -108,12 +126,28 @@
 </template>
 
 <script setup lang="ts">
-  import { computed, inject, nextTick, onMounted, ref, useTemplateRef, watch } from "vue";
-  import { CheckOutlined, CloseOutlined, EditOutlined, DragOutlined } from "@ant-design/icons-vue";
+  import {
+    computed,
+    inject,
+    nextTick,
+    onMounted,
+    ref,
+    useTemplateRef,
+  } from "vue";
+  import {
+    CheckOutlined,
+    CloseOutlined,
+    EditOutlined,
+    DragOutlined,
+  } from "@ant-design/icons-vue";
   import { VueDraggable } from "vue-draggable-plus";
   import { sqlNodeContextKey, type GetNodeContext } from "../nodeContext";
   import { fetchFieldNodeUpstreamFields } from "../inputNodeMock";
-  import type { FieldSettingItem, FieldSettingPersistedItem, InputField } from "../types";
+  import type {
+    FieldSettingItem,
+    FieldSettingPersistedItem,
+    InputField,
+  } from "../types";
 
   interface TableColumn {
     title: string;
@@ -152,64 +186,48 @@
   const pendingLocalChange = ref(false);
   let loadToken = 0;
 
-  const persistedFieldSettingsEqual = (
-    left: FieldSettingPersistedItem[],
-    right: FieldSettingPersistedItem[],
-  ) => {
-    if (left.length !== right.length) return false;
-    return left.every((field, index) => {
-      const target = right[index];
-      return field.key === target?.key && field.name === target?.name;
-    });
-  };
-
-  const toPersistedFieldSettings = (fields: FieldSettingItem[]) => {
-    return fields
-      .filter((field) => field.selected)
-      .map<FieldSettingPersistedItem>((field) => ({
-        key: field.key,
-        name: field.name,
-      }));
-  };
-
-  const emitChange = (fields: FieldSettingItem[]) => {
-    emit(
-      "change-fields",
-      toPersistedFieldSettings(fields),
-    );
+  const emitChange = (fields: FieldSettingPersistedItem[]) => {
+    emit("change-fields", fields);
   };
 
   // 将“上游接口返回的最新字段列表”和“当前节点已保存的字段设置”合并成运行时可编辑的完整列表。
   // 合并规则：
   // 1. 未配置过时，以上游字段为准，默认全部选中。
-  // 2. 配置过时，优先保留已保存字段的顺序和改名结果。
+  // 2. 配置过时，优先保留已保存字段的顺序和改名结果。这些保留的都是可见的
   // 3. 已保存但新上游中已不存在的字段会被丢弃。
   // 4. 新上游中新增、但历史上未保存过的字段会追加到末尾，并默认未选中。
   const buildMergedFields = (upstream: InputField[]) => {
-    const existingMap = new Map(props.fieldSettings.map((field) => [field.key, field]));
-    const upstreamMap = new Map(upstream.map((field) => [field.key, field]));
-
     if (!props.configured) {
       return upstream.map<FieldSettingItem>((field) => ({
-        ...field,
         selected: true,
+        sourceFieldKey: field.key,
+        alias: field.name,
+        fieldType: field.type,
       }));
     }
 
-    const orderedKeys = [
-      ...props.fieldSettings.map((field) => field.key),
-      ...upstream.filter((field) => !existingMap.has(field.key)).map((field) => field.key),
-    ];
+    const existingMap = new Map(
+      props.fieldSettings.map((field) => [field.sourceFieldKey, field]),
+    );
+    const upstreamMap = new Map(upstream.map((field) => [field.key, field]));
 
+    // 先构建带顺序的字段列表
+    const orderedKeys = [
+      ...props.fieldSettings.map((field) => field.sourceFieldKey),
+      ...upstream
+        .filter((field) => !existingMap.has(field.key))
+        .map((field) => field.key),
+    ];
+    // 过滤一遍保存过的字段在此刻是否还存在
     return orderedKeys
       .map((key) => {
         const upstreamField = upstreamMap.get(key);
         if (!upstreamField) return null;
         const savedField = existingMap.get(key);
         return {
-          key: upstreamField.key,
-          type: upstreamField.type,
-          name: savedField?.name || upstreamField.name,
+          sourceFieldKey: upstreamField.key,
+          fieldType: upstreamField.type,
+          alias: savedField?.alias || upstreamField.name,
           selected: existingMap.has(key),
         } satisfies FieldSettingItem;
       })
@@ -225,32 +243,21 @@
       return;
     }
 
-    const currentToken = ++loadToken;
-    loading.value = true;
-    // TODO: 当前字段节点的上游字段列表通过 inputNodeMock 模拟接口计算，目的是先验证节点配置联动，后续应替换为真实血缘/元数据接口。
-    const fields = await fetchFieldNodeUpstreamFields(nodeContext);
-    if (currentToken !== loadToken) return; // 防止旧请求结果覆盖新请求结果
-    upstreamFields.value = fields;
-    const mergedFields = buildMergedFields(fields);
-    localFields.value = mergedFields;
-    // localFields.value = [] // debug empty state
-    loading.value = false;
-
-
-  };
-
-  const syncLocalFields = () => {
-    if (loading.value) return;
-    const nextFields = buildMergedFields(upstreamFields.value);
-    if (fieldSettingsEqual(nextFields, localFields.value)) return;
-    if (
-      pendingLocalChange.value &&
-      persistedFieldSettingsEqual(toPersistedFieldSettings(nextFields), props.fieldSettings)
-    ) {
-      pendingLocalChange.value = false;
-      return;
+    try {
+      const currentToken = ++loadToken;
+      loading.value = true;
+      // TODO
+      const fields = await fetchFieldNodeUpstreamFields(nodeContext);
+      if (currentToken !== loadToken) return; // 防止旧请求结果覆盖新请求结果
+      upstreamFields.value = fields;
+      const mergedFields = buildMergedFields(fields);
+      localFields.value = mergedFields;
+    } catch (error) {
+      upstreamFields.value = [];
+      localFields.value = [];
+    } finally {
+      loading.value = false;
     }
-    localFields.value = nextFields;
   };
 
   const selectedFields = computed(() => {
@@ -267,14 +274,17 @@
   const selectedCount = computed(() => selectedFields.value.length);
 
   const allSelected = computed(() => {
-    return localFields.value.length > 0 && localFields.value.every((field) => field.selected);
+    return (
+      localFields.value.length > 0 &&
+      localFields.value.every((field) => field.selected)
+    );
   });
 
   const selectedTableColumns = computed<TableColumn[]>(() => {
     return selectedFields.value.map((field) => ({
-      title: field.name,
-      dataIndex: field.key,
-      key: field.key,
+      title: field.alias,
+      dataIndex: field.sourceFieldKey,
+      key: field.sourceFieldKey,
       width: 120,
       ellipsis: true,
     }));
@@ -285,23 +295,8 @@
   });
 
   onMounted(() => {
-    void loadUpstreamFields();
+    loadUpstreamFields();
   });
-
-  watch(
-    () => props.fieldSettings,
-    () => {
-      if (
-        pendingLocalChange.value &&
-        persistedFieldSettingsEqual(props.fieldSettings, toPersistedFieldSettings(localFields.value))
-      ) {
-        pendingLocalChange.value = false;
-        return;
-      }
-      syncLocalFields();
-    },
-    { deep: true },
-  );
 
   const updateLocalFields = (fields: FieldSettingItem[]) => {
     localFields.value = fields;
@@ -309,11 +304,12 @@
   };
 
   const startRename = async (field: FieldSettingItem) => {
-    editingFieldKey.value = field.key;
-    editingName.value = field.name;
+    editingFieldKey.value = field.sourceFieldKey;
+    editingName.value = field.alias;
     await nextTick();
     const inputElement =
-      editingInputRef.value?.input || editingInputRef.value?.$el?.querySelector("input");
+      editingInputRef.value?.input ||
+      editingInputRef.value?.$el?.querySelector("input");
     inputElement?.focus();
   };
 
@@ -334,13 +330,17 @@
     if (!editingFieldKey.value) return;
     const nextName = editingName.value.trim();
 
-    const targetField = localFields.value.find((field) => field.key === editingFieldKey.value);
-    const fallbackName = targetField?.name || "";
+    const targetField = localFields.value.find(
+      (field) => field.sourceFieldKey === editingFieldKey.value,
+    );
+    const fallbackName = targetField?.alias || "";
 
     const resolvedName = nextName || fallbackName;
 
     const nextFields = localFields.value.map((field) =>
-      field.key === editingFieldKey.value ? { ...field, name: resolvedName } : field,
+      field.sourceFieldKey === editingFieldKey.value
+        ? { ...field, alias: resolvedName }
+        : field,
     );
 
     editingFieldKey.value = "";
@@ -355,7 +355,9 @@
 
   const toggleField = (fieldKey: string) => {
     const nextFields = localFields.value.map((field) =>
-      field.key === fieldKey ? { ...field, selected: !field.selected } : field,
+      field.sourceFieldKey === fieldKey
+        ? { ...field, selected: !field.selected }
+        : field,
     );
     updateLocalFields(nextFields);
   };
@@ -378,23 +380,17 @@
   const flushDraft = () => {
     if (!pendingLocalChange.value) return;
     pendingLocalChange.value = false;
-    emitChange(localFields.value);
+    const saveData = selectedFields.value.map((field) => {
+      return {
+        sourceFieldKey: field.sourceFieldKey,
+        alias: field.alias,
+        fieldType: field.fieldType,
+      };
+    });
+    emitChange(saveData);
   };
 
   defineExpose({ flushDraft });
-
-  const fieldSettingsEqual = (left: FieldSettingItem[], right: FieldSettingItem[]) => {
-    if (left.length !== right.length) return false;
-    return left.every((field, index) => {
-      const target = right[index];
-      return (
-        field.key === target?.key &&
-        field.name === target?.name &&
-        field.type === target?.type &&
-        field.selected === target?.selected
-      );
-    });
-  };
 </script>
 
 <style scoped lang="scss">

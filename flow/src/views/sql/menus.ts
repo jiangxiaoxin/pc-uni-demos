@@ -27,14 +27,14 @@ const nodeEmptyLinkTip2 = "请将 2 个节点连接至本节点";
 const nodeEmptyLinkTip3 = "请将 2 个及以上节点连接至本节点";
 
 export const SQL_NODE_TYPE = {
-  IN_NODE: "in-node",
-  OUT_NODE: "out-node",
-  JOIN_NODE: "join-node",
-  UNION_NODE: "union-node",
-  GROUP_NODE: "group-node",
-  WHERE_NODE: "where-node",
-  FIELD_NODE: "field-node",
-  DISTINCT_NODE: "distinct-node",
+  IN_NODE: "INPUT",
+  OUT_NODE: "OUTPUT",
+  JOIN_NODE: "JOIN",
+  UNION_NODE: "UNION",
+  GROUP_NODE: "GROUP_BY",
+  WHERE_NODE: "FILTER",
+  FIELD_NODE: "FIELD_SETTING",
+  DISTINCT_NODE: "DEDUP",
 } as const;
 
 export type SqlNodeType = (typeof SQL_NODE_TYPE)[keyof typeof SQL_NODE_TYPE];

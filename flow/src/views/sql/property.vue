@@ -235,7 +235,6 @@
     DistinctPreviewPayload,
     FieldNodePreviewPayload,
     FieldSettingPersistedItem,
-    GroupAggregateFieldPersistedItem,
     GroupNodePreviewPayload,
     InputBindingPersisted,
     JoinConditionPersisted,
@@ -299,7 +298,6 @@
   });
   const unionNodeRef = ref<{ flushDraft: () => void } | null>(null);
   const draftUnionConfig = ref<UnionConfig>({
-    mode: "union",
     sourceNodeIds: [],
     fieldMappings: [],
   });
@@ -457,11 +455,9 @@
   });
 
   const unionConfig = computed<UnionConfig>(() => {
-    const mode = props.nodeData?.properties?.mode;
     const sourceNodeIds = props.nodeData?.properties?.sourceNodeIds;
     const fieldMappings = props.nodeData?.properties?.fieldMappings;
     return {
-      mode: mode === "unionAll" ? "unionAll" : "union",
       sourceNodeIds: Array.isArray(sourceNodeIds)
         ? sourceNodeIds.filter((id): id is string => typeof id === "string")
         : [],
@@ -615,6 +611,8 @@
               sourceNodeIds: [...draftUnionConfig.value.sourceNodeIds],
               fieldMappings: draftUnionConfig.value.fieldMappings.map((m) => ({
                 targetField: m.targetField,
+                targetName: m.targetName,
+                targetType: m.targetType,
                 sourceMap: { ...m.sourceMap },
               })),
             },
@@ -712,10 +710,11 @@
 
   const handleUnionConfigChange = (config: UnionConfig) => {
     draftUnionConfig.value = {
-      mode: config.mode,
       sourceNodeIds: [...config.sourceNodeIds],
       fieldMappings: config.fieldMappings.map((m) => ({
         targetField: m.targetField,
+        targetName: m.targetName,
+        targetType: m.targetType,
         sourceMap: { ...m.sourceMap },
       })),
     };

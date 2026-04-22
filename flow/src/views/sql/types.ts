@@ -162,8 +162,8 @@ export interface GroupAggregateMethodOption {
 }
 
 export interface JoinUpstreamForm {
-  id: string;
-  name: string;
+  id: string; // 节点id
+  name: string; // 节点名称
   fields: InputField[];
 }
 
@@ -177,7 +177,6 @@ export interface UnionFieldMapping {
 }
 
 export interface UnionConfig {
-  mode: UnionMode;
   sourceNodeIds: string[];
   fieldMappings: UnionFieldMapping[];
 }

@@ -32,7 +32,7 @@
               :title="`${col.name} (${col.type})`"
             >
               <div class="union-grid-field-name">{{ col.name }}</div>
-              <div class="union-grid-field-type">{{ col.type }}</div>
+              <!-- <div class="union-grid-field-type">{{ col.type }}</div> -->
             </div>
             <div class="union-grid-cell union-grid-cell--empty"></div>
           </div>
@@ -76,6 +76,7 @@
                       getMappedField(source.id, col.key)!,
                     )
                   "
+                  @dragend="handleDragEnd"
                 >
                   <span class="union-field-tag__name">{{
                     getMappedField(source.id, col.key)!.name
@@ -101,7 +102,7 @@
 </template>
 
 <script setup lang="ts">
-  import { computed, inject, onMounted, ref } from "vue";
+  import { computed, inject, onMounted, onUpdated, ref } from "vue";
   import { sqlNodeContextKey, type GetNodeContext } from "../nodeContext";
   import { fetchUnionNodeUpstreamFields } from "../inputNodeMock";
   import type {
@@ -109,7 +110,6 @@
     JoinUpstreamForm,
     UnionConfig,
     UnionFieldMapping,
-    UnionMode,
   } from "../types";
 
   const emit = defineEmits<{
@@ -133,7 +133,6 @@
   const getNodeContext = inject<GetNodeContext>(sqlNodeContextKey);
   const loading = ref(false);
   const upstreamForms = ref<JoinUpstreamForm[]>([]);
-  const localMode = ref<UnionMode>(props.config.mode);
   const localSourceNodeIds = ref<string[]>([...props.config.sourceNodeIds]);
   const localFieldMappings = ref<UnionFieldMapping[]>(
     props.config.fieldMappings.map((m) => ({
@@ -178,12 +177,15 @@
   const generateDefaultMappings = () => {
     const mappings: UnionFieldMapping[] = [];
     const findOrCreateMapping = (field: InputField, sourceId: string) => {
+
       let mapping = mappings.find(
-        (m) => m.targetName === field.name && m.targetType === field.type,
+        (m) => m.targetField === `${field.key}_[type:${field.type}]`,
       );
       if (!mapping) {
         mapping = {
-          targetField: field.name,
+          // 这个targetField后台不要，但是前端需要，作为v-for 的key。但只用key又可能出现重复的key（key 相同，但类型不一样），所以加上type
+          // 拖动到空列时，加上了 date.now， 所以也不会重复
+          targetField: `${field.key}_[type:${field.type}]`, 
           targetName: field.name,
           targetType: field.type,
           sourceMap: {},
@@ -203,14 +205,18 @@
     pendingLocalChange.value = true;
   };
 
+  // true 数据已经失效了，重新构建默认的
   const isConfigStale = (): boolean => {
     const validIds = new Set(upstreamForms.value.map((f) => f.id));
     const sourceIdsValid = localSourceNodeIds.value.every((id) =>
       validIds.has(id),
     );
+    // 原来记录的 sourceId 失效了，直接重建
     if (!sourceIdsValid) return true;
+    // 两次源的数量不一样，重建
     if (localSourceNodeIds.value.length !== upstreamForms.value.length)
       return true;
+    // 之前的配置没有，新的输入有字段可以映射，那也重建
     if (
       localFieldMappings.value.length === 0 &&
       upstreamForms.value.some((f) => f.fields.length > 0)
@@ -219,10 +225,12 @@
 
     for (const mapping of localFieldMappings.value) {
       for (const sourceId of Object.keys(mapping.sourceMap)) {
+        // 之前存的sourceId，在这次的上游输入里没有了，重建
         if (!validIds.has(sourceId)) return true;
         const source = upstreamForms.value.find((f) => f.id === sourceId);
         if (!source) return true;
-        const fieldKey = mapping.sourceMap[sourceId];
+        const fieldKey = mapping.sourceMap[sourceId]; // 这个是确切的field key，没做过任何修改
+        // 如果这个key 在新的source里找不到，重建
         if (fieldKey && !source.fields.some((f) => f.key === fieldKey))
           return true;
       }
@@ -232,7 +240,6 @@
   };
 
   const loadUpstreamForms = async () => {
-    localMode.value = props.config.mode;
     localSourceNodeIds.value = [...props.config.sourceNodeIds];
     localFieldMappings.value = props.config.fieldMappings.map((m) => ({
       targetField: m.targetField,
@@ -258,43 +265,36 @@
     const fromIds = nodeContext.currentNode?.fromIds || [];
 
     if (isConfigStale()) {
-      localMode.value = "union";
       localSourceNodeIds.value = [...fromIds];
-      localFieldMappings.value = [];
       generateDefaultMappings();
       pendingLocalChange.value = true;
     } else if (localSourceNodeIds.value.length === 0 && fromIds.length > 0) {
       localSourceNodeIds.value = [...fromIds];
       generateDefaultMappings();
       pendingLocalChange.value = true;
-    } else {
-      // 修复旧数据中缺失或被 col_ 污染的 targetName/targetType
-      let fixed = false;
-      localFieldMappings.value.forEach((mapping) => {
-        if (!mapping.targetName || mapping.targetName.startsWith("col_")) {
-          for (const sid of Object.keys(mapping.sourceMap)) {
-            const f = getFieldByKey(sid, mapping.sourceMap[sid]);
-            if (f) {
-              mapping.targetName = f.name;
-              mapping.targetType = f.type;
-              fixed = true;
-              break;
-            }
-          }
-        }
-      });
-      if (fixed) pendingLocalChange.value = true;
     }
+
+    console.log('build', localFieldMappings.value);
+    
   };
 
   onMounted(() => {
     void loadUpstreamForms();
   });
 
+  onUpdated(() => {
+    console.log('upppppp');
+    
+  })
+
   const getMappedField = (
     sourceId: string,
     colKey: string,
   ): InputField | null => {
+    console.log('getMappedField', sourceId, colKey);
+    // colKey 和 fieldKey 不一样的作用
+    // colkey 是为了区分哪一列
+    // 但 fieldKey 是这一列，这一行所使用的真正的field key
     const mapping = localFieldMappings.value.find(
       (m) => m.targetField === colKey,
     );
@@ -313,29 +313,34 @@
     e.dataTransfer!.effectAllowed = "move";
   };
 
+  const handleDragEnd = () => {
+    dragInfo.value = null;
+  };
+
   const handleDragOver = (
     e: DragEvent,
     targetType: string,
     sourceId: string,
     colKey: string,
   ) => {
-    if (!dragInfo.value) return;
-    if (
-      dragInfo.value.fieldType === targetType &&
-      dragInfo.value.sourceId === sourceId &&
-      !getMappedField(sourceId, colKey)
-    ) {
-      e.preventDefault();
-      e.dataTransfer!.dropEffect = "move";
-    }
+    
+    // if (!dragInfo.value) return;
+    // if (
+    //   dragInfo.value.fieldType === targetType &&
+    //   dragInfo.value.sourceId === sourceId &&
+    //   !getMappedField(sourceId, colKey)
+    // ) {
+    //   e.preventDefault();
+    //   e.dataTransfer!.dropEffect = "move";
+    // }
   };
 
   const handleDragOverEmpty = (e: DragEvent, sourceId: string) => {
-    if (!dragInfo.value) return;
-    if (dragInfo.value.sourceId === sourceId) {
-      e.preventDefault();
-      e.dataTransfer!.dropEffect = "move";
-    }
+    // if (!dragInfo.value) return;
+    // if (dragInfo.value.sourceId === sourceId) {
+    //   e.preventDefault();
+    //   e.dataTransfer!.dropEffect = "move";
+    // }
   };
 
   const removeFieldFromMappings = (sourceId: string, fieldKey: string) => {
@@ -357,6 +362,8 @@
     targetSourceId: string,
     targetColKey: string,
   ) => {
+    console.log('handleDrop');
+    
     e.preventDefault();
     if (!dragInfo.value) return;
     const { sourceId, fieldKey, fieldType } = dragInfo.value;
@@ -379,13 +386,15 @@
     }
 
     pendingLocalChange.value = true;
-    dragInfo.value = null;
   };
 
   const handleDropToEmpty = (e: DragEvent, sourceId: string) => {
+    console.log('handleDropToEmpty');
+    
     e.preventDefault();
     if (!dragInfo.value || dragInfo.value.sourceId !== sourceId) return;
     const { fieldKey, fieldType } = dragInfo.value;
+    // debugger
     const field = getFieldByKey(sourceId, fieldKey);
     if (!field) return;
 
@@ -393,7 +402,7 @@
     cleanEmptyMappings();
 
     const newMapping: UnionFieldMapping = {
-      targetField: `${field.name}_${Date.now()}`,
+      targetField: `${field.key}_${Date.now()}`,
       targetName: field.name,
       targetType: fieldType,
       sourceMap: { [sourceId]: fieldKey },
@@ -401,14 +410,12 @@
     localFieldMappings.value.push(newMapping);
 
     pendingLocalChange.value = true;
-    dragInfo.value = null;
   };
 
   const flushDraft = () => {
     if (!pendingLocalChange.value) return;
     pendingLocalChange.value = false;
     emit("change-config", {
-      mode: localMode.value,
       sourceNodeIds: [...localSourceNodeIds.value],
       fieldMappings: localFieldMappings.value.map((m) => ({
         targetField: m.targetField,

@@ -1424,7 +1424,7 @@ const mockCustomerFields: InputField[] = [
   { key: "gender", name: "性别", type: "string" },
   { key: "age", name: "年龄", type: "number" },
   { key: "address", name: "地址", type: "string" },
-  { key: "create_time", name: "创建时间", type: "datetime" },
+  { key: "create_time", name: "创建时间", type: "date" },
 ];
 
 const mockOrderFields: InputField[] = [

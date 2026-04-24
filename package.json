@@ -4,11 +4,13 @@
   "description": "Multi-project workspace with myEditor (Vue3) and myViewer (uni-app)",
   "scripts": {
     "dev": "concurrently \"node message-server.js\" \"pnpm run dev:editor\" \"pnpm run dev:viewer\"",
-    "dev:all": "concurrently \"node message-server.js\" \"pnpm run dev:editor\" \"pnpm run dev:viewer\" \"pnpm run dev:flow\"",
+    "dev:all": "concurrently \"node message-server.js\" \"pnpm run dev:editor\" \"pnpm run dev:viewer\" \"pnpm run dev:flow\" \"pnpm run dev:component-test\"",
     "dev:editor": "pnpm --filter myeditor run dev",
     "dev:viewer": "pnpm --filter myviewer run dev",
     "dev:flow": "pnpm --filter flow run dev",
     "dev:server": "pnpm --filter @pc-uni-h5/server run dev",
+    "dev:component-test": "pnpm --filter component-test run dev",
+    "test:component-test": "pnpm --filter component-test run test",
     "server": "node message-server.js",
     "dev:utils": "pnpm --filter @pc-uni-h5/utils run dev",
     "build:utils": "pnpm --filter @pc-uni-h5/utils run build",
@@ -18,7 +20,8 @@
     "build:viewer:h5": "pnpm --filter myviewer run build:h5",
     "build:viewer:mp-weixin": "pnpm --filter myviewer run build:mp-weixin",
     "build:flow": "pnpm --filter flow run build",
-    "build:all": "pnpm run build:editor && pnpm run build:viewer && pnpm run build:flow"
+    "build:all": "pnpm run build:editor && pnpm run build:viewer && pnpm run build:flow && pnpm run build:component-test",
+    "build:component-test": "pnpm --filter component-test run build"
   },
   "keywords": [],
   "author": "",

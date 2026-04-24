@@ -1,0 +1,28 @@
+{
+  "name": "component-test",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "vue-tsc --noEmit && vite build",
+    "preview": "vite preview",
+    "test": "vitest",
+    "test:ui": "vitest --ui",
+    "coverage": "vitest --coverage",
+    "type-check": "vue-tsc --noEmit"
+  },
+  "dependencies": {
+    "vue": "^3.5.13",
+    "vue-router": "^4.6.4"
+  },
+  "devDependencies": {
+    "@vitejs/plugin-vue": "^5.2.3",
+    "@vue/test-utils": "^2.4.6",
+    "happy-dom": "^17.4.4",
+    "typescript": "~5.8.3",
+    "vite": "^6.3.2",
+    "vitest": "^3.1.2",
+    "vue-tsc": "^2.2.10"
+  }
+}

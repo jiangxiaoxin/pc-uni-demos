@@ -1,6 +1,6 @@
 <template>
   <div class="field-editor-view">
-    <h2>@字段编辑器</h2>
+    <h2>@字段编辑器<span>在span之间</span>普通的文本</h2>
     <p class="desc">
       在编辑器中输入 <code>@</code> 符号调起字段选择器，选择字段后插入带颜色的标签。
       <br />

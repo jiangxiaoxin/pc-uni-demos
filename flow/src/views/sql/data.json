@@ -275,72 +275,160 @@
                     {
                         "targetField": "customer_id_[type:number]",
                         "outputAlias": "客户ID",
-                        "fieldType": "number"
+                        "fieldType": "number",
+                        "sourceMappings": [
+                            {
+                                "nodeKey": "FIELD_SETTING_1776849017536",
+                                "fieldKey": "customer_id"
+                            },
+                            {
+                                "nodeKey": "GROUP_BY_1776849042349",
+                                "fieldKey": "customer_id"
+                            }
+                        ]
                     },
                     {
                         "targetField": "customer_name_[type:string]",
                         "outputAlias": "客户姓名",
-                        "fieldType": "string"
+                        "fieldType": "string",
+                        "sourceMappings": [
+                            {
+                                "nodeKey": "FIELD_SETTING_1776849017536",
+                                "fieldKey": "customer_name"
+                            }
+                        ]
                     },
                     {
                         "targetField": "phone_[type:string]",
                         "outputAlias": "手机号",
-                        "fieldType": "string"
+                        "fieldType": "string",
+                        "sourceMappings": [
+                            {
+                                "nodeKey": "FIELD_SETTING_1776849017536",
+                                "fieldKey": "phone"
+                            }
+                        ]
                     },
                     {
                         "targetField": "email_[type:string]",
                         "outputAlias": "邮箱",
-                        "fieldType": "string"
+                        "fieldType": "string",
+                        "sourceMappings": [
+                            {
+                                "nodeKey": "FIELD_SETTING_1776849017536",
+                                "fieldKey": "email"
+                            }
+                        ]
                     },
                     {
                         "targetField": "gender_[type:string]",
                         "outputAlias": "性别",
-                        "fieldType": "string"
+                        "fieldType": "string",
+                        "sourceMappings": [
+                            {
+                                "nodeKey": "FIELD_SETTING_1776849017536",
+                                "fieldKey": "gender"
+                            }
+                        ]
                     },
                     {
                         "targetField": "age_[type:number]",
                         "outputAlias": "年龄",
-                        "fieldType": "number"
+                        "fieldType": "number",
+                        "sourceMappings": [
+                            {
+                                "nodeKey": "FIELD_SETTING_1776849017536",
+                                "fieldKey": "age"
+                            }
+                        ]
                     },
                     {
                         "targetField": "address_[type:string]",
                         "outputAlias": "地址",
-                        "fieldType": "string"
+                        "fieldType": "string",
+                        "sourceMappings": [
+                            {
+                                "nodeKey": "FIELD_SETTING_1776849017536",
+                                "fieldKey": "address"
+                            }
+                        ]
                     },
                     {
                         "targetField": "create_time_[type:date]",
                         "outputAlias": "创建时间",
-                        "fieldType": "date"
+                        "fieldType": "date",
+                        "sourceMappings": [
+                            {
+                                "nodeKey": "FIELD_SETTING_1776849017536",
+                                "fieldKey": "create_time"
+                            }
+                        ]
                     },
                     {
                         "targetField": "order_id_[type:number]",
                         "outputAlias": "订单ID",
-                        "fieldType": "number"
+                        "fieldType": "number",
+                        "sourceMappings": [
+                            {
+                                "nodeKey": "GROUP_BY_1776849042349",
+                                "fieldKey": "order_id"
+                            }
+                        ]
                     },
                     {
                         "targetField": "order_no_[type:string]",
                         "outputAlias": "订单编号",
-                        "fieldType": "string"
+                        "fieldType": "string",
+                        "sourceMappings": [
+                            {
+                                "nodeKey": "GROUP_BY_1776849042349",
+                                "fieldKey": "order_no"
+                            }
+                        ]
                     },
                     {
                         "targetField": "amount_[type:number]",
                         "outputAlias": "订单金额",
-                        "fieldType": "number"
+                        "fieldType": "number",
+                        "sourceMappings": [
+                            {
+                                "nodeKey": "GROUP_BY_1776849042349",
+                                "fieldKey": "amount"
+                            }
+                        ]
                     },
                     {
                         "targetField": "status_[type:string]",
                         "outputAlias": "订单状态",
-                        "fieldType": "string"
+                        "fieldType": "string",
+                        "sourceMappings": [
+                            {
+                                "nodeKey": "GROUP_BY_1776849042349",
+                                "fieldKey": "status"
+                            }
+                        ]
                     },
                     {
                         "targetField": "pay_time_[type:datetime]",
                         "outputAlias": "支付时间",
-                        "fieldType": "datetime"
+                        "fieldType": "datetime",
+                        "sourceMappings": [
+                            {
+                                "nodeKey": "GROUP_BY_1776849042349",
+                                "fieldKey": "pay_time"
+                            }
+                        ]
                     },
                     {
                         "targetField": "create_time_[type:datetime]",
                         "outputAlias": "创建时间",
-                        "fieldType": "datetime"
+                        "fieldType": "datetime",
+                        "sourceMappings": [
+                            {
+                                "nodeKey": "GROUP_BY_1776849042349",
+                                "fieldKey": "create_time"
+                            }
+                        ]
                     }
                 ]
             }

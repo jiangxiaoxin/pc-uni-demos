@@ -22,6 +22,11 @@ const routes = [
     name: 'FieldEditor',
     component: () => import('../views/FieldEditorView.vue'),
   },
+  {
+    path: '/cond',
+    name: 'cond',
+    component: () => import("../views/Cond.vue")
+  }
 ]
 
 const router = createRouter({

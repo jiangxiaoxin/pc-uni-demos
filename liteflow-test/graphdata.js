@@ -1,0 +1,8 @@
+const graph = {
+    nodes: [
+        {
+            
+        }
+    ],
+    edges: []
+}

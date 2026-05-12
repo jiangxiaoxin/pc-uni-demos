@@ -26,6 +26,10 @@ const routes = [
     path: '/cond',
     name: 'cond',
     component: () => import("../views/Cond.vue")
+  }, {
+    path: '/compute',
+    name: 'compute',
+    component: () => import("../views/compute-eng/index.vue")
   }
 ]
 

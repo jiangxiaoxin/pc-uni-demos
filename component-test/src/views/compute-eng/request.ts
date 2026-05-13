@@ -6,7 +6,7 @@ export function getDetail() {
           {
             id: "task_1",
             type: "task",
-            x: 300,
+            x: 500,
             y: 100,
             properties: {
               name: "任务节点",

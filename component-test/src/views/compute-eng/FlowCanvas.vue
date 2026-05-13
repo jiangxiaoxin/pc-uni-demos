@@ -136,21 +136,21 @@ onMounted(() => {
     alert(msg || "当前连接不被允许");
   });
 
-  lf.on('node:dragstart', (data) => {
-    console.log("🚀 ~ dragstart", data)
-    // debugger
+  // lf.on('node:dragstart', (data) => {
+  //   console.log("🚀 ~ dragstart", data)
+  //   // debugger
     
-  })
+  // })
 
-  lf.on("node:drag", (data) => {
-    console.log("🚀 drag:", data)
-  })
+  // lf.on("node:drag", (data) => {
+  //   console.log("🚀 drag:", data)
+  // })
 
-  lf.on("node:drop", (data) => {
-    console.log("🚀 ~ drop:", data)
+  // lf.on("node:drop", (data) => {
+  //   console.log("🚀 ~ drop:", data)
 
     
-  })
+  // })
 
   // 取消默认的 backspace/delete 删除绑定，重新绑定只删除边的逻辑
   lf.keyboard.off(["backspace"]);

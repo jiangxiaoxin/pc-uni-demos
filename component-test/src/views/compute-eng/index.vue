@@ -28,29 +28,37 @@
       />
     </div>
 
-    <PropertyPanel v-model:visible="panelVisible" :node-id="selectedNodeId" />
+    <PropertyPanel
+      ref="propertyPanelRef"
+      @update-title="handleUpdateTitle"
+    />
   </div>
 </template>
 
 <script setup lang="ts">
-import { onMounted, ref } from "vue";
+import { onMounted, provide, ref } from "vue";
 import FlowCanvas from "./FlowCanvas.vue";
 import PropertyPanel from "./PropertyPanel.vue";
 import { nodeTypes } from "./menus";
 import { getDetail } from "./request";
+import { NODE_CONFIGS_KEY } from "./symbols";
 
 const canvasRef = ref<InstanceType<typeof FlowCanvas> | null>(null);
-const panelVisible = ref(false);
-const selectedNodeId = ref("");
+const propertyPanelRef = ref<InstanceType<typeof PropertyPanel> | null>(null);
+const nodeConfigs = ref<Record<string, any>>({});
+
+provide(NODE_CONFIGS_KEY, nodeConfigs);
 
 const handleNodeSelect = (node: any) => {
-  selectedNodeId.value = node.id || "";
-  panelVisible.value = true;
+  propertyPanelRef.value?.open(node.id || "", node.properties || {});
 };
 
 const handleBlankClick = () => {
-  panelVisible.value = false;
-  selectedNodeId.value = "";
+  propertyPanelRef.value?.close()
+};
+
+const handleUpdateTitle = (payload: { nodeId: string; title: string }) => {
+  canvasRef.value?.updateNodeProperties(payload.nodeId, { title: payload.title });
 };
 
 const handleDragStart = (event: DragEvent, node: any) => {
@@ -60,7 +68,8 @@ const handleDragStart = (event: DragEvent, node: any) => {
 };
 
 const loadData = async () => {
-  const data = await getDetail();
+  const data: any = await getDetail();
+  nodeConfigs.value = data.configs || {};
   canvasRef.value?.renderGraph(data);
 };
 

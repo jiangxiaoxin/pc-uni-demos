@@ -99,7 +99,13 @@ export function getDetail() {
             targetNodeId: "end_1",
           },
         ],
-        configs: {}
+        configs: {
+          task_1: {
+            age: 18,
+            addr: "北京",
+            birthday: "2020-01-01"
+          }
+        }
       });
     }, 1000);
   });

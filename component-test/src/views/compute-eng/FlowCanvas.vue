@@ -42,6 +42,12 @@ const resizeEditor = () => {
 };
 
 const getGraphData = () => lf?.getGraphData();
+
+const updateNodeProperties = (nodeId: string, properties: Record<string, any>) => {
+  if (!lf) return;
+  lf.setProperties(nodeId, properties);
+};
+
 const renderGraph = async (data: any) => {
   await nextTick();
   if (!lf) return;
@@ -210,6 +216,7 @@ defineExpose({
   getGraphData,
   renderGraph,
   handleDrop,
+  updateNodeProperties,
 });
 </script>
 

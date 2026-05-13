@@ -4,6 +4,21 @@ export function getDetail() {
       resolve({
         nodes: [
           {
+            id: "task_1",
+            type: "task",
+            x: 300,
+            y: 100,
+            properties: {
+              name: "任务节点",
+              title: "我代表整个任务",
+              color: "#fa8c16",
+              icon: "📋",
+              hoverOutlineColor: "#fa8c16",
+              width: 260,
+              height: 64,
+            },
+          },
+          {
             id: "start_1",
             type: "start",
             x: 200,

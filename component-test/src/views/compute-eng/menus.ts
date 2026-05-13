@@ -2,6 +2,7 @@ export const NODE_TYPE = {
   START: "start",
   ACTION: "action",
   END: "end",
+  TASK: "task",
 } as const;
 
 export type NodeTypeValue = (typeof NODE_TYPE)[keyof typeof NODE_TYPE];
@@ -68,6 +69,27 @@ export const nodeTypes: NodeTypeConfig[] = [
   },
 ];
 
+export const hiddenNodeTypes: NodeTypeConfig[] = [
+  {
+    type: NODE_TYPE.TASK,
+    name: "任务节点",
+    title: "任务",
+    icon: "📋",
+    color: "#fa8c16",
+    iconBgColor: "#fa8c161A",
+    anchors: { in: false, out: false },
+    defaultConfig: {
+      width: 260,
+      height: 64,
+    },
+  },
+];
+
+export const allNodeTypes: NodeTypeConfig[] = [
+  ...nodeTypes,
+  ...hiddenNodeTypes,
+];
+
 export function getNodeTypeConfig(type: string): NodeTypeConfig | undefined {
-  return nodeTypes.find((node) => node.type === type);
+  return allNodeTypes.find((node) => node.type === type);
 }

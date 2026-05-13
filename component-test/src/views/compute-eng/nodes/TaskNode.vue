@@ -1,19 +1,17 @@
 <template>
   <div
-    class="flow-node"
+    class="task-node"
     :style="{ width: nodeWidth + 'px', height: nodeHeight + 'px' }"
     :title="nodeTitle"
   >
-    <div class="node-left-bar" :style="{ backgroundColor: nodeColor }"></div>
+    <div class="node-top-bar" :style="{ backgroundColor: nodeColor }"></div>
 
-    <div class="node-icon" :style="{ backgroundColor: iconBgColor }">
-      <span class="icon-text">{{ nodeIcon }}</span>
-    </div>
+    <div class="node-content">
+      <div class="node-icon" :style="{ backgroundColor: iconBgColor }">
+        <span class="icon-text">{{ nodeIcon }}</span>
+      </div>
 
-    <div class="node-title">{{ nodeTitle }}</div>
-
-    <div class="node-delete-btn" @click.stop="handleDelete" title="删除节点">
-      ✕
+      <div class="node-title">{{ nodeTitle }}</div>
     </div>
   </div>
 </template>
@@ -22,7 +20,6 @@
 import { ref, computed, inject, onMounted, onUnmounted } from "vue";
 import { EventType } from "@logicflow/core";
 import { vueNodesMap } from "@logicflow/vue-node-registry";
-import { allNodeTypes, DEFAULT_NODE_WIDTH, DEFAULT_NODE_HEIGHT } from "../menus";
 
 const getNode = inject("getNode") as () => any;
 const getGraph = inject("getGraph") as () => any;
@@ -41,15 +38,15 @@ const nodeTitle = computed(() => {
 });
 
 const nodeColor = computed(() => {
-  return nodeData.value.properties?.color || "#1890ff";
+  return nodeData.value.properties?.color || "#fa8c16";
 });
 
 const nodeWidth = computed(() => {
-  return nodeData.value.properties?.width || DEFAULT_NODE_WIDTH;
+  return nodeData.value.properties?.width || 260;
 });
 
 const nodeHeight = computed(() => {
-  return nodeData.value.properties?.height || DEFAULT_NODE_HEIGHT;
+  return nodeData.value.properties?.height || 64;
 });
 
 const iconBgColor = computed(() => {
@@ -58,16 +55,8 @@ const iconBgColor = computed(() => {
 });
 
 const nodeIcon = computed(() => {
-  const type = nodeData.value.type;
-  const config = allNodeTypes.find((n) => n.type === type);
-  return config?.icon || "?";
+  return nodeData.value.properties?.icon || "📋";
 });
-
-const handleDelete = () => {
-  if (confirm(`确定要删除节点 "${nodeTitle.value}" 吗？`)) {
-    graph.deleteNode(node.id);
-  }
-};
 
 const handlePropertyChange = (eventData: any) => {
   const keys = eventData.keys as string[];
@@ -97,75 +86,66 @@ onUnmounted(() => {
 </script>
 
 <style scoped lang="scss">
-.flow-node {
+.task-node {
   display: flex;
-  align-items: center;
+  flex-direction: column;
   background: #fff;
   border: 1px solid #d9d9d9;
-  padding: 0 12px;
   position: relative;
   overflow: hidden;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.06);
+  box-shadow: 0 3px 8px rgba(0, 0, 0, 0.08);
   transition: all 0.2s;
-  border-radius: 6px;
+  border-radius: 8px;
   cursor: pointer;
 
   &:hover {
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    box-shadow: 0 5px 12px rgba(0, 0, 0, 0.12);
     border-color: #bfbfbf;
   }
 }
 
-.node-left-bar {
+.node-top-bar {
   position: absolute;
-  left: 0;
   top: 0;
-  bottom: 0;
-  width: 4px;
+  left: 0;
+  right: 0;
+  height: 4px;
+}
+
+.node-content {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  padding: 8px 0 6px;
 }
 
 .node-icon {
-  width: 28px;
-  height: 28px;
+  width: 32px;
+  height: 32px;
   border-radius: 50%;
   display: flex;
   align-items: center;
   justify-content: center;
-  margin-left: 4px;
-  margin-right: 8px;
   flex-shrink: 0;
 }
 
 .icon-text {
-  font-size: 14px;
+  font-size: 16px;
   font-weight: 600;
   color: #262626;
 }
 
 .node-title {
-  flex: 1;
-  font-size: 14px;
+  font-size: 13px;
   font-weight: 500;
   color: #262626;
   line-height: 1.4;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
-}
-
-.node-delete-btn {
-  margin-left: 8px;
-  cursor: pointer;
-  color: #8c8c8c;
-  padding: 4px 6px;
-  border-radius: 4px;
-  font-size: 12px;
-  opacity: 1;
-  transition: all 0.2s;
-
-  &:hover {
-    color: #ff4d4f;
-    background: rgba(255, 77, 79, 0.1);
-  }
+  max-width: 90%;
 }
 </style>

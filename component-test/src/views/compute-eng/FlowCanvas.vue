@@ -17,7 +17,9 @@ import { nextTick, onMounted, onUnmounted, ref } from "vue";
 import { register, getTeleport } from "@logicflow/vue-node-registry";
 import FlowNode from "./nodes/FlowNode.vue";
 import FlowNodeModel from "./nodes/FlowNodeModel";
-import { nodeTypes } from "./menus";
+import TaskNode from "./nodes/TaskNode.vue";
+import TaskNodeModel from "./nodes/TaskNodeModel";
+import { allNodeTypes, NODE_TYPE } from "./menus";
 
 const emit = defineEmits<{
   (e: "node-select", node: any): void;
@@ -92,12 +94,13 @@ onMounted(() => {
     },
   });
 
-  nodeTypes.forEach((nodeType) => {
+  allNodeTypes.forEach((nodeType) => {
+    const isTask = nodeType.type === NODE_TYPE.TASK;
     register(
       {
         type: nodeType.type,
-        component: FlowNode,
-        model: FlowNodeModel,
+        component: isTask ? TaskNode : FlowNode,
+        model: isTask ? TaskNodeModel : FlowNodeModel,
       },
       lf!,
     );

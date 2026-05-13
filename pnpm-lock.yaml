@@ -24,6 +24,9 @@ importers:
       '@logicflow/vue-node-registry':
         specifier: ^1.1.12
         version: 1.1.12(@logicflow/core@2.1.11)(vue@3.5.30(typescript@5.8.3))
+      ant-design-vue:
+        specifier: ^4.2.6
+        version: 4.2.6(vue@3.5.30(typescript@5.8.3))
       vue:
         specifier: ^3.5.13
         version: 3.5.30(typescript@5.8.3)
@@ -5199,6 +5202,12 @@ snapshots:
 
   '@ant-design/icons-svg@4.4.2': {}
 
+  '@ant-design/icons-vue@7.0.1(vue@3.5.30(typescript@5.8.3))':
+    dependencies:
+      '@ant-design/colors': 6.0.0
+      '@ant-design/icons-svg': 4.4.2
+      vue: 3.5.30(typescript@5.8.3)
+
   '@ant-design/icons-vue@7.0.1(vue@3.5.30(typescript@5.9.3))':
     dependencies:
       '@ant-design/colors': 6.0.0
@@ -8212,6 +8221,32 @@ snapshots:
 
   ansi-styles@6.2.3: {}
 
+  ant-design-vue@4.2.6(vue@3.5.30(typescript@5.8.3)):
+    dependencies:
+      '@ant-design/colors': 6.0.0
+      '@ant-design/icons-vue': 7.0.1(vue@3.5.30(typescript@5.8.3))
+      '@babel/runtime': 7.28.6
+      '@ctrl/tinycolor': 3.6.1
+      '@emotion/hash': 0.9.2
+      '@emotion/unitless': 0.8.1
+      '@simonwep/pickr': 1.8.2
+      array-tree-filter: 2.1.0
+      async-validator: 4.2.5
+      csstype: 3.2.3
+      dayjs: 1.11.20
+      dom-align: 1.12.4
+      dom-scroll-into-view: 2.0.1
+      lodash: 4.17.23
+      lodash-es: 4.17.23
+      resize-observer-polyfill: 1.5.1
+      scroll-into-view-if-needed: 2.2.31
+      shallow-equal: 1.2.1
+      stylis: 4.3.6
+      throttle-debounce: 5.0.2
+      vue: 3.5.30(typescript@5.8.3)
+      vue-types: 3.0.2(vue@3.5.30(typescript@5.8.3))
+      warning: 4.0.3
+
   ant-design-vue@4.2.6(vue@3.5.30(typescript@5.9.3)):
     dependencies:
       '@ant-design/colors': 6.0.0
@@ -11081,6 +11116,11 @@ snapshots:
       '@volar/typescript': 2.4.28
       '@vue/language-core': 3.2.6
       typescript: 5.9.3
+
+  vue-types@3.0.2(vue@3.5.30(typescript@5.8.3)):
+    dependencies:
+      is-plain-object: 3.0.1
+      vue: 3.5.30(typescript@5.8.3)
 
   vue-types@3.0.2(vue@3.5.30(typescript@5.9.3)):
     dependencies:

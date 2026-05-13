@@ -116,6 +116,8 @@ onMounted(() => {
   });
 
   lf.on("node:click", ({ data }) => {
+    console.log('clicccccll', data);
+    
     emit("node-select", data);
   });
 
@@ -133,6 +135,22 @@ onMounted(() => {
     console.warn("连接被阻止:", msg);
     alert(msg || "当前连接不被允许");
   });
+
+  lf.on('node:dragstart', (data) => {
+    console.log("🚀 ~ dragstart", data)
+    // debugger
+    
+  })
+
+  lf.on("node:drag", (data) => {
+    console.log("🚀 drag:", data)
+  })
+
+  lf.on("node:drop", (data) => {
+    console.log("🚀 ~ drop:", data)
+
+    
+  })
 
   // 取消默认的 backspace/delete 删除绑定，重新绑定只删除边的逻辑
   lf.keyboard.off(["backspace"]);
@@ -203,7 +221,7 @@ onUnmounted(() => {
   resizeObserver = null;
 
   if (lf) {
-    lf.destroy();
+    lf.destroy(); // 内部会清理event
     lf = null;
   }
 });

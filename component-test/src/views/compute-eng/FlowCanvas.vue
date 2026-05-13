@@ -25,7 +25,8 @@ const emit = defineEmits<{
   (e: "node-select", node: any): void;
   (e: "blank-click"): void;
   (e: "node-delete", nodeId: string): void;
-  (e: "lf-inited"): void
+  (e: "lf-inited"): void;
+  (e: "save-request", data: any): void;
 }>();
 
 const TeleportContainer = getTeleport();
@@ -34,8 +35,6 @@ let lf: LogicFlow | null = null;
 let resizeObserver: ResizeObserver | null = null;
 const containerRef = ref<HTMLElement>();
 const flowId = ref("");
-
-const STORAGE_KEY = "compute_eng_flow_data";
 
 const resizeEditor = () => {
   lf?.resize();
@@ -189,9 +188,7 @@ const handleDrop = (event: DragEvent) => {
 const handleSave = () => {
   if (!lf) return;
   const data = lf.getGraphData();
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
-  console.log("[FlowCanvas] 保存的数据:", data);
-  alert("流程配置已保存到本地");
+  emit("save-request", data);
 };
 
 const handleClear = () => {

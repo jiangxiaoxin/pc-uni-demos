@@ -25,6 +25,7 @@
         class="flow-canvas"
         @node-select="handleNodeSelect"
         @blank-click="handleBlankClick"
+        @save-request="handleSaveRequest"
       />
     </div>
 
@@ -59,6 +60,17 @@ const handleBlankClick = () => {
 
 const handleUpdateTitle = (payload: { nodeId: string; title: string }) => {
   canvasRef.value?.updateNodeProperties(payload.nodeId, { title: payload.title });
+};
+
+const handleSaveRequest = (graphData: any) => {
+  const fullData = {
+    nodes: graphData.nodes,
+    edges: graphData.edges,
+    configs: nodeConfigs.value,
+  };
+  console.log("[index.vue] 保存的完整数据:", fullData);
+  localStorage.setItem("compute_eng_full_data", JSON.stringify(fullData));
+  alert("流程配置已保存到本地");
 };
 
 const handleDragStart = (event: DragEvent, node: any) => {

@@ -75,7 +75,7 @@
   // 标题本地编辑值
   const titleValue = ref("");
   const localNodeId = ref("");
-  const localNodeProperties = ref<Record<string, any>>({});
+  const localNodeProperties = ref<Record<string, any>>({}); //TODO 这个 properties 大概率并不用，因为属性是单独放置的对象
 
   const open = (nodeId: string, nodeProperties: Record<string, any>) => {
     localNodeId.value = nodeId;

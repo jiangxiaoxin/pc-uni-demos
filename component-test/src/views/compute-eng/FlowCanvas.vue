@@ -80,6 +80,7 @@ onMounted(() => {
     style: {
       baseEdge: {
         stroke: "#0369A1",
+        strokeDasharray: "5,5",
       },
     },
   });
@@ -125,12 +126,25 @@ onMounted(() => {
     alert(msg || "当前连接不被允许");
   });
 
+  // 取消默认的 backspace/delete 删除绑定，重新绑定只删除边的逻辑
+  lf.keyboard.off(["backspace"]);
+  lf.keyboard.on(["backspace", "del"], () => {
+    // const elements = lf!.getGraphData();
+    const selected = (lf as any).graphModel?.getSelectElements?.(true);
+    if (!selected) return true;
+    (lf as any).clearSelectElements();
+    selected.edges?.forEach((edge: any) => {
+      if (edge.id) lf!.deleteEdge(edge.id);
+    });
+    return false;
+  });
+
   resizeObserver = new ResizeObserver(() => {
     resizeEditor();
   });
   resizeObserver.observe(containerRef.value);
 
-  lf.render({})
+  lf.render({});
 
   emit("lf-inited");
 });

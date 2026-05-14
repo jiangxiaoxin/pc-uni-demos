@@ -27,12 +27,21 @@ importers:
       ant-design-vue:
         specifier: ^4.2.6
         version: 4.2.6(vue@3.5.30(typescript@5.8.3))
+      uuid:
+        specifier: ^14.0.0
+        version: 14.0.0
       vue:
         specifier: ^3.5.13
         version: 3.5.30(typescript@5.8.3)
       vue-router:
         specifier: ^4.6.4
         version: 4.6.4(vue@3.5.30(typescript@5.8.3))
+      vxe-pc-ui:
+        specifier: 4.14.9
+        version: 4.14.9(vue@3.5.30(typescript@5.8.3))
+      xe-utils:
+        specifier: 4.0.7
+        version: 4.0.7
     devDependencies:
       '@vitejs/plugin-vue':
         specifier: ^5.2.3
@@ -2353,6 +2362,11 @@ packages:
   '@vueuse/shared@12.0.0':
     resolution: {integrity: sha512-3i6qtcq2PIio5i/vVYidkkcgvmTjCqrf26u+Fd4LhnbBmIT6FN8y6q/GJERp8lfcB9zVEfjdV0Br0443qZuJpw==}
 
+  '@vxe-ui/core@4.4.12':
+    resolution: {integrity: sha512-GWRo732PmlIHrdjysSSbOudQh3ROAHS6wJ+OfcymYkbI/WcPqK+An2da/7pNlRiUwsZInesmn9eMo2lxMSmCSg==}
+    peerDependencies:
+      vue: ^3.2.0
+
   abab@2.0.6:
     resolution: {integrity: sha512-j2afSsaIENvHZN2B8GOpF566vZ5WVk5opAiMTvWgaQT8DkbOqsTfvNAvHoRGU2zzP8cPoqys+xHTRDWW8L+/BA==}
     deprecated: Use your platform's native atob() and btoa() methods instead
@@ -2906,6 +2920,9 @@ packages:
 
   dom-walk@0.1.2:
     resolution: {integrity: sha512-6QvTW9mrGeIegrFXdtQi9pk7O/nSK6lSdXW2eqUspN5LWD7UTji2Fqw5V2YLjBpHEoU9Xl/eUWNpDeZvoyOv2w==}
+
+  dom-zindex@1.0.6:
+    resolution: {integrity: sha512-FKWIhiU96bi3xpP9ewRMgANsoVmMUBnMnmpCT6dPMZOunVYJQmJhSRruoI0XSPoHeIif3kyEuiHbFrOJwEJaEA==}
 
   domexception@2.0.1:
     resolution: {integrity: sha512-yxJ2mFy/sibVQlu5qHjOkf9J3K6zgmCxgJ94u2EdvDOV09H+32LtRswEcUsmUWN72pVLOEnTSRaIVVzVQgS0dg==}
@@ -4797,6 +4814,10 @@ packages:
     resolution: {integrity: sha512-pMZTvIkT1d+TFGvDOqodOclx0QWkkgi6Tdoa8gC8ffGAAqz9pzPTZWAybbsHHoED/ztMtkv/VoYTYyShUn81hA==}
     engines: {node: '>= 0.4.0'}
 
+  uuid@14.0.0:
+    resolution: {integrity: sha512-Qo+uWgilfSmAhXCMav1uYFynlQO7fMFiMVZsQqZRMIXp0O7rR7qjkj+cPvBHLgBqi960QCoo/PH2/6ZtVqKvrg==}
+    hasBin: true
+
   uuid@9.0.1:
     resolution: {integrity: sha512-b+1eJOlsR9K8HJpow9Ok3fiWOWSIcIzXodvv0rQjVoOVNpWMpxf1wZNpt4y9h10odCNrqnYp1OBzRktckBe3sA==}
     hasBin: true
@@ -5040,6 +5061,9 @@ packages:
       typescript:
         optional: true
 
+  vxe-pc-ui@4.14.9:
+    resolution: {integrity: sha512-VbhZfuKbQZTBgZKbB66qh/z2zxbQucV4QDNGiJBckr9A9w1fw59mLSDOPEnsWVrRjo80IX8+iSnLaV8W64Qd0Q==}
+
   w3c-hr-time@1.0.2:
     resolution: {integrity: sha512-z8P5DvDNjKDoFIHK7q8r8lackT6l+jo/Ye3HOle7l9nICP9lf1Ci25fy9vHd0JOWewkIFzXIEig3TdKT7JQ5fQ==}
     deprecated: Use your platform's native performance.now() and performance.timeOrigin.
@@ -5130,6 +5154,9 @@ packages:
         optional: true
       utf-8-validate:
         optional: true
+
+  xe-utils@4.0.7:
+    resolution: {integrity: sha512-eV0+aYA+bOGCnl/48AOconhpoNKLvpBaIZykzWYzYU7URf07+q86FlDvbWz0WQZldgI60UzTCsAd4hBvvJNVpg==}
 
   xhr@2.6.0:
     resolution: {integrity: sha512-/eCGLb5rxjx5e3mF1A7s+pLlR6CGyqWN91fv1JgER5mVWg1MZmlhBvy9kjcsOdRk8RrIujotWyJamfyrp+WIcA==}
@@ -8167,6 +8194,12 @@ snapshots:
     transitivePeerDependencies:
       - typescript
 
+  '@vxe-ui/core@4.4.12(vue@3.5.30(typescript@5.8.3))':
+    dependencies:
+      dom-zindex: 1.0.6
+      vue: 3.5.30(typescript@5.8.3)
+      xe-utils: 4.0.7
+
   abab@2.0.6: {}
 
   abbrev@2.0.0: {}
@@ -8752,6 +8785,8 @@ snapshots:
   dom-scroll-into-view@2.0.1: {}
 
   dom-walk@0.1.2: {}
+
+  dom-zindex@1.0.6: {}
 
   domexception@2.0.1:
     dependencies:
@@ -10933,6 +10968,8 @@ snapshots:
 
   utils-merge@1.0.1: {}
 
+  uuid@14.0.0: {}
+
   uuid@9.0.1: {}
 
   uview-pro@0.5.15: {}
@@ -11157,6 +11194,12 @@ snapshots:
     optionalDependencies:
       typescript: 5.9.3
 
+  vxe-pc-ui@4.14.9(vue@3.5.30(typescript@5.8.3)):
+    dependencies:
+      '@vxe-ui/core': 4.4.12(vue@3.5.30(typescript@5.8.3))
+    transitivePeerDependencies:
+      - vue
+
   w3c-hr-time@1.0.2:
     dependencies:
       browser-process-hrtime: 1.0.0
@@ -11228,6 +11271,8 @@ snapshots:
   ws@7.5.10: {}
 
   ws@8.18.0: {}
+
+  xe-utils@4.0.7: {}
 
   xhr@2.6.0:
     dependencies:

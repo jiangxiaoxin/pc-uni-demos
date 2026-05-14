@@ -1,0 +1,89 @@
+import { v4 as uuidv4 } from "uuid";
+
+export type Logic = "and" | "or";
+
+export type ValueType = "STRING" | "NUMBER" | "BOOLEAN";
+
+export interface Condition {
+  id: string;
+  type: "condition";
+  [key: string]: any;
+}
+
+export interface ConditionGroup {
+  id: string;
+  type: "group";
+  logic: Logic;
+  children: CondNode[];
+}
+
+export type CondNode = Condition | ConditionGroup;
+
+export const  value_type_options = [
+    {
+        value: 'STRING',
+        label: '字符串'
+    },
+    {
+        value: 'NUMBER',
+        label: '数字'
+    },
+    {
+        value: 'BOOLEAN',
+        label: '布尔值'
+    }
+]
+
+export const OPERATORS = [
+  { value: "EQ", label: "等于" },
+  { value: "NE", label: "不等于" },
+  { value: "GT", label: "大于" },
+  { value: 'GE', label: "大于等于" },
+  { value: "LT", label: "小于" },
+  { value: 'LE', label: "小于等于" },
+];
+
+export function genId(prefix: "c" | "g" = "c"): string {
+  return `${prefix}_${uuidv4()}`;
+}
+
+export const condition_source_customize = "customize";
+export const condition_source_point = "point";
+export const condition_source_template = "template";
+export const condition_source_options = [
+  {
+    value: condition_source_customize,
+    label: "自定义字段",
+  },
+  {
+    value: condition_source_point,
+    label: "设备点位",
+  },
+  {
+    value: condition_source_template,
+    label: "设备动作模板",
+  },
+];
+
+export function createDefaultCondition(): Condition {
+  return {
+    id: genId("c"),
+    type: "condition",
+    conditionSource: condition_source_customize, // 条件来源
+    field: "", // 字段
+    operator: undefined, // 比较符
+    valueType: undefined, // 值类型
+    value: "", // 值
+    point: "", // 设备点位
+    template: undefined, // 设备动作模板
+  };
+}
+
+export function createDefaultGroup(): ConditionGroup {
+  return {
+    id: genId("g"),
+    type: "group",
+    logic: "and",
+    children: [createDefaultCondition(), createDefaultCondition(),],
+  };
+}

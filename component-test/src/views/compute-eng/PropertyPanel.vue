@@ -3,7 +3,7 @@
     :open="visible"
     title="属性面板"
     placement="right"
-    :width="500"
+    :width="1000"
     :maskClosable="false"
     @close="handleClose"
   >
@@ -16,45 +16,76 @@
       </a-button>
     </template>
     <div class="property-content">
-      <div class="info-row">
-        <span class="label">节点 ID：</span>
-        <span class="value">{{ localNodeId || "未选择" }}</span>
-      </div>
-
-      <div class="info-row">
-        <span class="label">节点标题：</span>
-        <a-input
-          :value="titleValue"
-          placeholder="请输入节点标题"
-          size="small"
-          @change="handleTitleChange"
-        />
-      </div>
-
-      <template v-if="localNodeId">
-        <div class="config-section">
-          <div class="section-title">属性配置</div>
-          <div
-            v-for="(value, key) in currentConfig"
-            :key="key"
-            class="info-row"
-          >
-            <span class="label">{{ key }}：</span>
-            <span class="value">{{ value }}</span>
-          </div>
+      <div class="config-section">
+        <div class="section-title">节点配置</div>
+        <div class="info-row">
+          <span class="label">ID：</span>
+          <span class="value">{{ localNodeId || "未选择" }}</span>
         </div>
-      </template>
+        <div class="info-row">
+          <span class="label">类型：</span>
+          <span class="value">{{ localNodeTypeName }}</span>
+        </div>
 
-      <template v-else>
-        <div class="empty-tip">该节点暂无属性配置</div>
-      </template>
+        <div class="info-row">
+          <span class="label">标题：</span>
+          <a-input
+            v-model:value="titleValue"
+            placeholder="请输入节点标题"
+            size="small"
+          />
+        </div>
+      </div>
+
+      <div class="config-section">
+        <div class="section-title">属性配置</div>
+        <div class="info-row">
+          <span class="label">优先级：</span>
+          <a-input-number
+            v-model:value="modelData.priority"
+            placeholder="请输入优先级"
+            size="small"
+            style="flex: 1 !important; width: auto"
+            :min="0"
+            :controls="false"
+            :precision="0"
+          />
+        </div>
+        <div class="info-row">
+          <span class="label">下游调度策略</span>
+          <a-select
+            v-model:value="modelData.downPolicy"
+            :options="down_policy_options"
+            style="flex: 1;"
+            size="small"
+          ></a-select>
+        </div>
+        <div class="info-row">
+          <span class="label">执行引擎</span>
+          <a-select v-model:value="modelData.executeEngine" :options="execute_engine_options" style="flex: 1;" size="small"></a-select>
+        </div>
+        <div v-if="modelData.executeEngine == execute_engine_aviator">
+          <span class="label">条件配置</span>
+          <ConditionGroup v-model="modelData.condConfig" :is-root="true" style="margin-top: 8px;"/>
+        </div>
+      </div>
     </div>
   </a-drawer>
 </template>
 
 <script setup lang="ts">
   import { computed, inject, nextTick, ref, type Ref } from "vue";
-  import { NODE_CONFIGS_KEY } from "./symbols";
+  import { execute_engine_aviator, NODE_CONFIGS_KEY } from "./symbols";
+  import { getNodeTypeConfig } from "./menus";
+  import { down_policy_options, execute_engine_options } from "./symbols";
+  import ConditionGroup from "./condition/ConditionGroup.vue";
+
+  interface NodeData {
+    id?: string;
+    type?: string;
+    properties?: Record<string, any>;
+    [key: string]: any;
+  }
 
   const emit = defineEmits<{
     (e: "update-title", payload: { nodeId: string; title: string }): void;
@@ -67,44 +98,62 @@
     ref({}),
   );
 
-  const currentConfig = computed(() => {
-    if (!localNodeId.value) return null;
-    return nodeConfigs.value[localNodeId.value] || null;
+  const modelData = ref<any>({
+    // priority: null, // 优先级
+    // downPolicy: null, // 下游调度策略
+    // executeEngine: null, // 执行引擎
+    // condConfig: {}, // 条件组配置
+    // calcConfig: {}, // 计算组配置
   });
 
   // 标题本地编辑值
   const titleValue = ref("");
-  const localNodeId = ref("");
-  const localNodeProperties = ref<Record<string, any>>({}); //TODO 这个 properties 大概率并不用，因为属性是单独放置的对象
+  const localNodeData = ref<NodeData>({});
+  const localNodeId = computed(() => {
+    return localNodeData.value.id ?? "";
+  });
 
-  const open = (nodeId: string, nodeProperties: Record<string, any>) => {
-    localNodeId.value = nodeId;
-    localNodeProperties.value = nodeProperties;
-    titleValue.value = nodeProperties.title || nodeProperties.name || "";
-    visible.value = true
+  const localNodeTypeName = computed(() => {
+    return getNodeTypeConfig(localNodeData.value.type ?? "")?.name || "未知";
+  });
+
+  const open = (nodeData: NodeData) => {
+    titleValue.value =
+      nodeData.properties?.title || nodeData.properties?.name || "";
+    localNodeData.value = nodeData;
+    if (!nodeConfigs.value[nodeData.id!]) {
+      nodeConfigs.value[nodeData.id!] = {};
+    }
+
+    try {
+      // 如果直接从nodeConfigs 上拿值赋给 modelData，则 后续做的修改，会直接修改在整体的配置上
+      modelData.value = JSON.parse(JSON.stringify(nodeConfigs.value[nodeData.id!]));
+    } catch (error) {
+      modelData.value = {}
+    }
+    
+    visible.value = true;
   };
 
   const clearData = () => {
     nextTick(() => {
-      localNodeId.value = "";
-      localNodeProperties.value = {};
+      localNodeData.value = {};
       titleValue.value = "";
     });
   };
 
-  const handleTitleChange = (e: Event) => {
-    titleValue.value = (e.target as HTMLInputElement).value;
-  };
-
   const handleConfirm = () => {
-    const title = titleValue.value.trim()
-    if (localNodeId.value && title) {
-      emit("update-title", {
-        nodeId: localNodeId.value,
-        title: title,
-      });
+    const title = titleValue.value.trim();
+    emit("update-title", {
+      nodeId: localNodeId.value,
+      title: title,
+    });
+
+    if (localNodeId.value) {
+      nodeConfigs.value[localNodeId.value] = modelData.value;
     }
-    handleClose()
+
+    handleClose();
   };
 
   const handleClose = () => {
@@ -114,9 +163,8 @@
 
   defineExpose({
     open,
-    close: handleClose
+    close: handleClose,
   });
-
 </script>
 
 <style scoped lang="scss">
@@ -127,14 +175,22 @@
   .info-row {
     display: flex;
     align-items: center;
-    margin-bottom: 16px;
+    margin-bottom: 6px;
     font-size: 14px;
+    min-height: 24px;
 
-    .label {
+    
+
+    :deep(.ant-input) {
+      flex: 1;
+    }
+  }
+
+  .label {
       color: #666;
       flex-shrink: 0;
       margin-right: 8px;
-      width: 80px;
+      width: 120px;
     }
 
     .value {
@@ -142,11 +198,6 @@
       font-weight: 500;
       flex: 1;
     }
-
-    :deep(.ant-input) {
-      flex: 1;
-    }
-  }
 
   .config-section {
     margin-top: 16px;

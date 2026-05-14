@@ -115,10 +115,8 @@ onMounted(() => {
     flowId.value = graphModel.flowId!;
   });
 
-  lf.on("node:click", ({ data }) => {
-    console.log('clicccccll', data);
-    
-    emit("node-select", data);
+  lf.on("node:click", ({ data }) => {   
+    emit("node-select", {...data}); // 阻断内外的数据引用传递
   });
 
   lf.on("blank:click", () => {

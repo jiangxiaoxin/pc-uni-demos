@@ -51,7 +51,8 @@ const nodeConfigs = ref<Record<string, any>>({});
 provide(NODE_CONFIGS_KEY, nodeConfigs);
 
 const handleNodeSelect = (node: any) => {
-  propertyPanelRef.value?.open(node.id || "", node.properties || {});
+  console.log("🚀 选中节点", node)
+  propertyPanelRef.value?.open(node);
 };
 
 const handleBlankClick = () => {
@@ -81,8 +82,10 @@ const handleDragStart = (event: DragEvent, node: any) => {
 
 const loadData = async () => {
   const data: any = await getDetail();
-  nodeConfigs.value = data.configs || {};
-  canvasRef.value?.renderGraph(data);
+  const {nodes=[], edges=[], configs = {}} = data
+  nodeConfigs.value = configs;
+  
+  canvasRef.value?.renderGraph({nodes, edges});
 };
 
 onMounted(() => {

@@ -1,4 +1,5 @@
 export const NODE_CONFIGS_KEY = Symbol("compute-node-configs");
+export const GET_GRAPH_DATA_FN_KEY = Symbol("GET_GRAPH_DATA_FN_KEY");
 
 export const down_policy_all = "all"
 export const down_policy_first = "first"

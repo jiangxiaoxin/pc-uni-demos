@@ -6,6 +6,7 @@
     :width="1000"
     :maskClosable="false"
     @close="handleClose"
+    destroy-on-close
   >
     <template #extra>
       <a-button size="small" style="margin-right: 8px" @click="handleClose">

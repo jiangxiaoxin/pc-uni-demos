@@ -26,6 +26,7 @@
         @node-select="handleNodeSelect"
         @blank-click="handleBlankClick"
         @save-request="handleSaveRequest"
+
       />
     </div>
 
@@ -42,16 +43,20 @@ import FlowCanvas from "./FlowCanvas.vue";
 import PropertyPanel from "./PropertyPanel.vue";
 import { nodeTypes } from "./menus";
 import { getDetail } from "./request";
-import { NODE_CONFIGS_KEY } from "./symbols";
+import { GET_GRAPH_DATA_FN_KEY, NODE_CONFIGS_KEY } from "./symbols";
 
 const canvasRef = ref<InstanceType<typeof FlowCanvas> | null>(null);
 const propertyPanelRef = ref<InstanceType<typeof PropertyPanel> | null>(null);
 const nodeConfigs = ref<Record<string, any>>({});
 
 provide(NODE_CONFIGS_KEY, nodeConfigs);
+provide(GET_GRAPH_DATA_FN_KEY, () => {
+  const data = canvasRef.value?.getGraphData?.();
+  return data
+});
 
 const handleNodeSelect = (node: any) => {
-  console.log("🚀 选中节点", node)
+  console.log("🚀 选中节点", node);
   propertyPanelRef.value?.open(node);
 };
 

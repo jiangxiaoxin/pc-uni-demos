@@ -71,7 +71,6 @@ const props = withDefaults(defineProps<{
   modelValue: ConditionGroup
   isRoot?: boolean
 }>(), {
-  modelValue: () => createDefaultGroup(),
   isRoot: false,
 })
 

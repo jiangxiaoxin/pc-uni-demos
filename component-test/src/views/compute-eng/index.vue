@@ -4,7 +4,7 @@
       <div class="panel-title">可用节点</div>
       <div class="node-list">
         <div
-          v-for="node in nodeTypes"
+          v-for="node in allNodeTypes"
           :key="node.type"
           class="node-item"
           draggable="true"
@@ -26,7 +26,7 @@
         @node-select="handleNodeSelect"
         @blank-click="handleBlankClick"
         @save-request="handleSaveRequest"
-
+        @clear-request="handleClearRequest"
       />
     </div>
 
@@ -41,7 +41,7 @@
 import { onMounted, provide, ref } from "vue";
 import FlowCanvas from "./FlowCanvas.vue";
 import PropertyPanel from "./PropertyPanel.vue";
-import { nodeTypes } from "./menus";
+import { nodeTypes, allNodeTypes } from "./menus";
 import { getDetail } from "./request";
 import { GET_GRAPH_DATA_FN_KEY, NODE_CONFIGS_KEY } from "./symbols";
 
@@ -62,6 +62,10 @@ const handleNodeSelect = (node: any) => {
 
 const handleBlankClick = () => {
   propertyPanelRef.value?.close()
+};
+
+const handleClearRequest = () => {
+  nodeConfigs.value = {};
 };
 
 const handleUpdateTitle = (payload: { nodeId: string; title: string }) => {

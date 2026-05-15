@@ -27,6 +27,7 @@ const emit = defineEmits<{
   (e: "node-delete", nodeId: string): void;
   (e: "lf-inited"): void;
   (e: "save-request", data: any): void;
+  (e: "clear-request"): void;
 }>();
 
 const TeleportContainer = getTeleport();
@@ -212,6 +213,7 @@ const handleClear = () => {
   if (!lf) return;
   lf.clearData();
   emit("blank-click");
+  emit("clear-request");
 };
 
 onUnmounted(() => {

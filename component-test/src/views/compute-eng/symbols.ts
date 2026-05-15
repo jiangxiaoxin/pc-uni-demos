@@ -25,3 +25,16 @@ export const execute_engine_options = [
         label: 'Aviator赋值'
     },
 ]
+
+export const calc_mode_direct = "direct"
+export const calc_mode_math = "math"
+export const calc_mode_options = [
+    {
+        value: calc_mode_direct,
+        label: '直接取值'
+    },
+    {
+        value: calc_mode_math,
+        label: '数学运算'
+    }
+]

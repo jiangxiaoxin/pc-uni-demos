@@ -191,9 +191,13 @@
     });
   }
 
-  function choosePoint() {}
+  function choosePoint() {
+    // TODO 打开点位选择器
+  }
 
-  function chooseTemplate() {}
+  function chooseTemplate() {
+    // TODO 打开modal，选择模板
+  }
 
   function onFieldChange(event: any) {
     patch({ field: event.target.value });

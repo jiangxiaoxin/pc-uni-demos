@@ -57,17 +57,43 @@
           <a-select
             v-model:value="modelData.downPolicy"
             :options="down_policy_options"
-            style="flex: 1;"
+            style="flex: 1"
             size="small"
           ></a-select>
         </div>
         <div class="info-row">
           <span class="label">执行引擎</span>
-          <a-select v-model:value="modelData.executeEngine" :options="execute_engine_options" style="flex: 1;" size="small" @change="onEngineChange"></a-select>
+          <a-select
+            v-model:value="modelData.executeEngine"
+            :options="execute_engine_options"
+            style="flex: 1"
+            size="small"
+            @change="onEngineChange"
+          ></a-select>
         </div>
         <div v-if="modelData.executeEngine == execute_engine_aviator">
           <span class="label">条件配置</span>
-          <ConditionGroup v-model="modelData.condConfig" :is-root="true" style="margin-top: 8px;"/>
+          <ConditionGroup
+            v-model="modelData.condConfig"
+            :is-root="true"
+            style="margin-top: 8px"
+          />
+        </div>
+        <div v-if="modelData.executeEngine == execute_engine_assign">
+          <div class="info-row">
+            <span class="label">计算模式</span>
+            <a-select
+              v-model:value="modelData.calcConfig.calcMode"
+              :options="calc_mode_options"
+              style="flex: 1"
+              size="small"
+              @change="onCalcModeChange"
+            ></a-select>
+          </div>
+          <div class="info-row" v-if="isDirect">
+            <span class="label">取值来源</span>
+            <DirectConfig v-model="modelData.calcConfig.directSource" />
+          </div>
         </div>
       </div>
     </div>
@@ -76,12 +102,20 @@
 
 <script setup lang="ts">
   import { computed, inject, nextTick, ref, type Ref } from "vue";
-  import { execute_engine_aviator, NODE_CONFIGS_KEY } from "./symbols";
+  import {
+    calc_mode_direct,
+    calc_mode_math,
+    calc_mode_options,
+    execute_engine_assign,
+    execute_engine_aviator,
+    NODE_CONFIGS_KEY,
+  } from "./symbols";
   import { getNodeTypeConfig } from "./menus";
   import { down_policy_options, execute_engine_options } from "./symbols";
   import ConditionGroup from "./condition/ConditionGroup.vue";
-import { createDefaultGroup } from "./condition/types";
-import { createDefaultCalc } from "./calc/types";
+  import { createDefaultGroup } from "./condition/types";
+  import { createDefaultCalc } from "./calc/types";
+  import DirectConfig from "./calc/DirectConfig.vue"
 
   interface NodeData {
     id?: string;
@@ -109,6 +143,13 @@ import { createDefaultCalc } from "./calc/types";
     // calcConfig: {}, // 计算组配置
   });
 
+  const isDirect = computed(() => {
+    return modelData.value.calcConfig?.calcMode == calc_mode_direct;
+  })
+  const isMath = computed(() => {
+    return modelData.value.calcConfig?.calcMode == calc_mode_math;
+  })
+
   // 标题本地编辑值
   const titleValue = ref("");
   const localNodeData = ref<NodeData>({});
@@ -130,31 +171,42 @@ import { createDefaultCalc } from "./calc/types";
 
     try {
       // 如果直接从nodeConfigs 上拿值赋给 modelData，则 后续做的修改，会直接修改在整体的配置上
-      modelData.value = JSON.parse(JSON.stringify(nodeConfigs.value[nodeData.id!]));
+      modelData.value = JSON.parse(
+        JSON.stringify(nodeConfigs.value[nodeData.id!]),
+      );
     } catch (error) {
-      modelData.value = {}
+      modelData.value = {};
     }
-    
+
+    // 补全计算配置中的取值来源
+    if (modelData.value.calcConfig && !modelData.value.calcConfig.directSource) {
+      modelData.value.calcConfig.directSource = createDefaultCalc().directSource;
+    }
+
     visible.value = true;
   };
 
   const onEngineChange = (value: string) => {
-    console.log("🚀 ~ PropertyPanel.vue:140 ~ onEngineChange ~ value:", value)
+    console.log("🚀 ~ PropertyPanel.vue:140 ~ onEngineChange ~ value:", value);
     // TODO 切换后，要清空配置
     // 这会导致一个问题：先配cond，然后切换到calc，那cond 的配置会立马丢失，再回到cond时，需要从头开始配
     // 也可以在这里不清理，依然保留旧数据，而是在最后保存到后台时，根据当时的类型来决定保存什么数据
-    if(value == execute_engine_aviator) {
-      if(!modelData.value.condConfig) {
-        modelData.value.condConfig = createDefaultGroup()
+    if (value == execute_engine_aviator) {
+      if (!modelData.value.condConfig) {
+        modelData.value.condConfig = createDefaultGroup();
       }
-      modelData.value.calcConfig = null
+      modelData.value.calcConfig = null;
     } else {
-      if(!modelData.value.calcConfig) {
-        modelData.value.calcConfig = createDefaultCalc()
+      if (!modelData.value.calcConfig) {
+        modelData.value.calcConfig = createDefaultCalc();
       }
-      modelData.value.condConfig = null
+      modelData.value.condConfig = null;
     }
-  }
+  };
+
+  const onCalcModeChange = (value: string) => {
+    // TODO 计算模式变了
+  };
 
   const clearData = () => {
     nextTick(() => {
@@ -173,6 +225,11 @@ import { createDefaultCalc } from "./calc/types";
     if (localNodeId.value) {
       nodeConfigs.value[localNodeId.value] = modelData.value;
     }
+
+    // TODO
+    setTimeout(() => {
+      console.log("保存了", JSON.parse(JSON.stringify(modelData.value)))
+    }, 1000);
 
     handleClose();
   };
@@ -200,25 +257,23 @@ import { createDefaultCalc } from "./calc/types";
     font-size: 14px;
     min-height: 24px;
 
-    
-
     :deep(.ant-input) {
       flex: 1;
     }
   }
 
   .label {
-      color: #666;
-      flex-shrink: 0;
-      margin-right: 8px;
-      width: 120px;
-    }
+    color: #666;
+    flex-shrink: 0;
+    margin-right: 8px;
+    width: 120px;
+  }
 
-    .value {
-      color: #262626;
-      font-weight: 500;
-      flex: 1;
-    }
+  .value {
+    color: #262626;
+    font-weight: 500;
+    flex: 1;
+  }
 
   .config-section {
     margin-top: 16px;

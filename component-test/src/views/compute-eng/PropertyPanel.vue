@@ -94,6 +94,15 @@
             <span class="label">取值来源</span>
             <DirectConfig v-model="modelData.calcConfig.directSource" />
           </div>
+          <div v-if="isMath">
+            <span class="label">运算配置</span>
+            <MathGroup
+              v-if="modelData.calcConfig.mathConfig"
+              v-model="modelData.calcConfig.mathConfig"
+              :is-root="true"
+              style="margin-top: 8px"
+            />
+          </div>
         </div>
       </div>
     </div>
@@ -114,8 +123,9 @@
   import { down_policy_options, execute_engine_options } from "./symbols";
   import ConditionGroup from "./condition/ConditionGroup.vue";
   import { createDefaultGroup } from "./condition/types";
-  import { createDefaultCalc } from "./calc/types";
+  import { createDefaultCalc, createDefaultMathGroup } from "./calc/types";
   import DirectConfig from "./calc/DirectConfig.vue"
+  import MathGroup from "./calc/MathGroup.vue"
 
   interface NodeData {
     id?: string;
@@ -182,6 +192,10 @@
     if (modelData.value.calcConfig && !modelData.value.calcConfig.directSource) {
       modelData.value.calcConfig.directSource = createDefaultCalc().directSource;
     }
+    // 补全数学运算配置
+    if (modelData.value.calcConfig && !modelData.value.calcConfig.mathConfig) {
+      modelData.value.calcConfig.mathConfig = createDefaultMathGroup();
+    }
 
     visible.value = true;
   };
@@ -205,7 +219,9 @@
   };
 
   const onCalcModeChange = (value: string) => {
-    // TODO 计算模式变了
+    if (value === calc_mode_math && !modelData.value.calcConfig?.mathConfig) {
+      modelData.value.calcConfig.mathConfig = createDefaultMathGroup();
+    }
   };
 
   const clearData = () => {

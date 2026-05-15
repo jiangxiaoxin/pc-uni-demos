@@ -27,6 +27,7 @@ export interface DirectSourceConfig {
 export interface CalcConfig {
   calcMode?: string
   directSource?: DirectSourceConfig
+  mathConfig?: MathGroup
 }
 
 export function createDefaultCalc(): CalcConfig {
@@ -39,5 +40,69 @@ export function createDefaultCalc(): CalcConfig {
       point: undefined,
       field: undefined,
     },
+    mathConfig: undefined,
+  }
+}
+
+/* ==================== 数学运算配置 ==================== */
+
+import { v4 as uuidv4 } from 'uuid'
+
+export type MathOperator = '+' | '-' | '*' | '/'
+
+export const math_operator_add: MathOperator = '+'
+export const math_operator_sub: MathOperator = '-'
+export const math_operator_mul: MathOperator = '*'
+export const math_operator_div: MathOperator = '/'
+
+export const math_operator_options = [
+  { value: math_operator_add, label: '加' },
+  { value: math_operator_sub, label: '减' },
+  { value: math_operator_mul, label: '乘' },
+  { value: math_operator_div, label: '除' },
+]
+
+export interface MathItem {
+  id: string
+  type: 'item'
+  sourceType: string
+  value?: any
+  point?: string
+  field?: string
+  joinOperator?: MathOperator  // 与下一项的运算关系
+}
+
+export interface MathGroup {
+  id: string
+  type: 'group'
+  children: MathNode[]
+  joinOperator?: MathOperator  // 与下一项的运算关系
+}
+
+export type MathNode = MathItem | MathGroup
+
+export function genMathId(prefix: 'm' | 'mg' = 'm'): string {
+  return `${prefix}_${uuidv4()}`
+}
+
+export function createDefaultMathItem(): MathItem {
+  return {
+    id: genMathId('m'),
+    type: 'item',
+    sourceType: source_type_fixed,
+    value: undefined,
+    point: undefined,
+    field: undefined,
+  }
+}
+
+export function createDefaultMathGroup(): MathGroup {
+  return {
+    id: genMathId('mg'),
+    type: 'group',
+    children: [
+      { ...createDefaultMathItem(), joinOperator: math_operator_add },
+      createDefaultMathItem(),
+    ],
   }
 }

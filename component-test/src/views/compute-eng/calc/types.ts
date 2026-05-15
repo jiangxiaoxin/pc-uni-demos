@@ -48,12 +48,12 @@ export function createDefaultCalc(): CalcConfig {
 
 import { v4 as uuidv4 } from 'uuid'
 
-export type MathOperator = '+' | '-' | '*' | '/'
+export type MathOperator = 'ADD' | 'SUBTRACT' | 'MULTIPLY' | 'DIVIDE'
 
-export const math_operator_add: MathOperator = '+'
-export const math_operator_sub: MathOperator = '-'
-export const math_operator_mul: MathOperator = '*'
-export const math_operator_div: MathOperator = '/'
+export const math_operator_add: MathOperator = 'ADD'
+export const math_operator_sub: MathOperator = 'SUBTRACT'
+export const math_operator_mul: MathOperator = 'MULTIPLY'
+export const math_operator_div: MathOperator = 'DIVIDE'
 
 export const math_operator_options = [
   { value: math_operator_add, label: '加' },

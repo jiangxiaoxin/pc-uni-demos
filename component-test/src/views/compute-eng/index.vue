@@ -34,6 +34,10 @@
       ref="propertyPanelRef"
       @update-title="handleUpdateTitle"
     />
+    <TaskPropertyPanel
+      ref="taskPropertyPanelRef"
+      @update-title="handleUpdateTitle"
+    />
   </div>
 </template>
 
@@ -41,12 +45,14 @@
 import { onMounted, provide, ref } from "vue";
 import FlowCanvas from "./FlowCanvas.vue";
 import PropertyPanel from "./PropertyPanel.vue";
-import { nodeTypes, allNodeTypes } from "./menus";
+import TaskPropertyPanel from "./TaskPropertyPanel.vue";
+import { nodeTypes, allNodeTypes, NODE_TYPE } from "./menus";
 import { getDetail } from "./request";
 import { GET_GRAPH_DATA_FN_KEY, NODE_CONFIGS_KEY } from "./symbols";
 
 const canvasRef = ref<InstanceType<typeof FlowCanvas> | null>(null);
 const propertyPanelRef = ref<InstanceType<typeof PropertyPanel> | null>(null);
+const taskPropertyPanelRef = ref<InstanceType<typeof TaskPropertyPanel> | null>(null);
 const nodeConfigs = ref<Record<string, any>>({});
 
 provide(NODE_CONFIGS_KEY, nodeConfigs);
@@ -57,15 +63,22 @@ provide(GET_GRAPH_DATA_FN_KEY, () => {
 
 const handleNodeSelect = (node: any) => {
   console.log("🚀 选中节点", node);
-  propertyPanelRef.value?.open(node);
+  if (node.type === NODE_TYPE.TASK) {
+    taskPropertyPanelRef.value?.open(node);
+  } else {
+    propertyPanelRef.value?.open(node);
+  }
 };
 
 const handleBlankClick = () => {
-  propertyPanelRef.value?.close()
+  propertyPanelRef.value?.close();
+  taskPropertyPanelRef.value?.close();
 };
 
 const handleClearRequest = () => {
   nodeConfigs.value = {};
+  propertyPanelRef.value?.close();
+  taskPropertyPanelRef.value?.close();
 };
 
 const handleUpdateTitle = (payload: { nodeId: string; title: string }) => {

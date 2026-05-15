@@ -17,26 +17,11 @@
       </a-button>
     </template>
     <div class="property-content">
-      <div class="config-section">
-        <div class="section-title">节点配置</div>
-        <div class="info-row">
-          <span class="label">ID：</span>
-          <span class="value">{{ localNodeId || "未选择" }}</span>
-        </div>
-        <div class="info-row">
-          <span class="label">类型：</span>
-          <span class="value">{{ localNodeTypeName }}</span>
-        </div>
-
-        <div class="info-row">
-          <span class="label">标题：</span>
-          <a-input
-            v-model:value="titleValue"
-            placeholder="请输入节点标题"
-            size="small"
-          />
-        </div>
-      </div>
+      <NodeBaseConfig
+        :node-id="localNodeId"
+        :node-type-name="localNodeTypeName"
+        v-model:title="titleValue"
+      />
 
       <div class="config-section">
         <div class="section-title">属性配置</div>
@@ -126,6 +111,7 @@
   import { createDefaultCalc, createDefaultMathGroup } from "./calc/types";
   import DirectConfig from "./calc/DirectConfig.vue"
   import MathGroup from "./calc/MathGroup.vue"
+  import NodeBaseConfig from "./NodeBaseConfig.vue"
 
   interface NodeData {
     id?: string;

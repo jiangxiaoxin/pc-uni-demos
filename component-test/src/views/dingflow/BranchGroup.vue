@@ -1,5 +1,5 @@
 <template>
-  <div class="branch-group">
+  <div class="branch-group" :style="{ '--debug-box-color': debugBoxColor }">
     <div class="branch-group__toolbar">
       <div class="branch-title-card">
         <span>{{ node.title }}</span>
@@ -22,11 +22,7 @@
         class="branch-column"
       >
         <div class="branch-condition">
-          <input
-            v-model="branch.condition"
-            class="branch-condition__input"
-            aria-label="分支条件"
-          />
+          <span class="branch-condition__title">{{ branch.condition }}</span>
           <button type="button" @click="removeBranch(branchIndex)">删除</button>
         </div>
 
@@ -58,6 +54,7 @@
 <script setup lang="ts">
 import { defineAsyncComponent } from 'vue'
 import AddNodeButton from './AddNodeButton.vue'
+import { getDebugBoxColor } from './debugColor'
 import {
   createActionNode,
   createBranchLine,
@@ -73,6 +70,8 @@ const FlowSequence = defineAsyncComponent(() => import('./FlowSequence.vue'))
 const props = defineProps<{
   node: BranchFlowNode
 }>()
+
+const debugBoxColor = getDebugBoxColor(props.node.id)
 
 const emit = defineEmits<{
   addAfter: [type: AddableNodeKind]

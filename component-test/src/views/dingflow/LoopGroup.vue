@@ -1,5 +1,5 @@
 <template>
-  <div class="loop-group">
+  <div class="loop-group" :style="{ '--debug-box-color': debugBoxColor }">
     <div class="loop-group__toolbar">
       <div class="loop-title-card">
         <span>{{ node.title }}</span>
@@ -48,6 +48,7 @@
 <script setup lang="ts">
 import { defineAsyncComponent } from 'vue'
 import AddNodeButton from './AddNodeButton.vue'
+import { getDebugBoxColor } from './debugColor'
 import {
   createActionNode,
   createBranchNode,
@@ -61,6 +62,8 @@ const FlowSequence = defineAsyncComponent(() => import('./FlowSequence.vue'))
 const props = defineProps<{
   node: LoopFlowNode
 }>()
+
+const debugBoxColor = getDebugBoxColor(props.node.id)
 
 const emit = defineEmits<{
   addAfter: [type: AddableNodeKind]

@@ -5,14 +5,23 @@
         <h1>钉钉审批流编辑器</h1>
         <p>使用普通 HTML 元素和 CSS 连线实现，可递归嵌套条件分支。</p>
       </div>
-      <button class="reset-button" type="button" @click="resetFlow">重置示例</button>
+      <div class="header-actions">
+        <label class="debug-toggle">
+          <input v-model="showDebugBox" type="checkbox" />
+          <span>显示包围盒</span>
+        </label>
+        <button class="reset-button" type="button" @click="resetFlow">重置示例</button>
+      </div>
     </header>
 
     <main class="dingflow-layout">
       <section
         ref="editorShellRef"
         class="editor-shell"
-        :class="{ 'editor-shell--dragging': draggingCanvas }"
+        :class="{
+          'editor-shell--dragging': draggingCanvas,
+          'editor-shell--debug-box': showDebugBox,
+        }"
         aria-label="流程编辑区域"
         @mousedown="startCanvasDrag"
         @mousemove="moveCanvasDrag"
@@ -49,6 +58,7 @@ import {
 const flowNodes = ref<FlowNode[]>(createInitialFlow())
 const editorShellRef = ref<HTMLElement | null>(null)
 const draggingCanvas = ref(false)
+const showDebugBox = ref(false)
 const dragStart = {
   x: 0,
   y: 0,
@@ -150,6 +160,30 @@ function stopCanvasDrag() {
 
 .reset-button:hover {
   border-color: #64748b;
+}
+
+.header-actions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.debug-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: 34px;
+  padding: 0 10px;
+  border: 1px solid #cbd5e1;
+  border-radius: 6px;
+  background: #fff;
+  color: #334155;
+  font-size: 13px;
+  cursor: pointer;
+}
+
+.debug-toggle input {
+  margin: 0;
 }
 
 .dingflow-layout {
@@ -397,6 +431,23 @@ function stopCanvasDrag() {
   min-width: max-content;
 }
 
+.editor-shell--debug-box :deep(.branch-group::before),
+.editor-shell--debug-box :deep(.loop-group::before) {
+  content: "";
+  position: absolute;
+  inset: -10px -12px;
+  z-index: 0;
+  border: 1px dashed var(--debug-box-color, #334155);
+  border-radius: 8px;
+  pointer-events: none;
+}
+
+:deep(.branch-group > *),
+:deep(.loop-group > *) {
+  position: relative;
+  z-index: 1;
+}
+
 :deep(.branch-group__toolbar) {
   position: relative;
   z-index: 2;
@@ -563,16 +614,17 @@ function stopCanvasDrag() {
   box-shadow: 0 6px 16px rgba(245, 158, 11, 0.1);
 }
 
-:deep(.branch-condition__input) {
+:deep(.branch-condition__title) {
   min-width: 0;
   flex: 1;
-  height: 30px;
-  border: 1px solid #fed7aa;
-  border-radius: 4px;
-  padding: 0 8px;
+  padding: 0 4px;
   color: #92400e;
-  background: #fff;
   font-size: 13px;
+  font-weight: 600;
+  line-height: 26px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 :deep(.branch-condition button) {

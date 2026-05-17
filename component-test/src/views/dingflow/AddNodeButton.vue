@@ -1,5 +1,5 @@
 <template>
-  <div class="add-node">
+  <div ref="addNodeRef" class="add-node">
     <span class="add-node__line" aria-hidden="true"></span>
     <div class="add-node__actions" :class="{ 'add-node__actions--open': open }">
       <button
@@ -21,7 +21,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue'
+import { onBeforeUnmount, ref, watch } from 'vue'
 import type { AddableNodeKind } from './types'
 
 const emit = defineEmits<{
@@ -31,6 +31,7 @@ const emit = defineEmits<{
 }>()
 
 const open = ref(false)
+const addNodeRef = ref<HTMLElement | null>(null)
 
 function toggleMenu() {
   open.value = !open.value
@@ -47,4 +48,24 @@ function selectNode(type: AddableNodeKind) {
 
   open.value = false
 }
+
+function handleDocumentPointerDown(event: PointerEvent) {
+  const addNode = addNodeRef.value
+  // 如果点击的是这个容器下的元素，则不关闭菜单
+  if (!addNode || addNode.contains(event.target as Node)) return
+
+  open.value = false
+}
+
+watch(open, (value) => {
+  if (value) {
+    document.addEventListener('pointerdown', handleDocumentPointerDown)
+  } else {
+    document.removeEventListener('pointerdown', handleDocumentPointerDown)
+  }
+})
+
+onBeforeUnmount(() => {
+  document.removeEventListener('pointerdown', handleDocumentPointerDown)
+})
 </script>

@@ -1,3 +1,7 @@
+/**
+ * 根据节点 id 生成稳定的深色调试色。
+ * 这里不使用真正的随机数，避免组件重新渲染后包围盒颜色跳变。
+ */
 export function getDebugBoxColor(id: string) {
   let hash = 0
 

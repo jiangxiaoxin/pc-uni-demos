@@ -3,8 +3,16 @@
     <div class="branch-group__toolbar">
       <div class="branch-title-card">
         <span>{{ node.title }}</span>
+        <button
+          class="branch-title-card__delete"
+          type="button"
+          aria-label="删除条件分支"
+          @click="emit('remove')"
+        >
+          删除
+        </button>
       </div>
-      <button type="button" @click="addBranch">增加分支</button>
+      <button class="branch-add-button" type="button" @click="addBranch">增加分支</button>
     </div>
 
     <div class="branch-group__body" :style="{ '--branch-count': String(node.branches.length) }">

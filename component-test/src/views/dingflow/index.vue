@@ -405,7 +405,7 @@ function stopCanvasDrag() {
   font-weight: 600;
 }
 
-:deep(.branch-group__toolbar button) {
+:deep(.branch-add-button) {
   position: relative;
   height: 28px;
   padding: 0 10px;
@@ -416,7 +416,7 @@ function stopCanvasDrag() {
   cursor: pointer;
 }
 
-:deep(.branch-group__toolbar button::before) {
+:deep(.branch-add-button::before) {
   content: "";
   position: absolute;
   left: 50%;
@@ -428,12 +428,13 @@ function stopCanvasDrag() {
 }
 
 :deep(.branch-title-card) {
+  position: relative;
   display: flex;
   align-items: center;
   justify-content: center;
   width: 180px;
   min-height: 54px;
-  padding: 12px 14px;
+  padding: 12px 58px 12px 14px;
   border: 1px solid transparent;
   border-radius: 6px;
   background: #7c3aed;
@@ -444,6 +445,25 @@ function stopCanvasDrag() {
 :deep(.branch-title-card span) {
   font-size: 15px;
   font-weight: 700;
+}
+
+:deep(.branch-title-card__delete) {
+  position: absolute;
+  right: 10px;
+  top: 50%;
+  height: 28px;
+  padding: 0 8px;
+  border: 1px solid rgba(255, 255, 255, 0.55);
+  border-radius: 4px;
+  background: rgba(255, 255, 255, 0.16);
+  color: #fff;
+  font-size: 12px;
+  cursor: pointer;
+  transform: translateY(-50%);
+}
+
+:deep(.branch-title-card__delete:hover) {
+  background: rgba(255, 255, 255, 0.28);
 }
 
 :deep(.branch-group__body) {

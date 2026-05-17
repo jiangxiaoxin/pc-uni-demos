@@ -8,6 +8,13 @@
         @remove="emit('removeNode', index)"
       />
 
+      <LoopGroup
+        v-else-if="node.type === 'loop'"
+        :node="node"
+        @add-after="emit('addAfter', index, $event)"
+        @remove="emit('removeNode', index)"
+      />
+
       <div
         v-else
         class="flow-node-block"
@@ -37,6 +44,7 @@
           v-if="node.type !== 'end'"
           @add-action="emit('addAfter', index, 'action')"
           @add-branch="emit('addAfter', index, 'branch')"
+          @add-loop="emit('addAfter', index, 'loop')"
         />
       </div>
     </template>
@@ -46,14 +54,15 @@
 <script setup lang="ts">
 import AddNodeButton from './AddNodeButton.vue'
 import BranchGroup from './BranchGroup.vue'
-import type { FlowNode } from './types'
+import LoopGroup from './LoopGroup.vue'
+import type { AddableNodeKind, FlowNode } from './types'
 
 defineProps<{
   nodes: FlowNode[]
 }>()
 
 const emit = defineEmits<{
-  addAfter: [index: number, type: 'action' | 'branch']
+  addAfter: [index: number, type: AddableNodeKind]
   removeNode: [index: number]
 }>()
 
@@ -61,6 +70,7 @@ const nodeTypeText = {
   start: '开始',
   action: '动作',
   branch: '分支',
+  loop: '循环',
   end: '结束',
 } as const
 </script>

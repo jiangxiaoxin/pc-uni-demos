@@ -33,6 +33,7 @@
         <AddNodeButton
           @add-action="addBranchChild(branch.children, 'action')"
           @add-branch="addBranchChild(branch.children, 'branch')"
+          @add-loop="addBranchChild(branch.children, 'loop')"
         />
 
         <FlowSequence
@@ -48,6 +49,7 @@
       <AddNodeButton
         @add-action="emit('addAfter', 'action')"
         @add-branch="emit('addAfter', 'branch')"
+        @add-loop="emit('addAfter', 'loop')"
       />
     </div>
   </div>
@@ -60,6 +62,8 @@ import {
   createActionNode,
   createBranchLine,
   createBranchNode,
+  createLoopNode,
+  type AddableNodeKind,
   type BranchFlowNode,
   type FlowNode,
 } from './types'
@@ -71,19 +75,21 @@ const props = defineProps<{
 }>()
 
 const emit = defineEmits<{
-  addAfter: [type: 'action' | 'branch']
+  addAfter: [type: AddableNodeKind]
   remove: []
 }>()
 
-function createNextNode(type: 'action' | 'branch') {
-  return type === 'action' ? createActionNode() : createBranchNode()
+function createNextNode(type: AddableNodeKind) {
+  if (type === 'action') return createActionNode()
+  if (type === 'branch') return createBranchNode()
+  return createLoopNode()
 }
 
-function addBranchChild(children: FlowNode[], type: 'action' | 'branch') {
+function addBranchChild(children: FlowNode[], type: AddableNodeKind) {
   children.unshift(createNextNode(type))
 }
 
-function addAfter(nodes: FlowNode[], index: number, type: 'action' | 'branch') {
+function addAfter(nodes: FlowNode[], index: number, type: AddableNodeKind) {
   nodes.splice(index + 1, 0, createNextNode(type))
 }
 

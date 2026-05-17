@@ -1,4 +1,5 @@
-export type FlowNodeKind = 'start' | 'action' | 'branch' | 'end'
+export type FlowNodeKind = 'start' | 'action' | 'branch' | 'loop' | 'end'
+export type AddableNodeKind = 'action' | 'branch' | 'loop'
 
 export interface BaseFlowNode {
   id: string
@@ -21,7 +22,12 @@ export interface BranchFlowNode extends BaseFlowNode {
   branches: BranchLine[]
 }
 
-export type FlowNode = SimpleFlowNode | BranchFlowNode
+export interface LoopFlowNode extends BaseFlowNode {
+  type: 'loop'
+  children: FlowNode[]
+}
+
+export type FlowNode = SimpleFlowNode | BranchFlowNode | LoopFlowNode
 
 let seed = 0
 
@@ -68,6 +74,15 @@ export function createBranchNode(): BranchFlowNode {
     type: 'branch',
     title: '条件分支',
     branches: [createBranchLine(1), createBranchLine(2)],
+  }
+}
+
+export function createLoopNode(): LoopFlowNode {
+  return {
+    id: createId('loop'),
+    type: 'loop',
+    title: '循环节点',
+    children: [],
   }
 }
 

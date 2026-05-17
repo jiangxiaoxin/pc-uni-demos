@@ -9,11 +9,12 @@
         :aria-expanded="open"
         @click="toggleMenu"
       >
-        <span>+</span>
+        <span>下一步</span>
       </button>
       <div class="add-node__menu">
         <button type="button" @click="selectNode('action')">动作</button>
         <button type="button" @click="selectNode('branch')">分支</button>
+        <button type="button" @click="selectNode('loop')">循环</button>
       </div>
     </div>
   </div>
@@ -21,10 +22,12 @@
 
 <script setup lang="ts">
 import { ref } from 'vue'
+import type { AddableNodeKind } from './types'
 
 const emit = defineEmits<{
   addAction: []
   addBranch: []
+  addLoop: []
 }>()
 
 const open = ref(false)
@@ -33,11 +36,13 @@ function toggleMenu() {
   open.value = !open.value
 }
 
-function selectNode(type: 'action' | 'branch') {
+function selectNode(type: AddableNodeKind) {
   if (type === 'action') {
     emit('addAction')
-  } else {
+  } else if (type === 'branch') {
     emit('addBranch')
+  } else {
+    emit('addLoop')
   }
 
   open.value = false

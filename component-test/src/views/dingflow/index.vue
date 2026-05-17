@@ -15,25 +15,31 @@
     </header>
 
     <main class="dingflow-layout">
-      <section
-        ref="editorShellRef"
-        class="editor-shell"
-        :class="{
-          'editor-shell--dragging': draggingCanvas,
-          'editor-shell--debug-box': showDebugBox,
-        }"
-        aria-label="流程编辑区域"
-        @mousedown="startCanvasDrag"
-        @mousemove="moveCanvasDrag"
-        @mouseup="stopCanvasDrag"
-        @mouseleave="stopCanvasDrag"
-      >
-        <FlowSequence
+      <div class="editor-shell-wrap">
+        <section
+          ref="editorShellRef"
+          class="editor-shell"
+          :class="{
+            'editor-shell--dragging': draggingCanvas,
+            'editor-shell--debug-box': showDebugBox,
+          }"
+          aria-label="流程编辑区域"
+          @mousedown="startCanvasDrag"
+          @mousemove="moveCanvasDrag"
+          @mouseup="stopCanvasDrag"
+          @mouseleave="stopCanvasDrag"
+        >
+          <FlowSequence
+            :nodes="flowNodes"
+            @add-after="addAfter"
+            @remove-node="removeNode"
+          />
+        </section>
+        <EditorMinimap
           :nodes="flowNodes"
-          @add-after="addAfter"
-          @remove-node="removeNode"
+          :editor-shell="editorShellRef"
         />
-      </section>
+      </div>
 
       <aside class="json-panel">
         <div class="json-panel__title">配置 JSON</div>
@@ -45,6 +51,7 @@
 
 <script setup lang="ts">
 import { computed, ref } from 'vue'
+import EditorMinimap from './EditorMinimap.vue'
 import FlowSequence from './FlowSequence.vue'
 import {
   createActionNode,
@@ -201,11 +208,19 @@ function stopCanvasDrag() {
   min-height: 0;
 }
 
+.editor-shell-wrap {
+  --flow-bg: #fff;
+
+  position: relative;
+  flex: 1 1 auto;
+  min-width: 0;
+  height: 100%;
+  min-height: 0;
+}
+
 .editor-shell {
   --flow-bg: #fff;
 
-  flex: 1 1 auto;
-  min-width: 0;
   /* 主体区域由外层 flex 分配高度；编辑区自身滚动，避免页面再出现第二层纵向滚动条。 */
   height: 100%;
   min-height: 0;

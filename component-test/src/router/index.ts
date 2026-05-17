@@ -30,6 +30,11 @@ const routes = [
     path: '/compute',
     name: 'compute',
     component: () => import("../views/compute-eng/index.vue")
+  },
+  {
+    path: '/dingflow',
+    name: 'DingFlow',
+    component: () => import('../views/dingflow/index.vue')
   }
 ]
 

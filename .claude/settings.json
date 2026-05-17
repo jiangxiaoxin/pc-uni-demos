@@ -1,0 +1,12 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(curl -s http://localhost:5177/dingflow)",
+      "Bash(npx playwright *)",
+      "Read(//c/Users/ASUS/AppData/Local/Temp/**)",
+      "Bash(npx playwright-core eval --browser=chromium ' *)",
+      "Bash(node -e ' *)",
+      "Bash(npx -y playwright@latest screenshot --browser=chromium --viewport-size=1400,800 --wait-for-timeout=3000 http://localhost:5177/dingflow /tmp/dingflow-check.png)"
+    ]
+  }
+}

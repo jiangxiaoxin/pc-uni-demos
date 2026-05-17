@@ -9,7 +9,8 @@
       "Bash(python -c \"print\\('test'\\)\")",
       "Bash(python -c ' *)",
       "Bash(xargs grep *)",
-      "Bash(npm run *)"
+      "Bash(npm run *)",
+      "WebFetch(domain:open-wflow.willianfu.top)"
     ]
   }
 }

@@ -1,5 +1,5 @@
 <template>
-  <div class="loop-group" :style="{ '--debug-box-color': debugBoxColor }">
+  <div class="loop-group">
     <div class="loop-group__toolbar">
       <div class="loop-title-card">
         <span>{{ node.title }}</span>
@@ -48,7 +48,6 @@
 <script setup lang="ts">
 import { defineAsyncComponent } from 'vue'
 import AddNodeButton from './AddNodeButton.vue'
-import { getDebugBoxColor } from './debugColor'
 import {
   createActionNode,
   createBranchNode,
@@ -63,8 +62,6 @@ const FlowSequence = defineAsyncComponent(() => import('./FlowSequence.vue'))
 const props = defineProps<{
   node: LoopFlowNode
 }>()
-
-const debugBoxColor = getDebugBoxColor(props.node.id)
 
 const emit = defineEmits<{
   addAfter: [type: AddableNodeKind]
@@ -101,22 +98,6 @@ function removeChild(index: number) {
   flex-direction: column;
   align-items: center;
   min-width: max-content;
-}
-
-:global(.editor-shell--debug-box) .loop-group::before {
-  /* 调试包围盒不参与布局，只用来观察递归节点真实占位。 */
-  content: "";
-  position: absolute;
-  inset: -10px -12px;
-  z-index: 0;
-  border: 1px dashed var(--debug-box-color, #334155);
-  border-radius: 8px;
-  pointer-events: none;
-}
-
-.loop-group > * {
-  position: relative;
-  z-index: 1;
 }
 
 .loop-group__toolbar {

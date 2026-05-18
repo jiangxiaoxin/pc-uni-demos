@@ -1,5 +1,5 @@
 <template>
-  <div class="branch-group" :style="{ '--debug-box-color': debugBoxColor }">
+  <div class="branch-group">
     <div class="branch-group__toolbar">
       <div class="branch-title-card">
         <span>{{ node.title }}</span>
@@ -54,7 +54,6 @@
 <script setup lang="ts">
 import { defineAsyncComponent } from 'vue'
 import AddNodeButton from './AddNodeButton.vue'
-import { getDebugBoxColor } from './debugColor'
 import {
   createActionNode,
   createBranchLine,
@@ -71,8 +70,6 @@ const FlowSequence = defineAsyncComponent(() => import('./FlowSequence.vue'))
 const props = defineProps<{
   node: BranchFlowNode
 }>()
-
-const debugBoxColor = getDebugBoxColor(props.node.id)
 
 const emit = defineEmits<{
   addAfter: [type: AddableNodeKind]
@@ -123,22 +120,6 @@ function removeBranch(index: number) {
   flex-direction: column;
   align-items: center;
   min-width: max-content;
-}
-
-:global(.editor-shell--debug-box) .branch-group::before {
-  /* 调试包围盒不参与布局，只用来观察递归节点真实占位。 */
-  content: "";
-  position: absolute;
-  inset: -10px -12px;
-  z-index: 0;
-  border: 1px dashed var(--debug-box-color, #334155);
-  border-radius: 8px;
-  pointer-events: none;
-}
-
-.branch-group > * {
-  position: relative;
-  z-index: 1;
 }
 
 .branch-group__toolbar {

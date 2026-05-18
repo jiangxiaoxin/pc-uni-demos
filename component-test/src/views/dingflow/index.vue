@@ -6,10 +6,6 @@
         <p>使用普通 HTML 元素和 CSS 连线实现，可递归嵌套条件分支。</p>
       </div>
       <div class="header-actions">
-        <label class="debug-toggle">
-          <input v-model="showDebugBox" type="checkbox" />
-          <span>显示包围盒</span>
-        </label>
         <button class="reset-button" type="button" @click="resetFlow">重置示例</button>
       </div>
     </header>
@@ -21,7 +17,6 @@
           class="editor-shell"
           :class="{
             'editor-shell--dragging': draggingCanvas,
-            'editor-shell--debug-box': showDebugBox,
           }"
           aria-label="流程编辑区域"
           @mousedown="startCanvasDrag"
@@ -65,7 +60,6 @@ import {
 const flowNodes = ref<FlowNode[]>(createInitialFlow())
 const editorShellRef = ref<HTMLElement | null>(null)
 const draggingCanvas = ref(false)
-const showDebugBox = ref(false)
 
 // 记录按下鼠标时的滚动位置，用鼠标位移反向更新 scrollLeft/scrollTop 实现画布拖拽。
 const dragStart = {
@@ -180,24 +174,6 @@ function stopCanvasDrag() {
   display: flex;
   align-items: center;
   gap: 12px;
-}
-
-.debug-toggle {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  height: 34px;
-  padding: 0 10px;
-  border: 1px solid #cbd5e1;
-  border-radius: 6px;
-  background: #fff;
-  color: #334155;
-  font-size: 13px;
-  cursor: pointer;
-}
-
-.debug-toggle input {
-  margin: 0;
 }
 
 .dingflow-layout {

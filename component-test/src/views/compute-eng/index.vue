@@ -53,7 +53,7 @@ import TaskPropertyPanel from "./TaskPropertyPanel.vue";
 import EndPropertyPanel from "./EndPropertyPanel.vue";
 import { nodeTypes, allNodeTypes, NODE_TYPE } from "./menus";
 import { getDetail } from "./request";
-import { GET_GRAPH_DATA_FN_KEY, NODE_CONFIGS_KEY } from "./symbols";
+import { GET_GRAPH_DATA_FN_KEY, NODE_CONFIGS_KEY, GET_TASK_NODE_DATA_FN_KEY } from "./symbols";
 
 const canvasRef = ref<InstanceType<typeof FlowCanvas> | null>(null);
 const propertyPanelRef = ref<InstanceType<typeof PropertyPanel> | null>(null);
@@ -66,6 +66,11 @@ provide(GET_GRAPH_DATA_FN_KEY, () => {
   const data = canvasRef.value?.getGraphData?.();
   return data
 });
+provide(GET_TASK_NODE_DATA_FN_KEY, () => {
+  const data = canvasRef.value?.getGraphData() as {nodes: [], edges: []}
+  const taskNode = data?.nodes.find((node: any) => node.type === NODE_TYPE.TASK)
+  return nodeConfigs.value[taskNode?.id] ?? {}
+})
 
 const handleNodeSelect = (node: any) => {
   console.log("🚀 选中节点", node);

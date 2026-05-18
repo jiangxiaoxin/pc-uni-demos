@@ -104,6 +104,7 @@
     calc_mode_options,
     execute_engine_assign,
     execute_engine_aviator,
+    GET_TASK_NODE_DATA_FN_KEY,
     NODE_CONFIGS_KEY,
   } from "./symbols";
   import { getNodeTypeConfig } from "./menus";
@@ -133,6 +134,10 @@
     NODE_CONFIGS_KEY,
     ref({}),
   );
+
+  const taskNodeConfig = inject<Function>(GET_TASK_NODE_DATA_FN_KEY)
+
+  
 
   const modelData = ref<any>({
     // priority: null, // 优先级
@@ -188,6 +193,9 @@
     }
 
     visible.value = true;
+
+    console.log('task 节点', taskNodeConfig!()); // 可以获取任务节点配置的数据
+    
   };
 
   const onEngineChange = (value: string) => {

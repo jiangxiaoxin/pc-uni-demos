@@ -38,3 +38,48 @@ export const calc_mode_options = [
         label: '数学运算'
     }
 ]
+
+export type TimerUnit = 'millisecond' | 'second' | 'minute' | 'hour' | 'day' | 'week' | 'month' | 'year'
+
+export  interface TimeIntervalConfig {
+    value?: number | null
+    unit: TimerUnit
+  }
+
+export  interface NodeTimeConfig {
+    scope?: string
+    interval: TimeIntervalConfig
+    maxTimes?: number | null
+    concurrencyPolicy?: string
+  }
+
+  export const defaultTimeConfig = (): NodeTimeConfig => ({
+    scope: undefined,
+    interval: {
+      value: null,
+      unit: 'second',
+    },
+    maxTimes: null,
+    concurrencyPolicy: undefined,
+  })
+
+  export const timerScopeOptions = [
+    { value: 'TASK', label: 'TASK' },
+    { value: 'OPERATOR', label: 'OPERATOR' },
+  ]
+
+  export const timerUnitOptions = [
+    { value: 'millisecond', label: '毫秒' },
+    { value: 'second', label: '秒' },
+    { value: 'minute', label: '分' },
+    { value: 'hour', label: '时' },
+    { value: 'day', label: '天' },
+    { value: 'week', label: '周' },
+    { value: 'month', label: '月' },
+    { value: 'year', label: '年' },
+  ]
+
+  export const concurrencyPolicyOptions = [
+    { value: 'SERIAL', label: 'SERIAL' },
+    { value: 'SKIP', label: 'SKIP' },
+  ]

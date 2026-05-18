@@ -90,6 +90,8 @@
           </div>
         </div>
       </div>
+
+      <NodeTimeConfig v-model="modelData.timeConfig" />
     </div>
   </a-drawer>
 </template>
@@ -112,6 +114,7 @@
   import DirectConfig from "./calc/DirectConfig.vue"
   import MathGroup from "./calc/MathGroup.vue"
   import NodeBaseConfig from "./NodeBaseConfig.vue"
+  import NodeTimeConfig from "./NodeTimeConfig.vue";
 
   interface NodeData {
     id?: string;
@@ -137,6 +140,7 @@
     // executeEngine: null, // 执行引擎
     // condConfig: {}, // 条件组配置
     // calcConfig: {}, // 计算组配置
+    // timeConfig: {}, // 定时配置
   });
 
   const isDirect = computed(() => {
@@ -188,7 +192,7 @@
 
   const onEngineChange = (value: string) => {
     console.log("🚀 ~ PropertyPanel.vue:140 ~ onEngineChange ~ value:", value);
-    // TODO 切换后，要清空配置
+    //  切换后，要清空配置
     // 这会导致一个问题：先配cond，然后切换到calc，那cond 的配置会立马丢失，再回到cond时，需要从头开始配
     // 也可以在这里不清理，依然保留旧数据，而是在最后保存到后台时，根据当时的类型来决定保存什么数据
     if (value == execute_engine_aviator) {

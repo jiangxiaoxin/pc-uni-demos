@@ -69,16 +69,17 @@ provide(GET_GRAPH_DATA_FN_KEY, () => {
 
 const handleNodeSelect = (node: any) => {
   console.log("🚀 选中节点", node);
-  // 统一行为：关闭所有面板，再打开对应面板
-  propertyPanelRef.value?.close();
-  taskPropertyPanelRef.value?.close();
-  endPropertyPanelRef.value?.close();
-
   if (node.type === NODE_TYPE.TASK) {
+    propertyPanelRef.value?.close();
+    endPropertyPanelRef.value?.close();
     taskPropertyPanelRef.value?.open(node);
   } else if (node.type === NODE_TYPE.END) {
+    propertyPanelRef.value?.close();
+    taskPropertyPanelRef.value?.close();
     endPropertyPanelRef.value?.open(node);
   } else {
+    taskPropertyPanelRef.value?.close();
+    endPropertyPanelRef.value?.close();
     propertyPanelRef.value?.open(node);
   }
 };

@@ -1,12 +1,17 @@
 <template>
   <div class="cond-item">
     <a-select
+      v-if="!fixedConditionSource"
       :value="modelValue.conditionSource"
       :options="condition_source_options"
       @change="onConditionSourceChange"
       size="small"
       placeholder="条件来源"
     ></a-select>
+    <div v-else class="fixed-text">
+      <span class="fixed-label">条件来源</span>
+      <span class="fixed-value">{{ fixedConditionSourceLabel }}</span>
+    </div>
 
     <a-input
       v-if="isTemplate"
@@ -22,15 +27,19 @@
       </template>
     </a-input>
 
+    <div v-if="isPoint && fixedConditionSource" class="fixed-text">
+      <span class="fixed-label">设备点位</span>
+      <span class="fixed-value">{{ fixedPointLabel || '请选择采样指标' }}</span>
+    </div>
     <a-input
-      v-if="isPoint"
-      :value="modelValue.point"
+      v-else-if="isPoint"
+      :value="fixedPointLabel || modelValue.point"
       disabled
       size="small"
       placeholder="设备点位"
     >
-      <template #addonAfter>
-        <span @click.stop="choosePoint" style="cursor: pointer">
+      <template #addonAfter v-if="!fixedPoint">
+        <span  @click.stop="choosePoint" style="cursor: pointer">
           选择点位
         </span>
       </template>
@@ -128,24 +137,37 @@
 
   const props = defineProps<{
     modelValue: any;
+    fixedConditionSource?: string;
+    fixedPoint?: string;
+    fixedPointLabel?: string;
   }>();
 
   // console.log('item data', props.modelValue);
 
   const isCustomize = computed(() => {
-    return props.modelValue.conditionSource === condition_source_customize;
+    return conditionSource.value === condition_source_customize;
   });
 
   const isPoint = computed(() => {
-    return props.modelValue.conditionSource === condition_source_point;
+    return conditionSource.value === condition_source_point;
   });
 
   const isTemplate = computed(() => {
-    return props.modelValue.conditionSource === condition_source_template;
+    return conditionSource.value === condition_source_template;
   });
 
   const isNodeVar = computed(() => {
-    return props.modelValue.conditionSource === condition_source_node;
+    return conditionSource.value === condition_source_node;
+  });
+
+  const conditionSource = computed(() => {
+    return props.fixedConditionSource ?? props.modelValue.conditionSource;
+  });
+
+  const fixedPoint = computed(() => props.fixedPoint);
+  const fixedPointLabel = computed(() => props.fixedPointLabel || props.fixedPoint || "");
+  const fixedConditionSourceLabel = computed(() => {
+    return condition_source_options.find((item) => item.value === props.fixedConditionSource)?.label || "";
   });
 
   const getGraphData = inject(GET_GRAPH_DATA_FN_KEY, () => {});
@@ -173,7 +195,12 @@
   function patch(part: any) {
     console.log("🚀 ~ ConditionItem.vue:34 ~ patch ~ part:", part);
 
-    emit("update:modelValue", { ...props.modelValue, ...part });
+    emit("update:modelValue", {
+      ...props.modelValue,
+      conditionSource: props.fixedConditionSource ?? props.modelValue.conditionSource,
+      point: props.fixedConditionSource || props.fixedPoint !== undefined ? props.fixedPoint : props.modelValue.point,
+      ...part,
+    });
   }
 
   // 条件来源改变了，所有数据都要重置
@@ -247,7 +274,30 @@
     box-shadow: 0 2px 8px rgba(102, 126, 234, 0.08);
   }
 
-  .cond-item :deep(.ant-input-disabled) {
-    background: transparent !important;
+  .fixed-text {
+    display: flex;
+    align-items: center;
+    min-height: 24px;
+    padding: 0 8px;
+    font-size: 13px;
+    line-height: 22px;
+    background: #f5f5f5;
+    border: 1px solid #d9d9d9;
+    border-radius: 4px;
+  }
+
+  .fixed-label {
+    flex-shrink: 0;
+    color: #666;
+  }
+
+  .fixed-label::after {
+    content: "：";
+  }
+
+  .fixed-value {
+    min-width: 0;
+    color: #262626;
+    word-break: break-all;
   }
 </style>

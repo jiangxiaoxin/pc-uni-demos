@@ -25,12 +25,18 @@
           <CondGroup
             v-if="child.type === 'group'"
             :model-value="child"
+            :fixed-condition-source="fixedConditionSource"
+            :fixed-point="fixedPoint"
+            :fixed-point-label="fixedPointLabel"
             @update:model-value="val => updateChild(idx, val)"
             @remove="removeChild(idx)"
           />
           <CondItem
             v-else
             :model-value="child"
+            :fixed-condition-source="fixedConditionSource"
+            :fixed-point="fixedPoint"
+            :fixed-point-label="fixedPointLabel"
             @update:model-value="val => updateChild(idx, val)"
             @remove="removeChild(idx)"
           />
@@ -70,6 +76,9 @@ defineOptions({ name: 'CondGroup' })
 const props = withDefaults(defineProps<{
   modelValue: ConditionGroup
   isRoot?: boolean
+  fixedConditionSource?: string
+  fixedPoint?: string
+  fixedPointLabel?: string
 }>(), {
   isRoot: false,
 })
@@ -81,6 +90,26 @@ const emit = defineEmits<{
 
 const children = computed(() => props.modelValue.children)
 const logic = computed(() => props.modelValue.logic)
+const fixedConditionSource = computed(() => props.fixedConditionSource)
+const fixedPoint = computed(() => props.fixedPoint)
+const fixedPointLabel = computed(() => props.fixedPointLabel)
+
+function applyFixedConfig(node: CondNode): CondNode {
+  if (!props.fixedConditionSource && props.fixedPoint === undefined) return node
+
+  if (node.type === 'group') {
+    return {
+      ...node,
+      children: node.children.map((child) => applyFixedConfig(child)),
+    }
+  }
+
+  return {
+    ...node,
+    conditionSource: props.fixedConditionSource ?? node.conditionSource,
+    point: props.fixedConditionSource || props.fixedPoint !== undefined ? props.fixedPoint : node.point,
+  }
+}
 
 function setLogic(newLogic: Logic) {
   if (props.modelValue.logic === newLogic) return
@@ -89,7 +118,7 @@ function setLogic(newLogic: Logic) {
 
 function updateChild(idx: number, val: CondNode) {
   const next = props.modelValue.children.slice()
-  next[idx] = val
+  next[idx] = applyFixedConfig(val)
   emit('update:modelValue', { ...props.modelValue, children: next })
 }
 
@@ -102,7 +131,7 @@ function removeChild(idx: number) {
 function addCondition() {
   emit('update:modelValue', {
     ...props.modelValue,
-    children: [...props.modelValue.children, createDefaultCondition()],
+    children: [...props.modelValue.children, applyFixedConfig(createDefaultCondition())],
   })
 }
 
@@ -111,7 +140,7 @@ function addGroup() {
     ...props.modelValue,
     children: [
       ...props.modelValue.children,
-      createDefaultGroup(),
+      applyFixedConfig(createDefaultGroup()),
     ],
   })
 }

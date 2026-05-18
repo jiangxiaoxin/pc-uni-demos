@@ -38,6 +38,10 @@
       ref="taskPropertyPanelRef"
       @update-title="handleUpdateTitle"
     />
+    <EndPropertyPanel
+      ref="endPropertyPanelRef"
+      @update-title="handleUpdateTitle"
+    />
   </div>
 </template>
 
@@ -46,6 +50,7 @@ import { onMounted, provide, ref } from "vue";
 import FlowCanvas from "./FlowCanvas.vue";
 import PropertyPanel from "./PropertyPanel.vue";
 import TaskPropertyPanel from "./TaskPropertyPanel.vue";
+import EndPropertyPanel from "./EndPropertyPanel.vue";
 import { nodeTypes, allNodeTypes, NODE_TYPE } from "./menus";
 import { getDetail } from "./request";
 import { GET_GRAPH_DATA_FN_KEY, NODE_CONFIGS_KEY } from "./symbols";
@@ -53,6 +58,7 @@ import { GET_GRAPH_DATA_FN_KEY, NODE_CONFIGS_KEY } from "./symbols";
 const canvasRef = ref<InstanceType<typeof FlowCanvas> | null>(null);
 const propertyPanelRef = ref<InstanceType<typeof PropertyPanel> | null>(null);
 const taskPropertyPanelRef = ref<InstanceType<typeof TaskPropertyPanel> | null>(null);
+const endPropertyPanelRef = ref<InstanceType<typeof EndPropertyPanel> | null>(null);
 const nodeConfigs = ref<Record<string, any>>({});
 
 provide(NODE_CONFIGS_KEY, nodeConfigs);
@@ -63,8 +69,15 @@ provide(GET_GRAPH_DATA_FN_KEY, () => {
 
 const handleNodeSelect = (node: any) => {
   console.log("🚀 选中节点", node);
+  // 统一行为：关闭所有面板，再打开对应面板
+  propertyPanelRef.value?.close();
+  taskPropertyPanelRef.value?.close();
+  endPropertyPanelRef.value?.close();
+
   if (node.type === NODE_TYPE.TASK) {
     taskPropertyPanelRef.value?.open(node);
+  } else if (node.type === NODE_TYPE.END) {
+    endPropertyPanelRef.value?.open(node);
   } else {
     propertyPanelRef.value?.open(node);
   }
@@ -73,12 +86,14 @@ const handleNodeSelect = (node: any) => {
 const handleBlankClick = () => {
   propertyPanelRef.value?.close();
   taskPropertyPanelRef.value?.close();
+  endPropertyPanelRef.value?.close();
 };
 
 const handleClearRequest = () => {
   nodeConfigs.value = {};
   propertyPanelRef.value?.close();
   taskPropertyPanelRef.value?.close();
+  endPropertyPanelRef.value?.close();
 };
 
 const handleUpdateTitle = (payload: { nodeId: string; title: string }) => {

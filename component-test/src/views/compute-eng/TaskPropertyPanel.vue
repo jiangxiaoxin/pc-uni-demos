@@ -227,10 +227,6 @@
           暂无生命周期
         </div>
       </div>
-
-     
-
-      <NodeTimeConfig v-model="modelData.timeConfig" />
     </div>
   </a-drawer>
 </template>
@@ -246,7 +242,6 @@
     type ConditionGroup as ConditionGroupData,
   } from './condition/types'
   import NodeBaseConfig from './NodeBaseConfig.vue'
-  import NodeTimeConfig from './NodeTimeConfig.vue'
 
   interface NodeData {
     id?: string

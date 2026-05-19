@@ -27,8 +27,8 @@ export const execute_engine_options = [
     },
 ]
 
-export const calc_mode_direct = "direct"
-export const calc_mode_math = "math"
+export const calc_mode_direct = "DIRECT_VALUE"
+export const calc_mode_math = "OPERATION"
 export const calc_mode_options = [
     {
         value: calc_mode_direct,

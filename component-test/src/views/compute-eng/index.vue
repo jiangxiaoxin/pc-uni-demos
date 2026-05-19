@@ -51,9 +51,10 @@ import FlowCanvas from "./FlowCanvas.vue";
 import PropertyPanel from "./PropertyPanel.vue";
 import TaskPropertyPanel from "./TaskPropertyPanel.vue";
 import EndPropertyPanel from "./EndPropertyPanel.vue";
-import { nodeTypes, allNodeTypes, NODE_TYPE } from "./menus";
+import { allNodeTypes, NODE_TYPE } from "./menus";
 import { getDetail } from "./request";
 import { GET_GRAPH_DATA_FN_KEY, NODE_CONFIGS_KEY, GET_TASK_NODE_DATA_FN_KEY } from "./symbols";
+import { saveToServer } from "./data";
 
 const canvasRef = ref<InstanceType<typeof FlowCanvas> | null>(null);
 const propertyPanelRef = ref<InstanceType<typeof PropertyPanel> | null>(null);
@@ -112,9 +113,11 @@ const handleSaveRequest = (graphData: any) => {
     edges: graphData.edges,
     configs: nodeConfigs.value,
   };
-  console.log("[index.vue] 保存的完整数据:", fullData);
+  console.log("[index.vue] 保存的完整数据:", JSON.parse(JSON.stringify(fullData)));
   localStorage.setItem("compute_eng_full_data", JSON.stringify(fullData));
-  alert("流程配置已保存到本地");
+  saveToServer(fullData)
+  console.log('serverData', fullData);
+  
 };
 
 const handleDragStart = (event: DragEvent, node: any) => {

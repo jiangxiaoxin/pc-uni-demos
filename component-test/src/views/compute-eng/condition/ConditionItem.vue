@@ -47,11 +47,11 @@
 
     <a-select
       v-if="isNodeVar"
-      :value="modelValue.nodeId"
-      :options="allNodes"
+      :value="graphVariableValue"
+      :options="graphVariableOptions"
       size="small"
-      placeholder="图内节点"
-      @change="onNodeChange"
+      placeholder="图内节点 / 聚合定义"
+      @change="onGraphVariableChange"
     ></a-select>
 
     <a-input
@@ -93,7 +93,7 @@
         :value="modelValue.value"
         :options="bool_options"
         placeholder="值"
-        @chagne="onBooleanChange"
+        @change="onBooleanChange"
         size="small"
       ></a-select>
       <a-input
@@ -119,7 +119,7 @@
 
 <script setup lang="ts">
   import { computed, inject } from "vue";
-  import { GET_GRAPH_DATA_FN_KEY } from "../symbols";
+  import { GET_GRAPH_DATA_FN_KEY, GET_TASK_NODE_DATA_FN_KEY } from "../symbols";
   import {
     bool_options,
     condition_source_customize,
@@ -131,9 +131,43 @@
     value_type_boolean,
     value_type_number,
     value_type_options,
-    value_type_string,
   } from "./types";
   import { NODE_TYPE } from "../menus";
+
+  interface GraphNode {
+    id?: string | number;
+    type?: string;
+    properties?: Record<string, any>;
+  }
+
+  interface GraphData {
+    nodes?: GraphNode[];
+  }
+
+  interface AggregationConfig {
+    id?: string | number;
+    displayName?: string;
+    aggregateFunction?: string;
+  }
+
+  interface LifecycleConfig {
+    id?: string | number;
+    name?: string;
+    aggregations?: AggregationConfig[];
+  }
+
+  interface TaskNodeConfig {
+    lifecycleConfigs?: LifecycleConfig[];
+  }
+
+  interface SelectOption {
+    value: string;
+    label: string;
+  }
+
+  type GraphVariableSelection =
+    | { type: "node"; nodeId: string }
+    | { type: "aggregate"; lifecycleId: string; aggregateId: string };
 
   const props = defineProps<{
     modelValue: any;
@@ -170,20 +204,128 @@
     return condition_source_options.find((item) => item.value === props.fixedConditionSource)?.label || "";
   });
 
-  const getGraphData = inject(GET_GRAPH_DATA_FN_KEY, () => {});
+  const getGraphData = inject<() => GraphData | undefined>(GET_GRAPH_DATA_FN_KEY, () => ({ nodes: [] }));
+  const getTaskNodeData = inject<() => TaskNodeConfig | undefined>(GET_TASK_NODE_DATA_FN_KEY, () => ({}));
 
-  const allNodes = computed(() => {
-    const { nodes = [] } = getGraphData();
+  function encodeGraphVariableValue(selection: GraphVariableSelection) {
+    return JSON.stringify(selection);
+  }
+
+  function parseGraphVariableValue(value: string): GraphVariableSelection | null {
+    if (!value) {
+      return null;
+    }
+
+    try {
+      const parsed = JSON.parse(value) as Partial<GraphVariableSelection>;
+      if (parsed.type === "aggregate" && parsed.lifecycleId && parsed.aggregateId) {
+        return {
+          type: "aggregate",
+          lifecycleId: String(parsed.lifecycleId),
+          aggregateId: String(parsed.aggregateId),
+        };
+      }
+
+      if (parsed.type === "node" && parsed.nodeId) {
+        return {
+          type: "node",
+          nodeId: String(parsed.nodeId),
+        };
+      }
+    } catch {
+      return {
+        type: "node",
+        nodeId: value,
+      };
+    }
+
+    return null;
+  }
+
+  const graphNodeOptions = computed<SelectOption[]>(() => {
+    const nodes = getGraphData()?.nodes ?? [];
     return nodes
       .filter((node) => {
-        return node.type != NODE_TYPE.TASK;
+        return node.type !== NODE_TYPE.TASK && node.id !== undefined && node.id !== null;
       })
       .map((node) => {
+        const nodeId = String(node.id);
+        const nodeName = node.properties?.title || node.properties?.name || nodeId;
         return {
-          value: node.id,
-          label: `${node.properties.title || node.properties.name || ""} (${node.id})`,
+          value: encodeGraphVariableValue({ type: "node", nodeId }),
+          label: `${nodeName} (${nodeId})`,
         };
       });
+  });
+
+  const aggregateOptions = computed<SelectOption[]>(() => {
+    const lifecycleConfigs = getTaskNodeData()?.lifecycleConfigs ?? [];
+
+    return lifecycleConfigs.flatMap((lifecycle, lifecycleIndex) => {
+      if (lifecycle.id === undefined || lifecycle.id === null) {
+        return [];
+      }
+
+      const lifecycleId = String(lifecycle.id);
+      const lifecycleName = lifecycle.name || `生命周期 ${lifecycleIndex + 1}`;
+      const aggregations = Array.isArray(lifecycle.aggregations) ? lifecycle.aggregations : [];
+
+      return aggregations
+        .filter((aggregation) => aggregation.id !== undefined && aggregation.id !== null)
+        .map((aggregation, aggregationIndex) => {
+          const aggregateId = String(aggregation.id);
+          const aggregateName = aggregation.displayName || `聚合 ${aggregationIndex + 1}`;
+          const aggregateFunction = aggregation.aggregateFunction ? ` / ${aggregation.aggregateFunction}` : "";
+
+          return {
+            value: encodeGraphVariableValue({
+              type: "aggregate",
+              lifecycleId,
+              aggregateId,
+            }),
+            label: `${lifecycleName} - ${aggregateName}${aggregateFunction} (${aggregateId})`,
+          };
+        });
+    });
+  });
+
+  const graphVariableOptions = computed(() => {
+    const options: Array<SelectOption | { label: string; options: SelectOption[] }> = [];
+
+    if (graphNodeOptions.value.length > 0) {
+      options.push({
+        label: "图中节点",
+        options: graphNodeOptions.value,
+      });
+    }
+
+    if (aggregateOptions.value.length > 0) {
+      options.push({
+        label: "生命周期聚合定义",
+        options: aggregateOptions.value,
+      });
+    }
+
+    return options;
+  });
+
+  const graphVariableValue = computed(() => {
+    if (props.modelValue.lifecycleId && props.modelValue.aggregateId) {
+      return encodeGraphVariableValue({
+        type: "aggregate",
+        lifecycleId: String(props.modelValue.lifecycleId),
+        aggregateId: String(props.modelValue.aggregateId),
+      });
+    }
+
+    if (props.modelValue.nodeId) {
+      return encodeGraphVariableValue({
+        type: "node",
+        nodeId: String(props.modelValue.nodeId),
+      });
+    }
+
+    return undefined;
   });
 
   const emit = defineEmits<{
@@ -215,15 +357,17 @@
       point: "",
       template: undefined,
       nodeId: undefined, // 选中的节点。
+      lifecycleId: undefined,
+      aggregateId: undefined,
     });
   }
 
   function choosePoint() {
-    // TODO 打开点位选择器
+    patch({ point: "mock-device-1" });
   }
 
   function chooseTemplate() {
-    // TODO 打开modal，选择模板
+    patch({ template: "mock-action-template-1" });
   }
 
   function onFieldChange(event: any) {
@@ -246,11 +390,30 @@
     patch({ value });
   }
 
-  function onNodeChange(newValue: string) {
-    patch({ nodeId: newValue });
+  function onGraphVariableChange(newValue: string) {
+    const selection = parseGraphVariableValue(newValue);
+    if (!selection) {
+      return;
+    }
+
+    if (selection.type === "aggregate") {
+      patch({
+        nodeId: undefined,
+        lifecycleId: selection.lifecycleId,
+        aggregateId: selection.aggregateId,
+      });
+      return;
+    }
+
+    patch({
+      nodeId: selection.nodeId,
+      lifecycleId: undefined,
+      aggregateId: undefined,
+    });
   }
 
   function onBooleanChange(newValue: any) {
+
     patch({ value: newValue });
   }
 </script>

@@ -1,6 +1,6 @@
 import { v4 as uuidv4 } from "uuid";
 
-export type Logic = "and" | "or";
+export type Logic = "AND" | "OR";
 
 export const value_type_string = "STRING"
 export const value_type_number = "NUMBER"
@@ -10,7 +10,7 @@ export type ValueType = typeof value_type_string | typeof value_type_number | ty
 
 export interface Condition {
   id: string;
-  type: "condition";
+  type: "CONDITION";
   [key: string]: any;
 }
 
@@ -40,11 +40,11 @@ export const  value_type_options = [
 
 export const bool_options = [
   {
-    value: true,
+    value: 1,
     label:'真'
   },
   {
-    value: false,
+    value: 0,
     label:'假'
   }
 ]
@@ -88,7 +88,7 @@ export const condition_source_options = [
 export function createDefaultCondition(): Condition {
   return {
     id: genId("c"),
-    type: "condition",
+    type: "CONDITION",
     conditionSource: condition_source_options[0].value, // 条件来源
     field: "", // 字段
     operator: undefined, // 比较符
@@ -104,7 +104,7 @@ export function createDefaultGroup(): ConditionGroup {
   return {
     id: genId("g"),
     type: "group",
-    logic: "and",
+    logic: "AND",
     children: [createDefaultCondition(), createDefaultCondition(),],
   };
 }

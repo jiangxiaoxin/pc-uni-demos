@@ -232,8 +232,8 @@
 </template>
 
 <script setup lang="ts">
-  import { computed, inject, nextTick, ref, type Ref } from 'vue'
-  import { GET_GRAPH_DATA_FN_KEY, NODE_CONFIGS_KEY } from './symbols'
+  import { computed, inject, nextTick, provide, ref, type Ref } from 'vue'
+  import { GET_GRAPH_DATA_FN_KEY, GET_TASK_NODE_DATA_FN_KEY, NODE_CONFIGS_KEY } from './symbols'
   import { getNodeTypeConfig, NODE_TYPE } from './menus'
   import ConditionGroup from './condition/ConditionGroup.vue'
   import {
@@ -293,6 +293,8 @@
   const getGraphData = inject<() => GraphData | undefined>(GET_GRAPH_DATA_FN_KEY, () => ({ nodes: [] }))
 
   const modelData = ref<any>({})
+
+  provide(GET_TASK_NODE_DATA_FN_KEY, () => modelData.value)
 
   const aggregateFunctionOptions = [
     { value: 'COUNT', label: 'COUNT' },

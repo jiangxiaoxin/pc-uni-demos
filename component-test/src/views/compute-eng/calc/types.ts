@@ -22,6 +22,8 @@ export interface DirectSourceConfig {
   value?: any
   point?: string
   field?: string
+  lifecycleId?: string
+  aggregateId?: string
 }
 
 export interface CalcConfig {
@@ -39,6 +41,8 @@ export function createDefaultCalc(): CalcConfig {
       value: undefined,
       point: undefined,
       field: undefined,
+      lifecycleId: undefined,
+      aggregateId: undefined,
     },
     mathConfig: undefined,
   }
@@ -69,6 +73,8 @@ export interface MathItem {
   value?: any
   point?: string
   field?: string
+  lifecycleId?: string
+  aggregateId?: string
   joinOperator?: MathOperator  // 与下一项的运算关系
 }
 
@@ -93,6 +99,8 @@ export function createDefaultMathItem(): MathItem {
     value: undefined,
     point: undefined,
     field: undefined,
+    lifecycleId: undefined,
+    aggregateId: undefined,
   }
 }
 

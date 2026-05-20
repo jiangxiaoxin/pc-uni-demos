@@ -71,7 +71,7 @@ function getMathItemExpression(item: MathItem): string {
   }
 
   if (item.sourceType === source_type_field) {
-    return toExpressionToken(item.field);
+    return toExpressionToken(item.field ?? item.aggregateId);
   }
 
   return toExpressionToken(item.value ?? item.point ?? item.field);
@@ -127,14 +127,14 @@ export function saveToServer(data) {
     } else {
       // 节点name 在 nodes properties 里
 
-      // saveNormalNode(config);
-      // config.operatorId = id;
-      // config.operatorName = properties.name;
-      // config.operatorType = type;
-      // const nextNodes = edges
-      //   .filter((edge) => edge.sourceNodeId == id)
-      //   .map((edge) => edge.targetNodeId);
-      // config.downStreams = nextNodes;
+      saveNormalNode(config);
+      config.operatorId = id;
+      config.operatorName = properties.name;
+      config.operatorType = type;
+      const nextNodes = edges
+        .filter((edge) => edge.sourceNodeId == id)
+        .map((edge) => edge.targetNodeId);
+      config.downStreams = nextNodes;
     }
   }
   delete data.configs
@@ -174,7 +174,18 @@ function saveNormalNode(nodeConfig: any) {
     if (calcConfig.type == calc_mode_direct) {
       calcConfig.sourceType = calcConfig.directSource.sourceType;
       calcConfig.valueType = calcConfig.directSource.valueType;
-      calcConfig.field = calcConfig.directSource.value;
+      if (calcConfig.sourceType == source_type_point) {
+        calcConfig.devicePointCode = calcConfig.directSource.point;
+      } else if (calcConfig.sourceType == source_type_field) {
+        if (calcConfig.directSource.lifecycleId && calcConfig.directSource.aggregateId) {
+          calcConfig.lifecycleId = calcConfig.directSource.lifecycleId;
+          calcConfig.aggregateId = calcConfig.directSource.aggregateId;
+        } else {
+          calcConfig.operatorId = calcConfig.directSource.field;
+        }
+      } else {
+        calcConfig.field = calcConfig.directSource.value;
+      }
       nodeConfig.executionLogic.conditionConfig = calcConfig;
     }
     if (calcConfig.type == calc_mode_math) {
@@ -198,15 +209,36 @@ function saveNormalNode(nodeConfig: any) {
           if (child.type == "item") {
             child.type = "VALUE"; // 固定值，表示这个是项
             if (child.sourceType == source_type_field) {
-              // 固定值，只要最后的value
+              if (child.lifecycleId && child.aggregateId) {
+                delete child.operatorId;
+                delete child.field;
+                delete child.value;
+                delete child.point;
+              } else if (child.field) {
+                child.operatorId = child.field;
+                delete child.lifecycleId;
+                delete child.aggregateId;
+                delete child.field;
+                delete child.value;
+                delete child.point;
+              } else {
+                delete child.operatorId;
+                delete child.lifecycleId;
+                delete child.aggregateId;
+                delete child.field;
+                delete child.value;
+                delete child.point;
+              }
             } else if (child.sourceType == source_type_point) {
-              child.devicePointCode = child.value; // 只要选定的设备点位
+              child.devicePointCode = child.point; // 只要选定的设备点位
               delete child.value;
+              delete child.point;
             } else {
-              // 取值字段 source_type_field
-              // child.operatorId // 节点id
-              // child.lifecycleId // 生命周期id
-              // child.aggregateId // 聚合的id
+              // 固定值只保留 value
+              delete child.point;
+              delete child.field;
+              delete child.lifecycleId;
+              delete child.aggregateId;
             }
           }
         }
@@ -227,13 +259,11 @@ const formatStartConditionConfig = (children) => {
     if (child.type == "group") {
       // 组的字段处理一下
       child.type = "LOGICAL";
-      //TODO logic 改大写
       if (child.children && child.children.length > 0) {
         formatStartConditionConfig(child.children);
       }
     } else {
       // 这里就是项的处理
-      //TODO type: condition 改大写
       child.sourceType = child.conditionSource;
       delete child.conditionSource;
       if (child.sourceType == condition_source_node) {

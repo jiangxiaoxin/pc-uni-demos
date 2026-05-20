@@ -77,7 +77,11 @@
           </div>
           <div class="info-row" v-if="isDirect">
             <span class="label">取值来源</span>
-            <DirectConfig v-model="modelData.calcConfig.directSource" />
+            <DirectConfig
+              v-model="modelData.calcConfig.directSource"
+              :point-tree-data="pointTreeData"
+              :field-options="fieldOptions"
+            />
           </div>
           <div v-if="isMath">
             <span class="label">运算配置</span>
@@ -85,6 +89,8 @@
               v-if="modelData.calcConfig.mathConfig"
               v-model="modelData.calcConfig.mathConfig"
               :is-root="true"
+              :point-tree-data="pointTreeData"
+              :field-tree-data="fieldTreeData"
               style="margin-top: 8px"
             />
           </div>
@@ -105,9 +111,10 @@
     execute_engine_assign,
     execute_engine_aviator,
     GET_TASK_NODE_DATA_FN_KEY,
+    GET_GRAPH_DATA_FN_KEY,
     NODE_CONFIGS_KEY,
   } from "./symbols";
-  import { getNodeTypeConfig } from "./menus";
+  import { getNodeTypeConfig, NODE_TYPE } from "./menus";
   import { down_policy_options, execute_engine_options } from "./symbols";
   import ConditionGroup from "./condition/ConditionGroup.vue";
   import { createDefaultGroup } from "./condition/types";
@@ -116,6 +123,7 @@
   import MathGroup from "./calc/MathGroup.vue"
   import NodeBaseConfig from "./NodeBaseConfig.vue"
   import NodeTimeConfig from "./NodeTimeConfig.vue";
+  import type { PointTreeNode } from "./condition/types";
 
   interface NodeData {
     id?: string;
@@ -123,6 +131,32 @@
     properties?: Record<string, any>;
     [key: string]: any;
   }
+
+  interface DevicePoint {
+    code: string
+    name: string
+    unit?: string
+  }
+
+  interface SelectedDevice {
+    id: string | number
+    name: string
+    points?: DevicePoint[]
+  }
+
+  interface FieldOption {
+    label: string
+    value: string
+  }
+
+  interface FieldOptionGroup {
+    label: string
+    options: FieldOption[]
+  }
+
+  type FieldSelection =
+    | { type: 'node'; id: string }
+    | { type: 'aggregate'; lifecycleId: string; aggregateId: string }
 
   const emit = defineEmits<{
     (e: "update-title", payload: { nodeId: string; title: string }): void;
@@ -136,6 +170,10 @@
   );
 
   const taskNodeConfig = inject<Function>(GET_TASK_NODE_DATA_FN_KEY)
+  const getGraphData = inject<() => { nodes?: NodeData[] } | undefined>(
+    GET_GRAPH_DATA_FN_KEY,
+    () => ({ nodes: [] }),
+  )
 
   
 
@@ -154,6 +192,203 @@
   const isMath = computed(() => {
     return modelData.value.calcConfig?.calcMode == calc_mode_math;
   })
+
+  const taskConfig = computed(() => {
+    return taskNodeConfig?.() ?? {}
+  })
+
+  const selectedDevices = computed<SelectedDevice[]>(() => {
+    const devices = taskConfig.value?.devices
+    return Array.isArray(devices) ? devices : []
+  })
+
+  const pointTreeData = computed<PointTreeNode[]>(() => {
+    return selectedDevices.value.map((device) => {
+      const deviceId = String(device.id)
+      return {
+        title: device.name,
+        value: `device:${deviceId}`,
+        key: `device:${deviceId}`,
+        disabled: true,
+        children: getDevicePoints(device).map((point) => ({
+          title: `${point.name}${point.unit ? ` (${point.unit})` : ''}`,
+          value: point.code,
+          key: point.code,
+        })),
+      }
+    })
+  })
+
+  const fieldOptions = computed<FieldOptionGroup[]>(() => {
+    const graphNodes = getGraphData()?.nodes ?? []
+    const nodeOptions = graphNodes
+      .filter((node) => node.type !== NODE_TYPE.TASK && node.id)
+      .map((node) => {
+        const nodeId = String(node.id)
+        return {
+          value: encodeFieldSelection({ type: 'node', id: nodeId }),
+          label: node.properties?.title || node.properties?.name || nodeId,
+        }
+      })
+    const aggregateOptions = getAggregateFieldOptions()
+    const groups: FieldOptionGroup[] = []
+
+    if (nodeOptions.length > 0) {
+      groups.push({
+        label: '图中节点',
+        options: nodeOptions,
+      })
+    }
+
+    if (aggregateOptions.length > 0) {
+      groups.push({
+        label: '生命周期聚合定义',
+        options: aggregateOptions,
+      })
+    }
+
+    return groups
+  })
+
+  const fieldTreeData = computed<PointTreeNode[]>(() => {
+    const graphNodes = getGraphData()?.nodes ?? []
+    const nodeChildren = graphNodes
+      .filter((node) => node.type !== NODE_TYPE.TASK && node.id)
+      .map((node) => {
+        const nodeId = String(node.id)
+        const value = encodeFieldSelection({ type: 'node', id: nodeId })
+        return {
+          title: node.properties?.title || node.properties?.name || nodeId,
+          value,
+          key: value,
+        }
+      })
+    const aggregateChildren = getAggregateFieldTreeNodes()
+    const treeData: PointTreeNode[] = []
+
+    if (nodeChildren.length > 0) {
+      treeData.push({
+        title: '图中节点',
+        value: 'field-group:nodes',
+        key: 'field-group:nodes',
+        disabled: true,
+        children: nodeChildren,
+      })
+    }
+
+    if (aggregateChildren.length > 0) {
+      treeData.push({
+        title: '生命周期聚合定义',
+        value: 'field-group:aggregates',
+        key: 'field-group:aggregates',
+        disabled: true,
+        children: aggregateChildren,
+      })
+    }
+
+    return treeData
+  })
+
+  function encodeFieldSelection(selection: FieldSelection) {
+    return JSON.stringify(selection)
+  }
+
+  function getDevicePoints(device: SelectedDevice): DevicePoint[] {
+    if (Array.isArray(device.points) && device.points.length > 0) {
+      return device.points
+    }
+
+    const deviceId = String(device.id)
+    return [
+      {
+        code: `${deviceId}-temperature`,
+        name: '温度',
+        unit: '℃',
+      },
+      {
+        code: `${deviceId}-humidity`,
+        name: '湿度',
+        unit: '%',
+      },
+      {
+        code: `${deviceId}-count`,
+        name: '次数',
+        unit: '次',
+      },
+    ]
+  }
+
+  function getAggregateFieldOptions(): FieldOption[] {
+    const lifecycleConfigs = taskConfig.value?.lifecycleConfigs
+    if (!Array.isArray(lifecycleConfigs)) {
+      return []
+    }
+
+    return lifecycleConfigs.flatMap((lifecycle: any, lifecycleIndex: number) => {
+      const aggregations = Array.isArray(lifecycle.aggregations) ? lifecycle.aggregations : []
+      const lifecycleId = lifecycle.id ? String(lifecycle.id) : ''
+      const lifecycleName = lifecycle.name || `生命周期 ${lifecycleIndex + 1}`
+
+      if (!lifecycleId) {
+        return []
+      }
+
+      return aggregations
+        .filter((aggregation: any) => aggregation.id)
+        .map((aggregation: any, aggregationIndex: number) => {
+          const aggregateId = String(aggregation.id)
+          const aggregateName = aggregation.displayName || `聚合 ${aggregationIndex + 1}`
+          return {
+            value: encodeFieldSelection({ type: 'aggregate', lifecycleId, aggregateId }),
+            label: `${lifecycleName} - ${aggregateName}`,
+          }
+        })
+    })
+  }
+
+  function getAggregateFieldTreeNodes(): PointTreeNode[] {
+    const lifecycleConfigs = taskConfig.value?.lifecycleConfigs
+    if (!Array.isArray(lifecycleConfigs)) {
+      return []
+    }
+
+    return lifecycleConfigs
+      .map((lifecycle: any, lifecycleIndex: number) => {
+        const aggregations = Array.isArray(lifecycle.aggregations) ? lifecycle.aggregations : []
+        const lifecycleId = lifecycle.id ? String(lifecycle.id) : ''
+        const lifecycleName = lifecycle.name || `生命周期 ${lifecycleIndex + 1}`
+
+        if (!lifecycleId) {
+          return null
+        }
+
+        const children = aggregations
+          .filter((aggregation: any) => aggregation.id)
+          .map((aggregation: any, aggregationIndex: number) => {
+            const aggregateId = String(aggregation.id)
+            const aggregateName = aggregation.displayName || `聚合 ${aggregationIndex + 1}`
+            const value = encodeFieldSelection({ type: 'aggregate', lifecycleId, aggregateId })
+            return {
+              title: aggregateName,
+              value,
+              key: value,
+            }
+          })
+
+        if (children.length === 0) {
+          return null
+        }
+
+        return {
+          title: lifecycleName,
+          value: `field-lifecycle:${lifecycleId}`,
+          key: `field-lifecycle:${lifecycleId}`,
+          disabled: true,
+          children,
+        }
+      })
+      .filter((node): node is PointTreeNode => !!node)
+  }
 
   // 标题本地编辑值
   const titleValue = ref("");

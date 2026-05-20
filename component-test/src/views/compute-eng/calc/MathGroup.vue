@@ -12,12 +12,18 @@
           <MathGroup
             v-if="child.type === 'group'"
             :model-value="child"
+            :point-tree-data="pointTreeData"
+            :point-tree-loading="pointTreeLoading"
+            :field-tree-data="fieldTreeData"
             @update:model-value="val => updateChild(idx, val)"
             @remove="removeChild(idx)"
           />
           <MathItem
             v-else
             :model-value="child"
+            :point-tree-data="pointTreeData"
+            :point-tree-loading="pointTreeLoading"
+            :field-tree-data="fieldTreeData"
             @update:model-value="val => updateChild(idx, val)"
             @remove="removeChild(idx)"
           />
@@ -65,14 +71,21 @@
   import MathItem from './MathItem.vue'
   import type { MathGroup as MathGroupType, MathNode, MathOperator } from './types'
   import { math_operator_options, math_operator_add, createDefaultMathItem, createDefaultMathGroup } from './types'
+  import type { PointTreeNode } from '../condition/types'
 
   defineOptions({ name: 'MathGroup' })
 
   const props = withDefaults(defineProps<{
     modelValue: MathGroupType
     isRoot?: boolean
+    pointTreeData?: PointTreeNode[]
+    pointTreeLoading?: boolean
+    fieldTreeData?: PointTreeNode[]
   }>(), {
     isRoot: false,
+    pointTreeData: () => [],
+    pointTreeLoading: false,
+    fieldTreeData: () => [],
   })
 
   const emit = defineEmits<{

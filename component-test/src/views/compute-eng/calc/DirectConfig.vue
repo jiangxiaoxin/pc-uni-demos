@@ -43,10 +43,13 @@
     </template>
 
     <!-- 设备点位 -->
-    <a-select
+    <a-tree-select
       v-if="isDevicePoint"
       :value="modelValue.point"
-      :options="pointOptions"
+      :tree-data="pointTreeData"
+      :loading="pointTreeLoading"
+      tree-default-expand-all
+      allow-clear
       @change="onPointChange"
       size="small"
       placeholder="选择设备点位"
@@ -55,11 +58,11 @@
     <!-- 取值字段 -->
     <a-select
       v-if="isField"
-      :value="modelValue.field"
+      :value="fieldSelectValue"
       :options="fieldOptions"
       @change="onFieldChange"
       size="small"
-      placeholder="选择取值字段"
+      placeholder="选择节点或聚合定义"
     />
   </div>
 </template>
@@ -76,17 +79,34 @@
     value_type_options,
   } from './types'
   import { bool_options, fromBooleanSelectValue, toBooleanSelectValue } from '../condition/types'
+  import type { PointTreeNode } from '../condition/types'
   import type { DirectSourceConfig } from './types'
+
+  type FieldSelection =
+    | { type: 'node'; id: string }
+    | { type: 'aggregate'; lifecycleId: string; aggregateId: string }
+
+  interface FieldOption {
+    label: string
+    value: string
+  }
+
+  interface FieldOptionGroup {
+    label: string
+    options: FieldOption[]
+  }
 
   const props = withDefaults(
     defineProps<{
       modelValue: DirectSourceConfig
-      pointOptions?: { label: string; value: string }[]
-      fieldOptions?: { label: string; value: string }[]
+      pointTreeData?: PointTreeNode[]
+      pointTreeLoading?: boolean
+      fieldOptions?: FieldOptionGroup[]
     }>(),
     {
       modelValue: () => ({ sourceType: source_type_fixed }) as DirectSourceConfig,
-      pointOptions: () => [],
+      pointTreeData: () => [],
+      pointTreeLoading: false,
       fieldOptions: () => [],
     },
   )
@@ -99,6 +119,57 @@
   const isDevicePoint = computed(() => props.modelValue.sourceType === source_type_point)
   const isField = computed(() => props.modelValue.sourceType === source_type_field)
   const booleanSelectValue = computed(() => toBooleanSelectValue(props.modelValue.value))
+  const fieldSelectValue = computed(() => {
+    if (props.modelValue.lifecycleId && props.modelValue.aggregateId) {
+      return encodeFieldSelection({
+        type: 'aggregate',
+        lifecycleId: props.modelValue.lifecycleId,
+        aggregateId: props.modelValue.aggregateId,
+      })
+    }
+
+    if (props.modelValue.field) {
+      return encodeFieldSelection({ type: 'node', id: props.modelValue.field })
+    }
+
+    return undefined
+  })
+
+  function encodeFieldSelection(selection: FieldSelection) {
+    return JSON.stringify(selection)
+  }
+
+  function parseFieldSelection(value: string): FieldSelection | null {
+    if (!value) {
+      return null
+    }
+
+    try {
+      const parsed = JSON.parse(value) as Partial<FieldSelection> & {
+        id?: string
+      }
+      if (parsed.type === 'node' && parsed.id) {
+        return {
+          type: 'node',
+          id: String(parsed.id),
+        }
+      }
+      if (parsed.type === 'aggregate' && parsed.lifecycleId && parsed.aggregateId) {
+        return {
+          type: 'aggregate',
+          lifecycleId: String(parsed.lifecycleId),
+          aggregateId: String(parsed.aggregateId),
+        }
+      }
+    } catch {
+      return {
+        type: 'node',
+        id: value,
+      }
+    }
+
+    return null
+  }
 
   function patch(part: Partial<DirectSourceConfig>) {
     emit('update:modelValue', { ...props.modelValue, ...part })
@@ -111,6 +182,8 @@
       value: undefined,
       point: undefined,
       field: undefined,
+      lifecycleId: undefined,
+      aggregateId: undefined,
     })
   }
 
@@ -130,12 +203,27 @@
     patch({ value: event.target.value })
   }
 
-  function onPointChange(newValue: string) {
+  function onPointChange(newValue: string | undefined) {
     patch({ point: newValue })
   }
 
   function onFieldChange(newValue: string) {
-    patch({ field: newValue })
+    const selection = parseFieldSelection(newValue)
+    if (!selection) {
+      patch({ field: undefined, lifecycleId: undefined, aggregateId: undefined })
+      return
+    }
+
+    if (selection.type === 'aggregate') {
+      patch({
+        field: undefined,
+        lifecycleId: selection.lifecycleId,
+        aggregateId: selection.aggregateId,
+      })
+      return
+    }
+
+    patch({ field: selection.id, lifecycleId: undefined, aggregateId: undefined })
   }
 </script>
 

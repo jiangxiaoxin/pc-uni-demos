@@ -24,6 +24,7 @@
           @mouseup="stopCanvasDrag"
           @mouseleave="stopCanvasDrag"
         >
+        <!-- flow-sequence 就是顺序的去处理，这样branch和loop 内部也是 flow-sequence -->
           <FlowSequence
             :nodes="flowNodes"
             @add-after="addAfter"

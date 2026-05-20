@@ -9,13 +9,23 @@ export interface BaseFlowNode {
   title: string
 }
 
-export interface SimpleFlowNode extends BaseFlowNode {
-  type: 'start' | 'action' | 'end'
+export interface StartFlowNode extends BaseFlowNode {
+  type: 'start'
 }
+
+export interface ActionFlowNode extends BaseFlowNode {
+  type: 'action'
+}
+
+export interface EndFlowNode extends BaseFlowNode {
+  type: 'end'
+}
+
+export type SimpleFlowNode = StartFlowNode | ActionFlowNode | EndFlowNode
 
 export interface BranchLine {
   id: string
-  condition: string
+  title: string
   /** 当前分支上的节点序列。这里继续使用 FlowNode[]，因此分支和循环都能递归嵌套。 */
   children: FlowNode[]
 }
@@ -42,7 +52,7 @@ export function createId(prefix: string) {
   return `${prefix}-${Date.now().toString(36)}-${seed}`
 }
 
-export function createStartNode(): SimpleFlowNode {
+export function createStartNode(): StartFlowNode {
   return {
     id: createId('start'),
     type: 'start',
@@ -50,7 +60,7 @@ export function createStartNode(): SimpleFlowNode {
   }
 }
 
-export function createActionNode(title = '动作节点'): SimpleFlowNode {
+export function createActionNode(title = '动作节点'): ActionFlowNode {
   return {
     id: createId('action'),
     type: 'action',
@@ -58,7 +68,7 @@ export function createActionNode(title = '动作节点'): SimpleFlowNode {
   }
 }
 
-export function createEndNode(): SimpleFlowNode {
+export function createEndNode(): EndFlowNode {
   return {
     id: createId('end'),
     type: 'end',
@@ -69,7 +79,7 @@ export function createEndNode(): SimpleFlowNode {
 export function createBranchLine(index: number): BranchLine {
   return {
     id: createId('branch-line'),
-    condition: `分支条件 ${index}`,
+    title: `分支条件 ${index}`,
     children: [],
   }
 }
@@ -98,7 +108,7 @@ export function createInitialFlow(): FlowNode[] {
   return [
     createStartNode(),
     createActionNode(),
-    createBranchNode(),
+    // createBranchNode(),
     createEndNode(),
   ]
 }

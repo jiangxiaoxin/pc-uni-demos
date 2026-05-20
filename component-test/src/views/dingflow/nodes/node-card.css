@@ -1,0 +1,49 @@
+.flow-node-block {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.flow-card {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  width: 180px;
+  min-height: 54px;
+  padding: 12px 14px;
+  border: 1px solid transparent;
+  border-radius: 6px;
+  color: #fff;
+  box-shadow: 0 8px 22px rgba(15, 23, 42, 0.08);
+}
+
+.flow-card__label {
+  font-size: 15px;
+  font-weight: 700;
+}
+
+.flow-card__type {
+  font-size: 12px;
+  opacity: 0.82;
+}
+
+.flow-card__delete {
+  position: absolute;
+  right: 10px;
+  top: 50%;
+  height: 28px;
+  padding: 0 8px;
+  border: 1px solid rgba(255, 255, 255, 0.55);
+  border-radius: 4px;
+  background: rgba(255, 255, 255, 0.16);
+  color: #fff;
+  font-size: 12px;
+  cursor: pointer;
+  transform: translateY(-50%);
+}
+
+.flow-card__delete:hover {
+  background: rgba(255, 255, 255, 0.28);
+}

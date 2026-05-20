@@ -22,7 +22,7 @@
         class="branch-column"
       >
         <div class="branch-condition">
-          <span class="branch-condition__title">{{ branch.condition }}</span>
+          <span class="branch-condition__title">{{ branch.title }}</span>
           <button type="button" @click="removeBranch(branchIndex)">删除</button>
         </div>
 

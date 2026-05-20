@@ -20,6 +20,7 @@
       </div>
 
       <div class="loop-content">
+        <!-- 循环内容区已有贯穿竖线，关闭按钮自带线，避免重叠。 -->
         <AddNodeButton
           :line="false"
           @add-action="addLoopChild('action')"
@@ -27,6 +28,7 @@
           @add-loop="addLoopChild('loop')"
         />
 
+        <!-- 循环内部子序列继续复用 loop-content 的贯穿竖线。 -->
         <FlowSequence
           v-if="node.children.length > 0"
           :nodes="node.children"
@@ -64,6 +66,7 @@ const FlowSequence = defineAsyncComponent(() => import('./FlowSequence.vue'))
 
 const props = defineProps<{
   node: LoopFlowNode
+  /** 控制循环汇合后那颗“下一步”按钮是否绘制自身连接线，由外层序列决定。 */
   addNodeLine?: boolean
 }>()
 
@@ -224,6 +227,7 @@ function removeChild(index: number) {
   align-items: center;
   min-width: var(--loop-content-width);
   padding: 28px 14px;
+  /* 循环内容区自己拥有贯穿竖线，内部 AddNodeButton 不再重复画线。 */
   background-image: linear-gradient(#cbd5e1, #cbd5e1);
   background-position: center top;
   background-repeat: no-repeat;

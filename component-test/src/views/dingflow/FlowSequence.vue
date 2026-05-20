@@ -55,6 +55,8 @@ import EndNode from './nodes/EndNode.vue'
 import StartNode from './nodes/StartNode.vue'
 import type { AddableNodeKind, FlowNode } from './types'
 
+// FlowSequence 只负责渲染一段纵向节点序列。
+// addNodeLine 会沿递归链路传递，用来统一决定该序列里的“下一步”按钮是否自画连接线。
 withDefaults(defineProps<{
   nodes: FlowNode[]
   addNodeLine?: boolean

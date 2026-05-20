@@ -26,6 +26,7 @@
           <button type="button" @click="removeBranch(branchIndex)">删除</button>
         </div>
 
+        <!-- 分支列已经用背景画了贯穿竖线，这里关闭按钮自带线，避免线条重叠变粗。 -->
         <AddNodeButton
           :line="false"
           @add-action="addBranchChild(branch.children, 'action')"
@@ -33,6 +34,7 @@
           @add-loop="addBranchChild(branch.children, 'loop')"
         />
 
+        <!-- 子序列继续复用分支列的贯穿竖线，不再让内部按钮重复画线。 -->
         <FlowSequence
           v-if="branch.children.length > 0"
           :nodes="branch.children"
@@ -72,6 +74,7 @@ const FlowSequence = defineAsyncComponent(() => import('./FlowSequence.vue'))
 
 const props = defineProps<{
   node: BranchFlowNode
+  /** 控制分支汇合后那颗“下一步”按钮是否绘制自身连接线，由外层序列决定。 */
   addNodeLine?: boolean
 }>()
 
@@ -243,6 +246,7 @@ function removeBranch(index: number) {
   align-items: center;
   min-width: var(--branch-width);
   padding: 28px 14px;
+  /* 分支列自己拥有贯穿竖线，列内 AddNodeButton 必须关闭自身线段。 */
   background-image: linear-gradient(red, red);
   background-position: center top;
   background-repeat: no-repeat;

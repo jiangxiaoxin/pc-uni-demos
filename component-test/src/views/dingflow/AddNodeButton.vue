@@ -34,6 +34,8 @@ import { ref } from 'vue'
 import type { MenuInfo } from 'ant-design-vue/es/menu/src/interface'
 import type { AddableNodeKind } from './types'
 
+// line 控制按钮自身是否绘制上下两段连接线。
+// 当父容器已经用背景绘制贯穿竖线时关闭它，避免两条 1px 线重叠后视觉变粗。
 withDefaults(defineProps<{
   line?: boolean
 }>(), {
@@ -80,6 +82,7 @@ function getPopupContainer() {
 
 .add-node__line::before,
 .add-node__line::after {
+  /* 没有父级贯穿线的普通序列，由按钮自己补齐上下两段断线。 */
   content: "";
   position: absolute;
   left: 50%;

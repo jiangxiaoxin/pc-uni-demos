@@ -88,16 +88,16 @@ function getPopupContainer() {
 }
 
 .add-node__line::after {
-  top: 48px;
   bottom: 0;
+  height: 24px;
 }
 
 .add-node__actions {
   position: absolute;
-  top: 22px;
+  top: 50%;
   left: 50%;
   z-index: 3;
-  transform: translateX(-50%);
+  transform: translate(-50%, -50%);
 }
 
 .add-node__main {

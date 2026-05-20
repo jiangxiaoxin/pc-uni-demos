@@ -24,11 +24,6 @@
   font-weight: 700;
 }
 
-.flow-card__type {
-  font-size: 12px;
-  opacity: 0.82;
-}
-
 .flow-card__delete {
   position: absolute;
   right: 10px;

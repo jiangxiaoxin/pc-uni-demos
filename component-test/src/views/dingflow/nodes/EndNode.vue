@@ -2,7 +2,6 @@
   <div class="flow-node-block flow-node-block--end">
     <div class="flow-card flow-card--end">
       <span class="flow-card__label">{{ node.title }}</span>
-      <span class="flow-card__type">结束</span>
     </div>
   </div>
 </template>
@@ -29,6 +28,7 @@ defineProps<{
 }
 
 .flow-card--end {
+  justify-content: center;
   background: #64748b;
 }
 </style>

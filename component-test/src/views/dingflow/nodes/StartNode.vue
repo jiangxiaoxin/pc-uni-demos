@@ -2,7 +2,6 @@
   <div class="flow-node-block">
     <div class="flow-card flow-card--start">
       <span class="flow-card__label">{{ node.title }}</span>
-      <span class="flow-card__type">开始</span>
     </div>
   </div>
 </template>
@@ -19,6 +18,7 @@ defineProps<{
 @import './node-card.css';
 
 .flow-card--start {
+  justify-content: center;
   background: #16a34a;
 }
 </style>

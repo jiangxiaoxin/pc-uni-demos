@@ -5,15 +5,15 @@
       <div class="logic-switch">
         <button
           class="logic-btn"
-          :class="{ active: logic === 'and' }"
+          :class="{ active: logic === logic_and }"
           type="button"
-          @click="setLogic('and')"
+          @click="setLogic(logic_and)"
         >AND</button>
         <button
           class="logic-btn"
-          :class="{ active: logic === 'or' }"
+          :class="{ active: logic === logic_or }"
           type="button"
-          @click="setLogic('or')"
+          @click="setLogic(logic_or)"
         >OR</button>
       </div>
       <div class="rail-line rail-line-bottom" />
@@ -28,6 +28,9 @@
             :fixed-condition-source="fixedConditionSource"
             :fixed-point="fixedPoint"
             :fixed-point-label="fixedPointLabel"
+            :point-tree-data="pointTreeData"
+            :point-tree-loading="pointTreeLoading"
+            :fixed-value-type="fixedValueType"
             @update:model-value="val => updateChild(idx, val)"
             @remove="removeChild(idx)"
           />
@@ -37,6 +40,9 @@
             :fixed-condition-source="fixedConditionSource"
             :fixed-point="fixedPoint"
             :fixed-point-label="fixedPointLabel"
+            :point-tree-data="pointTreeData"
+            :point-tree-loading="pointTreeLoading"
+            :fixed-value-type="fixedValueType"
             @update:model-value="val => updateChild(idx, val)"
             @remove="removeChild(idx)"
           />
@@ -68,8 +74,8 @@
 <script setup lang="ts">
 import { computed } from 'vue'
 import CondItem from './ConditionItem.vue'
-import type { CondNode, ConditionGroup, Logic } from './types'
-import { createDefaultCondition, createDefaultGroup } from './types'
+import type { CondNode, ConditionGroup, Logic, PointTreeNode, ValueType } from './types'
+import { createDefaultCondition, createDefaultGroup, logic_and, logic_or } from './types'
 
 defineOptions({ name: 'CondGroup' })
 
@@ -79,8 +85,13 @@ const props = withDefaults(defineProps<{
   fixedConditionSource?: string
   fixedPoint?: string
   fixedPointLabel?: string
+  pointTreeData?: PointTreeNode[]
+  pointTreeLoading?: boolean
+  fixedValueType?: ValueType
 }>(), {
   isRoot: false,
+  pointTreeData: () => [],
+  pointTreeLoading: false,
 })
 
 const emit = defineEmits<{
@@ -93,9 +104,12 @@ const logic = computed(() => props.modelValue.logic)
 const fixedConditionSource = computed(() => props.fixedConditionSource)
 const fixedPoint = computed(() => props.fixedPoint)
 const fixedPointLabel = computed(() => props.fixedPointLabel)
+const pointTreeData = computed(() => props.pointTreeData)
+const pointTreeLoading = computed(() => props.pointTreeLoading)
+const fixedValueType = computed(() => props.fixedValueType)
 
 function applyFixedConfig(node: CondNode): CondNode {
-  if (!props.fixedConditionSource && props.fixedPoint === undefined) return node
+  if (!props.fixedConditionSource && props.fixedPoint === undefined && !props.fixedValueType) return node
 
   if (node.type === 'group') {
     return {
@@ -108,6 +122,7 @@ function applyFixedConfig(node: CondNode): CondNode {
     ...node,
     conditionSource: props.fixedConditionSource ?? node.conditionSource,
     point: props.fixedConditionSource || props.fixedPoint !== undefined ? props.fixedPoint : node.point,
+    valueType: props.fixedValueType ?? node.valueType,
   }
 }
 

@@ -126,14 +126,15 @@ export function saveToServer(data) {
       saveTaskNode(config, data);
     } else {
       // 节点name 在 nodes properties 里
-      saveNormalNode(config);
-      config.operatorId = id;
-      config.operatorName = properties.name;
-      config.operatorType = type;
-      const nextNodes = edges
-        .filter((edge) => edge.sourceNodeId == id)
-        .map((edge) => edge.targetNodeId);
-      config.downStreams = nextNodes;
+
+      // saveNormalNode(config);
+      // config.operatorId = id;
+      // config.operatorName = properties.name;
+      // config.operatorType = type;
+      // const nextNodes = edges
+      //   .filter((edge) => edge.sourceNodeId == id)
+      //   .map((edge) => edge.targetNodeId);
+      // config.downStreams = nextNodes;
     }
   }
   delete data.configs
@@ -278,7 +279,13 @@ function saveTaskNode(nodeConfig: any, allData: any) {
   debugger
   allData.lifecycles = lifecycleConfigs; // 因为任务类型的节点只有1个，所以可以直接赋值
   delete nodeConfig.lifecycleConfigs;
-  allData.deviceIds = devices.map(one => one.id) // 保存的时候，只需要保存设备id。查详情时返回的是[{id:'', name: ''}]
+  // 保存的时候，把id和name 都保存。考虑就是基础数据是配置好以后不应该修改的，如果改了，那就要重新设置。
+  allData.deviceIds = devices.map(item => {
+    return {
+      deviceId: item.id,
+      deviceName: item.name
+    }
+  }) 
   delete nodeConfig.devices
   lifecycleConfigs.forEach((lifecycle) => {
     const {

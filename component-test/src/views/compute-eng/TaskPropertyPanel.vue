@@ -79,7 +79,12 @@
 
             <div class="lifecycle-block">
               <div class="block-title">开始条件</div>
-              <ConditionGroup v-model="lifecycle.startCondition" :is-root="true" />
+              <ConditionGroup
+                v-model="lifecycle.startCondition"
+                :is-root="true"
+                :point-tree-data="sampleMetricTreeData"
+                :point-tree-loading="sampleMetricLoading"
+              />
             </div>
 
             <div class="lifecycle-block">
@@ -127,7 +132,12 @@
 
                   <div class="condition-config">
                     <div class="field-title">条件配置</div>
-                    <ConditionGroup v-model="endCondition.condition" :is-root="true" />
+                    <ConditionGroup
+                      v-model="endCondition.condition"
+                      :is-root="true"
+                      :point-tree-data="sampleMetricTreeData"
+                      :point-tree-loading="sampleMetricLoading"
+                    />
                   </div>
 
                   <div class="trigger-config">
@@ -181,14 +191,16 @@
 
                   <div class="info-row">
                     <span class="label">采样指标</span>
-                    <a-select
+                    <a-tree-select
                       v-model:value="aggregation.sampleMetric"
-                      :options="sampleMetricOptions"
+                      :tree-data="sampleMetricTreeData"
+                      :loading="sampleMetricLoading"
+                      tree-default-expand-all
+                      allow-clear
                       placeholder="请选择采样指标"
                       size="small"
                       style="flex: 1"
-                      allow-clear
-                      @change="onSampleMetricChange(aggregation)"
+                      @change="(value) => onSampleMetricChange(aggregation, value)"
                     />
                   </div>
 
@@ -213,6 +225,9 @@
                       :fixed-condition-source="condition_source_point"
                       :fixed-point="aggregation.sampleMetric"
                       :fixed-point-label="getSampleMetricLabel(aggregation.sampleMetric)"
+                      :point-tree-data="sampleMetricTreeData"
+                      :point-tree-loading="sampleMetricLoading"
+                      :fixed-value-type="value_type_number"
                     />
                   </div>
                 </div>
@@ -228,11 +243,12 @@
         </div>
       </div>
     </div>
+    <TaskEquipModal ref="taskEquipModalRef"/>
   </a-drawer>
 </template>
 
 <script setup lang="ts">
-  import { computed, inject, nextTick, provide, ref, type Ref } from 'vue'
+  import { computed, inject, nextTick, provide, ref, watch, type Ref } from 'vue'
   import { GET_GRAPH_DATA_FN_KEY, GET_TASK_NODE_DATA_FN_KEY, NODE_CONFIGS_KEY } from './symbols'
   import { getNodeTypeConfig, NODE_TYPE } from './menus'
   import ConditionGroup from './condition/ConditionGroup.vue'
@@ -240,8 +256,12 @@
     condition_source_point,
     createDefaultGroup,
     type ConditionGroup as ConditionGroupData,
+    type CondNode,
+    type PointTreeNode,
+    value_type_number,
   } from './condition/types'
   import NodeBaseConfig from './NodeBaseConfig.vue'
+  import TaskEquipModal from './TaskEquipModal.vue'
 
   interface NodeData {
     id?: string
@@ -253,6 +273,13 @@
   interface SelectedDevice {
     id: string | number
     name: string
+    points?: DevicePoint[]
+  }
+
+  interface DevicePoint {
+    code: string
+    name: string
+    unit?: string
   }
 
   interface EndConditionConfig {
@@ -294,6 +321,13 @@
 
   const modelData = ref<any>({})
 
+  const taskEquipModalRef = ref()
+  // 采样指标树来自设备列表查询结果，不能直接从 selectedDevices 派生，后续替换真实接口时只需要改 fetchSampleMetricTreeData。
+  const sampleMetricTreeData = ref<PointTreeNode[]>([])
+  const sampleMetricLoading = ref(false)
+  // 防止设备列表快速变化时，旧请求晚返回并覆盖新设备对应的指标树。
+  const sampleMetricRequestId = ref(0)
+
   provide(GET_TASK_NODE_DATA_FN_KEY, () => modelData.value)
 
   const aggregateFunctionOptions = [
@@ -333,13 +367,6 @@
         value: String(node.id),
         label: node.properties?.title || node.properties?.name || String(node.id),
       }))
-  })
-
-  const sampleMetricOptions = computed(() => {
-    return selectedDevices.value.map((device) => ({
-      value: String(device.id),
-      label: device.name,
-    }))
   })
 
   const ensureSelectedDevices = () => {
@@ -404,11 +431,13 @@
     }
 
     normalizeLifecycleConfigs()
+    loadSampleMetricTreeData()
 
     visible.value = true
   }
 
   const handleAddDevice = () => {
+    // taskEquipModalRef.value?.open()
     const devices: SelectedDevice[] = []
     for (let index = 1; index <= 10; index += 1) {
       devices.push({
@@ -452,33 +481,182 @@
   }
 
   const getSampleMetricLabel = (sampleMetric?: string) => {
-    return sampleMetricOptions.value.find((option) => option.value === sampleMetric)?.label || sampleMetric || ''
+    if (!sampleMetric) {
+      return ''
+    }
+
+    const point = findPointInMetricTree(sampleMetricTreeData.value, sampleMetric)
+
+    return point?.title || sampleMetric
   }
 
-  // 聚合条件组有特殊约束：所有条件来源固定为设备点位，point 固定同步为当前聚合的采样指标。
-  const applyAggregationPoint = (condition: ConditionGroupData, sampleMetric?: string): ConditionGroupData => {
+  // mock 点位数据；真实接口返回 points 时优先使用接口数据。
+  const getDevicePoints = (device: SelectedDevice): DevicePoint[] => {
+    if (Array.isArray(device.points) && device.points.length > 0) {
+      return device.points
+    }
+
+    const deviceId = String(device.id)
+    return [
+      {
+        code: `${deviceId}-temperature`,
+        name: '温度',
+        unit: '℃',
+      },
+      {
+        code: `${deviceId}-humidity`,
+        name: '湿度',
+        unit: '%',
+      },
+      {
+        code: `${deviceId}-count`,
+        name: '次数',
+        unit: '次',
+      },
+    ]
+  }
+
+  // 模拟接口：入参是当前选择的设备列表，返回“设备 -> 点位”的两级 tree-select 数据。
+  const fetchSampleMetricTreeData = async (devices: SelectedDevice[]) => {
+    if (devices.length === 0) {
+      return []
+    }
+
+    await new Promise((resolve) => {
+      window.setTimeout(resolve, 120)
+    })
+
+    return devices.map((device) => {
+      const deviceId = String(device.id)
+      return {
+        title: device.name,
+        value: `device:${deviceId}`,
+        key: `device:${deviceId}`,
+        disabled: true,
+        children: getDevicePoints(device).map((point) => ({
+          title: `${point.name}${point.unit ? ` (${point.unit})` : ''}`,
+          value: point.code,
+          key: point.code,
+        })),
+      }
+    })
+  }
+
+  // tree-select 的父级设备节点是 disabled 的，只有叶子点位节点才算有效采样指标。
+  const findPointInMetricTree = (nodes: PointTreeNode[], pointCode: string): PointTreeNode | undefined => {
+    for (const node of nodes) {
+      if (!node.disabled && node.value === pointCode) {
+        return node
+      }
+
+      const matched = findPointInMetricTree(node.children ?? [], pointCode)
+      if (matched) {
+        return matched
+      }
+    }
+
+    return undefined
+  }
+
+  const clearInvalidPointConditions = (node?: CondNode) => {
+    if (!node) {
+      return node
+    }
+
+    if (node.type === 'group') {
+      return {
+        ...node,
+        children: node.children.map((child) => clearInvalidPointConditions(child)),
+      }
+    }
+
+    if (
+      node.conditionSource === condition_source_point &&
+      node.point &&
+      !findPointInMetricTree(sampleMetricTreeData.value, node.point)
+    ) {
+      return {
+        ...node,
+        point: undefined,
+      }
+    }
+
+    return node
+  }
+
+  // 设备变化后，原来选择的点位可能已经不在新的设备列表下，需要同步清空并更新条件组。
+  const clearInvalidPointSelections = () => {
+    lifecycles.value.forEach((lifecycle) => {
+      lifecycle.startCondition = clearInvalidPointConditions(lifecycle.startCondition) as ConditionGroupData
+      lifecycle.endConditions.forEach((endCondition) => {
+        endCondition.condition = clearInvalidPointConditions(endCondition.condition) as ConditionGroupData
+      })
+      lifecycle.aggregations.forEach((aggregation) => {
+        if (!aggregation.sampleMetric) {
+          return
+        }
+
+        if (!findPointInMetricTree(sampleMetricTreeData.value, aggregation.sampleMetric)) {
+          onSampleMetricChange(aggregation, undefined)
+        }
+      })
+    })
+  }
+
+  // 统一的采样指标树加载入口；没有设备时直接清空，不发起查询。
+  const loadSampleMetricTreeData = async () => {
+    const requestId = sampleMetricRequestId.value + 1
+    sampleMetricRequestId.value = requestId
+    const devices = selectedDevices.value.slice()
+    if (devices.length === 0) {
+      sampleMetricLoading.value = false
+      sampleMetricTreeData.value = []
+      clearInvalidPointSelections()
+      return
+    }
+
+    sampleMetricLoading.value = true
+    try {
+      const treeData = await fetchSampleMetricTreeData(devices)
+      if (requestId !== sampleMetricRequestId.value) {
+        return
+      }
+
+      sampleMetricTreeData.value = treeData
+      clearInvalidPointSelections()
+    } finally {
+      if (requestId === sampleMetricRequestId.value) {
+        sampleMetricLoading.value = false
+      }
+    }
+  }
+
+  // 聚合条件组有特殊约束：条件来源固定为设备点位，point 固定同步为当前采样指标，值类型固定为数字。
+  const applyAggregationConditionRules = (condition: ConditionGroupData, sampleMetric?: string): ConditionGroupData => {
     return {
       ...condition,
       children: condition.children.map((child) => {
         if (child.type === 'group') {
-          return applyAggregationPoint(child, sampleMetric)
+          return applyAggregationConditionRules(child, sampleMetric)
         }
 
         return {
           ...child,
           conditionSource: condition_source_point,
           point: sampleMetric,
+          valueType: value_type_number,
         }
       }),
     }
   }
 
   const createAggregationConditionGroup = (sampleMetric?: string) => {
-    return applyAggregationPoint(createDefaultGroup(), sampleMetric)
+    return applyAggregationConditionRules(createDefaultGroup(), sampleMetric)
   }
 
-  const onSampleMetricChange = (aggregation: AggregationConfig) => {
-    aggregation.condition = applyAggregationPoint(aggregation.condition, aggregation.sampleMetric)
+  const onSampleMetricChange = (aggregation: AggregationConfig, sampleMetric?: string) => {
+    aggregation.sampleMetric = sampleMetric
+    aggregation.condition = applyAggregationConditionRules(aggregation.condition, aggregation.sampleMetric)
   }
 
   const normalizeLifecycleConfigs = () => {
@@ -493,7 +671,7 @@
         if (!aggregation.condition) {
           aggregation.condition = createAggregationConditionGroup(aggregation.sampleMetric)
         } else {
-          aggregation.condition = applyAggregationPoint(aggregation.condition, aggregation.sampleMetric)
+          aggregation.condition = applyAggregationConditionRules(aggregation.condition, aggregation.sampleMetric)
         }
       })
     })
@@ -530,6 +708,14 @@
     visible.value = false
     clearData()
   }
+
+  watch(
+    () => selectedDevices.value.map((device) => String(device.id)).join(','),
+    () => {
+      // 设备列表是接口入参，任何设备增删都需要重新查询可选点位。
+      loadSampleMetricTreeData()
+    },
+  )
 
   defineExpose({
     open,

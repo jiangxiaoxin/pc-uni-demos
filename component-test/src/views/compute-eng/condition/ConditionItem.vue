@@ -31,19 +31,17 @@
       <span class="fixed-label">设备点位</span>
       <span class="fixed-value">{{ fixedPointLabel || '请选择采样指标' }}</span>
     </div>
-    <a-input
+    <a-tree-select
       v-else-if="isPoint"
-      :value="fixedPointLabel || modelValue.point"
-      disabled
+      :value="modelValue.point"
+      :tree-data="pointTreeData"
+      :loading="pointTreeLoading"
+      tree-default-expand-all
+      allow-clear
       size="small"
-      placeholder="设备点位"
-    >
-      <template #addonAfter v-if="!fixedPoint">
-        <span  @click.stop="choosePoint" style="cursor: pointer">
-          选择点位
-        </span>
-      </template>
-    </a-input>
+      placeholder="请选择设备点位"
+      @change="onPointChange"
+    />
 
     <a-select
       v-if="isNodeVar"
@@ -72,11 +70,12 @@
       ></a-select>
 
       <a-select
-        :value="modelValue.valueType"
+        :value="effectiveValueType"
         :options="value_type_options"
         placeholder="值类型"
         @change="onValueTypeChange"
         size="small"
+        :disabled="!!fixedValueType"
       ></a-select>
 
       <a-input-number
@@ -84,13 +83,13 @@
         size="small"
         placeholder="值"
         @change="onNumberChange"
-        v-if="modelValue.valueType == value_type_number"
+        v-if="effectiveValueType == value_type_number"
         :controls="false"
         style="width: 100%"
       ></a-input-number>
       <a-select
-        v-else-if="modelValue.valueType == value_type_boolean"
-        :value="modelValue.value"
+        v-else-if="effectiveValueType == value_type_boolean"
+        :value="booleanSelectValue"
         :options="bool_options"
         placeholder="值"
         @change="onBooleanChange"
@@ -127,11 +126,14 @@
     condition_source_options,
     condition_source_point,
     condition_source_template,
+    fromBooleanSelectValue,
     OPERATORS,
+    toBooleanSelectValue,
     value_type_boolean,
     value_type_number,
     value_type_options,
   } from "./types";
+  import type { PointTreeNode, ValueType } from "./types";
   import { NODE_TYPE } from "../menus";
 
   interface GraphNode {
@@ -174,6 +176,9 @@
     fixedConditionSource?: string;
     fixedPoint?: string;
     fixedPointLabel?: string;
+    pointTreeData?: PointTreeNode[];
+    pointTreeLoading?: boolean;
+    fixedValueType?: ValueType;
   }>();
 
   // console.log('item data', props.modelValue);
@@ -200,6 +205,10 @@
 
   const fixedPoint = computed(() => props.fixedPoint);
   const fixedPointLabel = computed(() => props.fixedPointLabel || props.fixedPoint || "");
+  const pointTreeData = computed(() => props.pointTreeData ?? []);
+  const pointTreeLoading = computed(() => props.pointTreeLoading ?? false);
+  const fixedValueType = computed(() => props.fixedValueType);
+  const effectiveValueType = computed(() => props.fixedValueType ?? props.modelValue.valueType);
   const fixedConditionSourceLabel = computed(() => {
     return condition_source_options.find((item) => item.value === props.fixedConditionSource)?.label || "";
   });
@@ -328,6 +337,10 @@
     return undefined;
   });
 
+  const booleanSelectValue = computed(() => {
+    return toBooleanSelectValue(props.modelValue.value);
+  });
+
   const emit = defineEmits<{
     (e: "update:modelValue", val: any): void;
     (e: "remove"): void;
@@ -341,7 +354,9 @@
       ...props.modelValue,
       conditionSource: props.fixedConditionSource ?? props.modelValue.conditionSource,
       point: props.fixedConditionSource || props.fixedPoint !== undefined ? props.fixedPoint : props.modelValue.point,
+      valueType: props.fixedValueType ?? props.modelValue.valueType,
       ...part,
+      ...(props.fixedValueType ? { valueType: props.fixedValueType } : {}),
     });
   }
 
@@ -352,7 +367,7 @@
       conditionSource: newValue,
       field: "",
       operator: undefined,
-      valueType: undefined,
+      valueType: props.fixedValueType,
       value: "",
       point: "",
       template: undefined,
@@ -360,10 +375,6 @@
       lifecycleId: undefined,
       aggregateId: undefined,
     });
-  }
-
-  function choosePoint() {
-    patch({ point: "mock-device-1" });
   }
 
   function chooseTemplate() {
@@ -379,11 +390,19 @@
   }
 
   function onValueTypeChange(newValue: string) {
+    if (props.fixedValueType) {
+      return;
+    }
+
     patch({ valueType: newValue, value: undefined }); // 值类型修改了，同时修改值
   }
 
   function onValueChange(event: any) {
     patch({ value: event.target.value });
+  }
+
+  function onPointChange(newValue: string | undefined) {
+    patch({ point: newValue });
   }
 
   function onNumberChange(value) {
@@ -412,9 +431,8 @@
     });
   }
 
-  function onBooleanChange(newValue: any) {
-
-    patch({ value: newValue });
+  function onBooleanChange(newValue: string) {
+    patch({ value: fromBooleanSelectValue(newValue) });
   }
 </script>
 

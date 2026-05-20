@@ -3,7 +3,7 @@
     :open="visible"
     title="属性面板"
     placement="right"
-    :width="1000"
+    :width="800"
     :maskClosable="false"
     @close="handleClose"
     destroy-on-close

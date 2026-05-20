@@ -27,9 +27,9 @@
       />
       <a-select
         v-else-if="modelValue.valueType === value_type_boolean"
-        :value="modelValue.value"
+        :value="booleanSelectValue"
         :options="bool_options"
-        @change="onValueChange"
+        @change="onBooleanValueChange"
         size="small"
         placeholder="请选择"
       />
@@ -75,7 +75,7 @@
     value_type_boolean,
     value_type_options,
   } from './types'
-  import { bool_options } from '../condition/types'
+  import { bool_options, fromBooleanSelectValue, toBooleanSelectValue } from '../condition/types'
   import type { DirectSourceConfig } from './types'
 
   const props = withDefaults(
@@ -98,6 +98,7 @@
   const isFixedValue = computed(() => props.modelValue.sourceType === source_type_fixed)
   const isDevicePoint = computed(() => props.modelValue.sourceType === source_type_point)
   const isField = computed(() => props.modelValue.sourceType === source_type_field)
+  const booleanSelectValue = computed(() => toBooleanSelectValue(props.modelValue.value))
 
   function patch(part: Partial<DirectSourceConfig>) {
     emit('update:modelValue', { ...props.modelValue, ...part })
@@ -119,6 +120,10 @@
 
   function onValueChange(newValue: any) {
     patch({ value: newValue })
+  }
+
+  function onBooleanValueChange(newValue: string) {
+    patch({ value: fromBooleanSelectValue(newValue) })
   }
 
   function onInputValueChange(event: any) {

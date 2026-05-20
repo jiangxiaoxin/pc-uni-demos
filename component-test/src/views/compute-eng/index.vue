@@ -114,9 +114,10 @@ const handleSaveRequest = (graphData: any) => {
     configs: nodeConfigs.value,
   };
   console.log("[index.vue] 保存的完整数据:", JSON.parse(JSON.stringify(fullData)));
-  localStorage.setItem("compute_eng_full_data", JSON.stringify(fullData));
-  saveToServer(fullData)
-  console.log('serverData', fullData);
+  localStorage.setItem("compute-data", JSON.stringify(fullData))
+  const copyData =  JSON.parse(JSON.stringify(fullData))
+  saveToServer(copyData)
+  console.log('serverData', copyData);
   
 };
 

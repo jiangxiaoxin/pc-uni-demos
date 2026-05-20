@@ -1,6 +1,9 @@
 import { v4 as uuidv4 } from "uuid";
 
-export type Logic = "AND" | "OR";
+export type Logic = typeof logic_and | typeof logic_or;
+
+export const logic_and = "AND";
+export const  logic_or = "OR";
 
 export const value_type_string = "STRING"
 export const value_type_number = "NUMBER"
@@ -23,6 +26,14 @@ export interface ConditionGroup {
 
 export type CondNode = Condition | ConditionGroup;
 
+export interface PointTreeNode {
+  title: string;
+  value: string;
+  key: string;
+  disabled?: boolean;
+  children?: PointTreeNode[];
+}
+
 export const  value_type_options = [
     {
         value: 'STRING',
@@ -40,14 +51,38 @@ export const  value_type_options = [
 
 export const bool_options = [
   {
-    value: 1,
+    value: "true", // antd 的类型判断，不能直接写 true
     label:'真'
   },
   {
-    value: 0,
+    value: "false",
     label:'假'
   }
 ]
+
+export function toBooleanSelectValue(value: unknown): string | undefined {
+  if (value === true) {
+    return "true";
+  }
+
+  if (value === false) {
+    return "false";
+  }
+
+  return undefined;
+}
+
+export function fromBooleanSelectValue(value: unknown): boolean | undefined {
+  if (value === "true" || value === true) {
+    return true;
+  }
+
+  if (value === "false" || value === false) {
+    return false;
+  }
+
+  return undefined;
+}
 
 export const OPERATORS = [
   { value: "EQ", label: "等于" },

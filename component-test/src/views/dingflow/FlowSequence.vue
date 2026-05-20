@@ -4,6 +4,7 @@
       <BranchGroup
         v-if="node.type === 'branch'"
         :node="node"
+        :add-node-line="addNodeLine"
         @add-after="emit('addAfter', index, $event)"
         @remove="emit('removeNode', index)"
       />
@@ -11,6 +12,7 @@
       <LoopGroup
         v-else-if="node.type === 'loop'"
         :node="node"
+        :add-node-line="addNodeLine"
         @add-after="emit('addAfter', index, $event)"
         @remove="emit('removeNode', index)"
       />
@@ -34,6 +36,7 @@
 
         <AddNodeButton
           v-if="node.type !== 'end'"
+          :line="addNodeLine"
           @add-action="emit('addAfter', index, 'action')"
           @add-branch="emit('addAfter', index, 'branch')"
           @add-loop="emit('addAfter', index, 'loop')"
@@ -52,9 +55,12 @@ import EndNode from './nodes/EndNode.vue'
 import StartNode from './nodes/StartNode.vue'
 import type { AddableNodeKind, FlowNode } from './types'
 
-defineProps<{
+withDefaults(defineProps<{
   nodes: FlowNode[]
-}>()
+  addNodeLine?: boolean
+}>(), {
+  addNodeLine: true,
+})
 
 const emit = defineEmits<{
   addAfter: [index: number, type: AddableNodeKind]

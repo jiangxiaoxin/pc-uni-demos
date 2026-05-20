@@ -27,6 +27,7 @@
         </div>
 
         <AddNodeButton
+          :line="false"
           @add-action="addBranchChild(branch.children, 'action')"
           @add-branch="addBranchChild(branch.children, 'branch')"
           @add-loop="addBranchChild(branch.children, 'loop')"
@@ -35,6 +36,7 @@
         <FlowSequence
           v-if="branch.children.length > 0"
           :nodes="branch.children"
+          :add-node-line="false"
           @add-after="(index, type) => addAfter(branch.children, index, type)"
           @remove-node="(index) => removeChild(branch.children, index)"
         />
@@ -43,6 +45,7 @@
 
     <div class="branch-group__join">
       <AddNodeButton
+        :line="addNodeLine"
         @add-action="emit('addAfter', 'action')"
         @add-branch="emit('addAfter', 'branch')"
         @add-loop="emit('addAfter', 'loop')"
@@ -69,6 +72,7 @@ const FlowSequence = defineAsyncComponent(() => import('./FlowSequence.vue'))
 
 const props = defineProps<{
   node: BranchFlowNode
+  addNodeLine?: boolean
 }>()
 
 const emit = defineEmits<{

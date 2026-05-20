@@ -21,6 +21,7 @@
 
       <div class="loop-content">
         <AddNodeButton
+          :line="false"
           @add-action="addLoopChild('action')"
           @add-branch="addLoopChild('branch')"
           @add-loop="addLoopChild('loop')"
@@ -29,6 +30,7 @@
         <FlowSequence
           v-if="node.children.length > 0"
           :nodes="node.children"
+          :add-node-line="false"
           @add-after="addAfter"
           @remove-node="removeChild"
         />
@@ -37,6 +39,7 @@
 
     <div class="loop-group__join">
       <AddNodeButton
+        :line="addNodeLine"
         @add-action="emit('addAfter', 'action')"
         @add-branch="emit('addAfter', 'branch')"
         @add-loop="emit('addAfter', 'loop')"
@@ -61,6 +64,7 @@ const FlowSequence = defineAsyncComponent(() => import('./FlowSequence.vue'))
 
 const props = defineProps<{
   node: LoopFlowNode
+  addNodeLine?: boolean
 }>()
 
 const emit = defineEmits<{

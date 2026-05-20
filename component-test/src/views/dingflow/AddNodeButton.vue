@@ -1,6 +1,6 @@
 <template>
   <div class="add-node">
-    <span class="add-node__line" aria-hidden="true"></span>
+    <span v-if="line" class="add-node__line" aria-hidden="true"></span>
     <div class="add-node__actions">
       <a-dropdown
         v-model:open="open"
@@ -33,6 +33,12 @@
 import { ref } from 'vue'
 import type { MenuInfo } from 'ant-design-vue/es/menu/src/interface'
 import type { AddableNodeKind } from './types'
+
+withDefaults(defineProps<{
+  line?: boolean
+}>(), {
+  line: true,
+})
 
 const emit = defineEmits<{
   addAction: []

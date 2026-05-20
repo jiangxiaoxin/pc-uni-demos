@@ -77,8 +77,8 @@ function getPopupContainer() {
   content: "";
   position: absolute;
   left: 50%;
-  width: 1px;
-  background: #cbd5e1;
+  width: 10px;
+  background: blue;
   transform: translateX(-50%);
 }
 

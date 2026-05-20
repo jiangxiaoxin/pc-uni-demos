@@ -239,7 +239,7 @@ function removeBranch(index: number) {
   align-items: center;
   min-width: var(--branch-width);
   padding: 28px 14px;
-  background-image: linear-gradient(#cbd5e1, #cbd5e1);
+  background-image: linear-gradient(red, red);
   background-position: center top;
   background-repeat: no-repeat;
   background-size: 1px 100%;

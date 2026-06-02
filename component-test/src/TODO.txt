@@ -1,0 +1,6 @@
+1. 用 PyTorch 拟合 y = 2x + 1
+2. 做手写数字识别 MNIST
+3. 做一个文本分类器
+4. 用预训练模型生成 embedding
+5. 做一个简单 RAG 系统
+6. 再学习 Transformer 内部结构

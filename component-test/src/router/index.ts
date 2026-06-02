@@ -32,6 +32,11 @@ const routes = [
     component: () => import("../views/compute-eng/index.vue")
   },
   {
+    path: '/compute-resize-test',
+    name: 'ComputeResizeTest',
+    component: () => import("../views/compute-eng/ResizeEdgeTest.vue")
+  },
+  {
     path: '/dingflow',
     name: 'DingFlow',
     component: () => import('../views/dingflow/index.vue')

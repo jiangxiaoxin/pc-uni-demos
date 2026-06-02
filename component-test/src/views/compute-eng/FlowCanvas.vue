@@ -1,6 +1,6 @@
 <template>
   <div class="flow-canvas-wrapper" @drop="handleDrop" @dragover.prevent>
-    <div class="toolbar-panel">
+    <div v-if="props.showToolbar" class="toolbar-panel">
       <button class="btn btn-primary" @click="handleSave">保存</button>
       <button class="btn btn-danger" @click="handleClear">清空</button>
     </div>
@@ -11,7 +11,12 @@
 </template>
 
 <script setup lang="ts">
-import LogicFlow from "@logicflow/core";
+import LogicFlow, {
+  BezierEdgeModel,
+  type BaseEdgeModel,
+  type BaseNodeModel,
+  type Model,
+} from "@logicflow/core";
 import "@logicflow/core/dist/index.css";
 import { nextTick, onMounted, onUnmounted, ref } from "vue";
 import { register, getTeleport } from "@logicflow/vue-node-registry";
@@ -30,6 +35,15 @@ const emit = defineEmits<{
   (e: "clear-request"): void;
 }>();
 
+const props = withDefaults(
+  defineProps<{
+    showToolbar?: boolean;
+  }>(),
+  {
+    showToolbar: true,
+  },
+);
+
 const TeleportContainer = getTeleport();
 
 let lf: LogicFlow | null = null;
@@ -43,9 +57,85 @@ const resizeEditor = () => {
 
 const getGraphData = () => lf?.getGraphData();
 
+const getSelectedNode = () => {
+  if (!lf) return null;
+  const selected = lf.getSelectElements(false);
+  const nodeId = selected.nodes?.[0]?.id;
+  if (!nodeId) return null;
+  return lf.getNodeModelById(nodeId) ?? null;
+};
+
+const getAnchorByEdge = (
+  node: BaseNodeModel,
+  edge: BaseEdgeModel,
+  anchorId: string | undefined,
+  fallbackType: "in" | "out",
+) => {
+  const anchors = node.anchors as Array<Model.AnchorConfig & { cusType?: string }>;
+  return (
+    anchors.find((anchor) => anchor.id === anchorId) ||
+    anchors.find((anchor) => anchor.cusType === fallbackType)
+  );
+};
+
+const refreshBezierEdgesByNode = (nodeId: string) => {
+  if (!lf) return;
+  const node = lf.getNodeModelById(nodeId);
+  if (!node) return;
+
+  lf.getNodeOutgoingEdge(nodeId).forEach((edge) => {
+    if (!(edge instanceof BezierEdgeModel)) return;
+    const anchor = getAnchorByEdge(
+      node,
+      edge,
+      edge.sourceAnchorId,
+      "out",
+    );
+    if (anchor) {
+      edge.updateStartPoint(anchor);
+    }
+  });
+
+  lf.getNodeIncomingEdge(nodeId).forEach((edge) => {
+    if (!(edge instanceof BezierEdgeModel)) return;
+    const anchor = getAnchorByEdge(
+      node,
+      edge,
+      edge.targetAnchorId,
+      "in",
+    );
+    if (anchor) {
+      edge.updateEndPoint(anchor);
+    }
+  });
+};
+
 const updateNodeProperties = (nodeId: string, properties: Record<string, any>) => {
   if (!lf) return;
   lf.setProperties(nodeId, properties);
+  if ("width" in properties || "height" in properties) {
+    refreshBezierEdgesByNode(nodeId);
+  }
+};
+
+const resizeSelectedNode = (payload: { deltaWidth?: number; deltaHeight?: number }) => {
+  const node = getSelectedNode();
+  if (!node) return null;
+
+  const props = node.getProperties();
+  const width = Math.max(30, (props.width || node.width) + (payload.deltaWidth || 0));
+  const height = Math.max(30, (props.height || node.height) + (payload.deltaHeight || 0));
+
+  updateNodeProperties(node.id, {
+    width,
+    height,
+  });
+
+  return {
+    id: node.id,
+    width,
+    height,
+  };
 };
 
 const renderGraph = async (data: any) => {
@@ -232,6 +322,7 @@ defineExpose({
   renderGraph,
   handleDrop,
   updateNodeProperties,
+  resizeSelectedNode,
 });
 </script>
 

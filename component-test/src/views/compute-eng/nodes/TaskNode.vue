@@ -1,6 +1,7 @@
 <template>
   <div
     class="task-node"
+    :class="{ 'task-node--meta': showMeta }"
     :style="{ width: nodeWidth + 'px', height: nodeHeight + 'px' }"
     :title="nodeTitle"
   >
@@ -12,6 +13,11 @@
       </div>
 
       <div class="node-title">{{ nodeTitle }}</div>
+
+      <div v-if="showMeta" class="node-meta">
+        <div>标题长度：{{ nodeTitleLength }}</div>
+        <div>节点ID：{{ nodeId }}</div>
+      </div>
     </div>
   </div>
 </template>
@@ -56,6 +62,18 @@ const iconBgColor = computed(() => {
 
 const nodeIcon = computed(() => {
   return nodeData.value.properties?.icon || "📋";
+});
+
+const showMeta = computed(() => {
+  return Boolean(nodeData.value.properties?.showTaskMeta);
+});
+
+const nodeId = computed(() => {
+  return nodeData.value.id || node.id;
+});
+
+const nodeTitleLength = computed(() => {
+  return nodeTitle.value.length;
 });
 
 const handlePropertyChange = (eventData: any) => {
@@ -119,7 +137,7 @@ onUnmounted(() => {
   align-items: center;
   justify-content: center;
   gap: 4px;
-  padding: 8px 0 6px;
+  padding: 8px 10px 6px;
 }
 
 .node-icon {
@@ -147,5 +165,30 @@ onUnmounted(() => {
   text-overflow: ellipsis;
   white-space: nowrap;
   max-width: 90%;
+}
+
+.node-meta {
+  width: 100%;
+  max-width: 100%;
+  font-size: 13px;
+  line-height: 1.4;
+  color: #667085;
+  text-align: center;
+
+  div {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+}
+
+.task-node--meta {
+  .node-content {
+    gap: 4px;
+  }
+
+  .node-title {
+    max-width: 100%;
+  }
 }
 </style>

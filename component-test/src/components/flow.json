@@ -1,0 +1,88 @@
+[
+    {
+        "id": "c06042d9-b7d6-475f-bab0-58f5f8485948",
+        "type": "FORM_EVENT",
+        "title": "表单事件"
+    },
+    {
+        "id": "9ca46a0d-805f-4e50-b492-ebafae69c22e",
+        "type": "ACTION",
+        "title": "动作节点"
+    },
+    {
+        "id": "dfdf5043-301a-4eb3-95ca-2c50502f360f",
+        "type": "ACTION",
+        "title": "动作节点"
+    },
+    {
+        "id": "b90bd1f4-e182-4164-99a0-8d1d898bc7e7",
+        "type": "BRANCH",
+        "title": "条件分支",
+        "children": [
+            {
+                "id": "871d25af-61e0-40bd-bfbb-5667cdfc0dbb",
+                "type": "BRANCH_CASE",
+                "title": "分支条件 1",
+                "children": [
+                    {
+                        "id": "9d98f6ac-0bc8-4a7e-b485-26852f33297f",
+                        "type": "ACTION",
+                        "title": "动作节点"
+                    },
+                    {
+                        "id": "892d93c6-5cbd-4aff-8cf7-7c0c74ff2ad7",
+                        "type": "ACTION",
+                        "title": "动作节点"
+                    }
+                ]
+            },
+            {
+                "id": "7abeac72-f61f-4fa2-bc50-f51cf9e2c3e6",
+                "type": "BRANCH_CASE",
+                "title": "分支条件 2",
+                "children": [
+                    {
+                        "id": "dd047761-2366-4fbe-9e4e-1fe1b5a9d7f8",
+                        "type": "BRANCH",
+                        "title": "条件分支",
+                        "children": [
+                            {
+                                "id": "02ee3140-4b0e-440c-8e59-f5802cc5e8e8",
+                                "type": "BRANCH_CASE",
+                                "title": "分支条件 1",
+                                "children": []
+                            },
+                            {
+                                "id": "312d5cb6-c1ee-4068-b546-6d2a9da3b7fb",
+                                "type": "BRANCH_CASE",
+                                "title": "分支条件 2",
+                                "children": []
+                            }
+                        ]
+                    },
+                    {
+                        "id": "f648c193-2af6-4072-8a54-027eb36e1276",
+                        "type": "ACTION",
+                        "title": "动作节点"
+                    }
+                ]
+            },
+            {
+                "id": "bfe468f2-cc71-4bd5-90d5-196cee6ba460",
+                "type": "BRANCH_CASE",
+                "title": "分支条件 3",
+                "children": []
+            }
+        ]
+    },
+    {
+        "id": "0e38037c-502d-423c-b72b-8038c5f31194",
+        "type": "ACTION",
+        "title": "动作节点"
+    },
+    {
+        "id": "5e150e83-0e7d-4f3d-b9ea-ae775658d138",
+        "type": "END",
+        "title": "结束"
+    }
+]

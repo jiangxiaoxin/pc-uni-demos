@@ -3,6 +3,12 @@ import { VueNodeModel } from "@logicflow/vue-node-registry";
 import { NODE_TYPE, DEFAULT_NODE_WIDTH, DEFAULT_NODE_HEIGHT } from "../menus";
 
 export default class FlowNodeModel extends VueNodeModel {
+  setAttributes(): void {
+    const props = this.getProperties();
+    this.width = props.width || DEFAULT_NODE_WIDTH;
+    this.height = props.height || DEFAULT_NODE_HEIGHT;
+  }
+
   initNodeData(data: LogicFlow.NodeConfig): void {
     super.initNodeData(data);
 

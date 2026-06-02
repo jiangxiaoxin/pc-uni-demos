@@ -2,6 +2,12 @@ import { LogicFlow } from "@logicflow/core";
 import { VueNodeModel } from "@logicflow/vue-node-registry";
 
 export default class TaskNodeModel extends VueNodeModel {
+  setAttributes(): void {
+    const props = this.getProperties();
+    this.width = props.width || 260;
+    this.height = props.height || 64;
+  }
+
   initNodeData(data: LogicFlow.NodeConfig): void {
     super.initNodeData(data);
 

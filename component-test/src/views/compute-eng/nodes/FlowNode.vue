@@ -1,19 +1,30 @@
 <template>
   <div
     class="flow-node"
+    :class="{ 'flow-node--meta': showMeta }"
     :style="{ width: nodeWidth + 'px', height: nodeHeight + 'px' }"
     :title="nodeTitle"
   >
     <div class="node-left-bar" :style="{ backgroundColor: nodeColor }"></div>
 
-    <div class="node-icon" :style="{ backgroundColor: iconBgColor }">
-      <span class="icon-text">{{ nodeIcon }}</span>
+    <div class="node-main">
+      <!-- 通过样式隐藏的 -->
+      <div class="node-row">
+        <div class="node-icon" :style="{ backgroundColor: iconBgColor }">
+          <span class="icon-text">{{ nodeIcon }}</span>
+        </div>
+
+        <div class="node-title">{{ nodeTitle }}</div>
+      </div>
+
+      <div v-if="showMeta" class="node-meta">
+        <div>标题长度：{{ nodeTitleLength }}</div>
+        <div>节点ID：{{ nodeId }}</div>
+      </div>
     </div>
 
-    <div class="node-title">{{ nodeTitle }}</div>
-
     <div class="node-delete-btn" @click.stop="handleDelete" title="删除节点">
-      ✕
+      ×
     </div>
   </div>
 </template>
@@ -63,8 +74,20 @@ const nodeIcon = computed(() => {
   return config?.icon || "?";
 });
 
+const showMeta = computed(() => {
+  return Boolean(nodeData.value.properties?.showNodeMeta);
+});
+
+const nodeId = computed(() => {
+  return nodeData.value.id || node.id;
+});
+
+const nodeTitleLength = computed(() => {
+  return nodeTitle.value.length;
+});
+
 const handleDelete = () => {
-  if (confirm(`确定要删除节点 "${nodeTitle.value}" 吗？`)) {
+  if (confirm(`确定要删除节点"${nodeTitle.value}"吗？`)) {
     graph.deleteNode(node.id);
   }
 };
@@ -124,6 +147,20 @@ onUnmounted(() => {
   width: 4px;
 }
 
+.node-main {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  align-items: center;
+}
+
+.node-row {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  align-items: center;
+}
+
 .node-icon {
   width: 28px;
   height: 28px;
@@ -144,6 +181,7 @@ onUnmounted(() => {
 
 .node-title {
   flex: 1;
+  min-width: 0;
   font-size: 14px;
   font-weight: 500;
   color: #262626;
@@ -151,6 +189,20 @@ onUnmounted(() => {
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+}
+
+.node-meta {
+  width: 100%;
+  max-width: 100%;
+  font-size: 20px;
+  line-height: 1.4;
+  color: #667085;
+
+  div {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
 }
 
 .node-delete-btn {
@@ -166,6 +218,25 @@ onUnmounted(() => {
   &:hover {
     color: #ff4d4f;
     background: rgba(255, 77, 79, 0.1);
+  }
+}
+
+.flow-node--meta {
+  align-items: center;
+  padding-top: 8px;
+  padding-bottom: 8px;
+
+  .node-row {
+    display: none;
+  }
+
+  .node-main {
+    align-items: flex-start;
+  }
+
+  .node-delete-btn {
+    align-self: flex-start;
+    margin-top: 2px;
   }
 }
 </style>

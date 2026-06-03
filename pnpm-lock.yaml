@@ -18,6 +18,9 @@ importers:
 
   component-test:
     dependencies:
+      '@ant-design/icons-vue':
+        specifier: ^7.0.1
+        version: 7.0.1(vue@3.5.30(typescript@5.8.3))
       '@logicflow/core':
         specifier: ^2.1.11
         version: 2.1.11
@@ -39,6 +42,9 @@ importers:
       vxe-pc-ui:
         specifier: 4.14.9
         version: 4.14.9(vue@3.5.30(typescript@5.8.3))
+      vxe-table:
+        specifier: ^4.19.6
+        version: 4.19.6(vue@3.5.30(typescript@5.8.3))
       xe-utils:
         specifier: 4.0.7
         version: 4.0.7
@@ -5063,6 +5069,9 @@ packages:
 
   vxe-pc-ui@4.14.9:
     resolution: {integrity: sha512-VbhZfuKbQZTBgZKbB66qh/z2zxbQucV4QDNGiJBckr9A9w1fw59mLSDOPEnsWVrRjo80IX8+iSnLaV8W64Qd0Q==}
+
+  vxe-table@4.19.6:
+    resolution: {integrity: sha512-KMFjriaQSpHbLPD8O7hc+FtVE521mLiDhif+oDilqMd7Zf8+oTvt7RLUW/KqN+vur4A2RqQtRWBs2vlrk0dc0g==}
 
   w3c-hr-time@1.0.2:
     resolution: {integrity: sha512-z8P5DvDNjKDoFIHK7q8r8lackT6l+jo/Ye3HOle7l9nICP9lf1Ci25fy9vHd0JOWewkIFzXIEig3TdKT7JQ5fQ==}
@@ -11197,6 +11206,12 @@ snapshots:
   vxe-pc-ui@4.14.9(vue@3.5.30(typescript@5.8.3)):
     dependencies:
       '@vxe-ui/core': 4.4.12(vue@3.5.30(typescript@5.8.3))
+    transitivePeerDependencies:
+      - vue
+
+  vxe-table@4.19.6(vue@3.5.30(typescript@5.8.3)):
+    dependencies:
+      vxe-pc-ui: 4.14.9(vue@3.5.30(typescript@5.8.3))
     transitivePeerDependencies:
       - vue
 

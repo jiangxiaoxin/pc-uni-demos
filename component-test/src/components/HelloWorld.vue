@@ -15,15 +15,44 @@
       <button>{{ fooComputed }}</button>
       <button>{{ numComputed }}</button>
     </div>
+    <div>
+      <vnodeFn />
+    </div>
+    <div>
+      <aicon />
+    </div>
   </div>
 </template>
 
 <script setup lang="ts">
-import { computed, ref, watch } from 'vue'
+import { computed, ref, watch, createVNode, h } from 'vue'
+import {
+    ZoomInOutlined,
+    ZoomOutOutlined,
+    FullscreenOutlined,
+    ReloadOutlined,
+    UndoOutlined,
+    RedoOutlined,
+    SaveOutlined,
+    UploadOutlined,
+    DeleteOutlined,
+    EyeOutlined,
+    CopyOutlined,
+    DownloadOutlined,
+  } from "@ant-design/icons-vue";
 
 defineProps<{
   msg: string
 }>()
+
+
+const vnodeFn = () => {
+  return createVNode(ZoomInOutlined)
+}
+
+const aicon = () => {
+  return h(RedoOutlined)
+}
 
 /**
  * computed 返回 get 和 set 方法，验证啥时候重新触发 get 和 set

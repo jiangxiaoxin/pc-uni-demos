@@ -40,6 +40,11 @@ const routes = [
     path: '/dingflow',
     name: 'DingFlow',
     component: () => import('../views/dingflow/index.vue')
+  },
+  {
+    path: '/table',
+    name: 'Table',
+    component: () => import('../views/table-vxe.vue')
   }
 ]
 

@@ -44,7 +44,7 @@ const routes = [
   {
     path: '/table',
     name: 'Table',
-    component: () => import('../views/table-vxe.vue')
+    component: () => import('../views/two-table.vue')
   }
 ]
 

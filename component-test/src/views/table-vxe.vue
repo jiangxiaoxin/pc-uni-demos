@@ -1,6 +1,6 @@
 <template>
-  <div class="whole-page">
-    <div class="search-form" :style="{height: expanded ? '300px' : '200px'}">
+  <div class="vxe-table-wrapper">
+    <div class="search-form" :style="{height: expanded ? '200px' : '100px'}">
         <h1>搜索部分{{ tableData.length }}---{{ expanded }}</h1>
         <button @click="getData">load</button>
         <button @click="toggleSearch">toggle</button>
@@ -92,7 +92,7 @@
     // height: 200px;
   }
 
-  .whole-page {
+  .vxe-table-wrapper {
     display: flex;
     flex-direction: column;
     height: 100%;
